@@ -173,6 +173,24 @@ await step("leave warning", async () => {
   check("confirm leaves", true);
 });
 
+await step("theme toggle", async () => {
+  const t = await browser.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: "dark" });
+  const p = await t.newPage();
+  await p.goto(BASE + "/styles", { waitUntil: "networkidle" });
+  const theme = () => p.evaluate(() => document.documentElement.dataset.theme);
+  check("follows system dark preference", (await theme()) === "dark");
+  await p.getByRole("button", { name: "Switch to light mode" }).click();
+  check("toggle switches to light", (await theme()) === "light");
+  const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  check("light background applied", bg === "rgb(244, 242, 237)", bg);
+  await p.reload({ waitUntil: "domcontentloaded" });
+  check("choice persists across reload (set before paint)", (await theme()) === "light");
+  await p.getByRole("button", { name: "Switch to dark mode" }).click();
+  const bg2 = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  check("dark background applied", bg2 === "rgb(21, 21, 20)", bg2);
+  await t.close();
+});
+
 check("no console errors during journeys", errors.length === 0, errors.join(" | "));
 console.log(`\n${pass} passed, ${fail} failed`);
 await browser.close();

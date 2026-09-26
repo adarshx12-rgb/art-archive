@@ -49,7 +49,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {toast.tone === "error" ? (
               <CircleAlert size={16} aria-hidden />
             ) : (
-              <Check size={16} aria-hidden className="text-acid" />
+              <Check size={16} aria-hidden />
             )}
             {toast.message}
           </p>

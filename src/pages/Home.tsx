@@ -3,6 +3,8 @@ import { Link } from "react-router";
 import { ReferenceFigure } from "../art/ReferenceFigure";
 import { StyleArt } from "../art/StyleArt";
 import { PaletteCard, StyleCard } from "../components/cards";
+import { QuoteBlock } from "../components/QuoteBlock";
+import { quotesForDay, type Quote } from "../content/quotes";
 import { site } from "../config/site";
 import { featuredPalettes, getPalette } from "../content/palettes";
 import { getReference } from "../content/references";
@@ -18,6 +20,7 @@ export function Home() {
   const softClub = getStyle("gen-x-soft-club")!;
   const vapor = getStyle("vaporwave")!;
   const chipPalette = getPalette("primary-school")!;
+  const [leadQuote, closingQuote] = quotesForDay(2) as [Quote, Quote];
 
   return (
     <>
@@ -60,7 +63,7 @@ export function Home() {
             <ul className="mt-2 flex gap-1.5" aria-label={`${chipPalette.name} colours`}>
               {chipPalette.colours.map((c) => (
                 <li key={c.hex} className="flex items-center gap-2 border border-rule-strong py-1 pr-2.5 pl-1">
-                  <span className="h-5 w-5 border border-black/10" style={{ background: c.hex }} aria-hidden />
+                  <span className="h-5 w-5 border border-swatch-edge" style={{ background: c.hex }} aria-hidden />
                   <span className="meta">{c.hex}</span>
                 </li>
               ))}
@@ -110,11 +113,25 @@ export function Home() {
           </Link>
         </div>
         <div className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredStyles.slice(0, 7).map((s, i) => (
-            <div key={s.slug} className={i === 0 ? "sm:col-span-2 lg:row-span-2" : ""}>
-              <StyleCard style={s} large={i === 0} />
-            </div>
-          ))}
+          {featuredStyles.slice(0, 7).map((s, i) =>
+            i === 0 ? (
+              // The lead card spans two rows on large screens; a quote fills the height it leaves free.
+              <div key={s.slug} className="flex flex-col gap-12 sm:col-span-2 lg:row-span-2">
+                <div>
+                  <StyleCard style={s} large />
+                </div>
+                <div className="hidden flex-1 flex-col lg:flex">
+                  <QuoteBlock quote={leadQuote} shape="tall" />
+                </div>
+              </div>
+            ) : (
+              <div key={s.slug}>
+                <StyleCard style={s} />
+              </div>
+            ),
+          )}
+          {/* Completes the last row next to the final two cards. */}
+          <QuoteBlock quote={closingQuote} className="sm:col-span-2" />
         </div>
       </section>
 

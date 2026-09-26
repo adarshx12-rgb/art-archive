@@ -91,6 +91,10 @@ The catalogue is your 63-style list; see “Content notes” below for how dupli
 
 The test `has 63 styles` pins the current count, so update it when you add entries.
 
+## Quotes
+
+The homepage fills layout gaps in the featured grid with quotations from `src/content/quotes.ts`, rotating daily. Only lines traceable to a named published source are included (Klee, Kandinsky, Albers, O’Keeffe, Sullivan, and Degas as recorded by Valéry), each shown with its source and year; translations are marked. Add new quotes only with a verifiable source.
+
 ## Adding palettes
 
 Add a record to `src/content/palettes.ts`:
@@ -186,7 +190,7 @@ The builder never silently overwrites a manually edited prompt. Changing setting
 ## Tests performed
 
 - **Unit (37, Vitest):** determinism; subject placeholder; intensity scaling; image vs video; curated and custom palettes with exact colour counts; the contradiction rules above; lettering only when relevant; no duplicate lines; “Style style” guard; URL round-trip including Unicode subject; invalid-link recovery; subject cleaning and length cap. Also content integrity (63 styles, 24 palettes, shares = 100, links resolve, renderers exist, entries distinct), search by name / alias / description / tag, filter combination, sorting, the exact 2 / 3 / 4 palette filters, slug suggestions, colour naming and malformed storage parsing.
-- **Browser (40, `npm run e2e`, real Chrome, production build):**
+- **Browser (45, `npm run e2e`, real Chrome, production build):**
   - Styles: search and filters combine and persist in the URL across reload; empty state; clear; A→Z sort.
   - Palettes: 2 / 3 / 4 filters are exact.
   - Saved items: save and unsave survive refresh, and malformed or partially valid `localStorage` is handled.
@@ -206,6 +210,7 @@ The builder never silently overwrites a manually edited prompt. Changing setting
 - **Hex values are colour intent.** Image and video tools interpret them loosely. “Preserve” lines are instructions, not guarantees. The UI says both.
 - **Illustrative studies are schematic.** For photographic or material looks (Steampunk, Clay Style, Surveillance, Bohemian, Luxury Minimal) they show ingredients, not finished photographs.
 - **Share links carry settings, not manual prompt edits.** The copy-link message says so when you have edits.
+- **Light and dark mode.** The header toggle switches themes. The site follows the system setting until you choose, then remembers the choice in `localStorage`; an inline script in `index.html` applies it before first paint. Theme colours are CSS variables in `src/index.css` (`:root[data-theme="dark"]`).
 - **Saved items are per browser.** There are no accounts and no sync. If storage is blocked, saving works for the current visit and the site says so.
 - **Hosting:** none is configured. `vite preview` serves SPA routes; a static host would need a fallback to `index.html` for deep links.
 - **Accessibility:** covered by semantic markup, labelled controls, visible focus, a skip link, focus management on route change, a native `<dialog>` for confirmations, and selection shown with ✓ marks and fills (not colour alone). It has not been tested with a physical screen reader.

@@ -460,7 +460,7 @@ export function Builder() {
                   <div className="mt-4">
                     <ul className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${palette.colours.length}, minmax(0,1fr))` }}>
                       {palette.colours.map((c) => (
-                        <li key={c.hex + c.role} className="flex min-h-16 flex-col justify-end border border-black/10 p-1.5" style={{ background: c.hex, color: inkOn(c.hex) }}>
+                        <li key={c.hex + c.role} className="flex min-h-16 flex-col justify-end border border-swatch-edge p-1.5" style={{ background: c.hex, color: inkOn(c.hex) }}>
                           <span className="meta capitalize">{c.role}</span>
                           <span className="meta">{c.hex}</span>
                         </li>
@@ -557,9 +557,9 @@ export function Builder() {
             </div>
 
             {staleEdit && (
-              <div role="status" className="mt-4 flex flex-wrap items-center gap-3 border border-ink bg-acid/40 p-3 text-sm">
+              <div role="status" className="mt-4 flex flex-wrap items-center gap-3 border border-on-acid bg-acid p-3 text-sm text-on-acid">
                 <p className="flex-1">Settings changed since you edited the prompt. Your edits are kept until you choose to regenerate.</p>
-                <button type="button" className="btn btn-ghost btn-sm bg-paper" onClick={() => setConfirm("regenerate")}>
+                <button type="button" className="btn btn-sm border-on-acid bg-transparent text-on-acid hover:bg-on-acid hover:text-acid" onClick={() => setConfirm("regenerate")}>
                   <RefreshCw size={14} aria-hidden />
                   Regenerate
                 </button>
@@ -579,7 +579,7 @@ export function Builder() {
                 setEdited(true);
               }}
               spellCheck
-              className="mt-4 min-h-[22rem] w-full resize-y border border-ink bg-[#fbfaf7] p-4 font-mono text-[0.8125rem] leading-relaxed"
+              className="mt-4 min-h-[22rem] w-full resize-y border border-ink bg-field p-4 font-mono text-[0.8125rem] leading-relaxed"
             />
             <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
               <p className="meta text-muted">{edited ? "Edited by you. Settings changes won’t overwrite it." : "Generated from your settings. Type to edit."}</p>

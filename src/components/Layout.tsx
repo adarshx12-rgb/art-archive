@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { site } from "../config/site";
 import { useSaved } from "../state/saved";
+import { ThemeToggle } from "../state/theme";
 
 const nav = [
   { to: "/styles", label: "Styles" },
@@ -29,7 +30,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           >
             {item.label}
             {item.to === "/saved" && count > 0 && (
-              <span className="meta rounded-[2px] bg-acid px-1 text-ink" aria-label={`${count} saved`}>
+              <span className="meta rounded-[2px] bg-acid px-1 text-on-acid" aria-label={`${count} saved`}>
                 {count}
               </span>
             )}
@@ -72,21 +73,26 @@ export function Layout() {
           <Link to="/" className="text-[1.05rem] font-extrabold tracking-[-0.03em] whitespace-nowrap" aria-label={`${site.name} home`}>
             {site.name}
           </Link>
-          <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex items-center gap-6">
-              <NavItems />
-            </ul>
-          </nav>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm md:hidden"
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X size={16} aria-hidden /> : <Menu size={16} aria-hidden />}
-            Menu
-          </button>
+          <div className="flex items-center gap-6">
+            <nav aria-label="Main" className="hidden md:block">
+              <ul className="flex items-center gap-6">
+                <NavItems />
+              </ul>
+            </nav>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm md:hidden"
+                aria-expanded={open}
+                aria-controls="mobile-nav"
+                onClick={() => setOpen((v) => !v)}
+              >
+                {open ? <X size={16} aria-hidden /> : <Menu size={16} aria-hidden />}
+                Menu
+              </button>
+            </div>
+          </div>
         </div>
         <nav id="mobile-nav" aria-label="Main" hidden={!open} className="border-t border-rule md:hidden">
           <ul className="wrap flex flex-col py-2">

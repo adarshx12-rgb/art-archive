@@ -99,7 +99,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
             </p>
           </div>
           <div className="lg:col-span-8">
-            <div className="flex h-16 border border-black/10" role="img" aria-label={`Proportions: ${palette.colours.map((c) => `${c.name} ${c.share}%`).join(", ")}`}>
+            <div className="flex h-16 border border-swatch-edge" role="img" aria-label={`Proportions: ${palette.colours.map((c) => `${c.name} ${c.share}%`).join(", ")}`}>
               {palette.colours.map((c) => (
                 <div key={c.hex} className="flex items-end p-1.5" style={{ width: `${c.share}%`, background: c.hex, color: inkOn(c.hex) }}>
                   <span className="meta">{c.share}%</span>

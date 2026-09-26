@@ -46,7 +46,7 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
       onClick={(e) => {
         if (e.target === ref.current) onCancel();
       }}
-      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-[3px] border border-ink bg-paper p-0 text-ink backdrop:bg-ink/40"
+      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-[3px] border border-ink bg-paper p-0 text-ink backdrop:bg-black/55"
     >
       <div className="p-6">
         <h2 id={titleId} className="text-2xl font-semibold tracking-[-0.02em]">

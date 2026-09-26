@@ -57,7 +57,7 @@ export function PaletteCard({ palette }: { palette: PaletteRecord }) {
       <ul className="mt-3 grid gap-1" style={{ gridTemplateColumns: `repeat(${palette.colours.length}, minmax(0, 1fr))` }}>
         {palette.colours.map((c) => (
           <li key={c.hex}>
-            <span className="block h-7 border border-black/10" style={{ background: c.hex }} aria-hidden />
+            <span className="block h-7 border border-swatch-edge" style={{ background: c.hex }} aria-hidden />
             <span className="meta mt-1 block truncate">{c.hex}</span>
           </li>
         ))}

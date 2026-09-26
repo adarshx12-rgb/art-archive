@@ -36,7 +36,7 @@ export function HexSwatch({
         const ok = await copyText(hex);
         toast(ok ? `Copied ${hex}` : `Couldn’t copy ${hex} automatically. Select it and copy manually.`, ok ? "ok" : "error");
       }}
-      className={`group relative flex w-full flex-col justify-end border border-black/10 p-2 text-left ${tall ? "min-h-40" : "min-h-20"}`}
+      className={`group relative flex w-full flex-col justify-end border border-swatch-edge p-2 text-left ${tall ? "min-h-40" : "min-h-20"}`}
       style={{ background: hex, color: ink }}
       aria-label={`Copy ${hex}${name ? `, ${name}` : ""}`}
     >

@@ -48,7 +48,7 @@ const LOOK_ROWS: [keyof StyleRecord["look"], string][] = [
 function PromptBlock({ text, what, builderHref }: { text: string; what: string; builderHref: string }) {
   return (
     <div>
-      <pre className="max-h-[28rem] overflow-auto border border-rule-strong bg-[#fbfaf7] p-4 font-mono text-[0.8125rem] leading-relaxed whitespace-pre-wrap">
+      <pre className="max-h-[28rem] overflow-auto border border-rule-strong bg-field p-4 font-mono text-[0.8125rem] leading-relaxed whitespace-pre-wrap">
         {text}
       </pre>
       <div className="mt-3 flex flex-wrap gap-2">

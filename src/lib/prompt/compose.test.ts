@@ -1,0 +1,199 @@
+import { describe, expect, it } from "vitest";
+import { composePrompt, resolvePalette } from "./compose";
+import { decodeState, defaultState, encodeState, type BuilderState } from "./state";
+import { getStyle } from "../../content/styles";
+
+const state = (patch: Partial<BuilderState> = {}): BuilderState => ({
+  ...defaultState(),
+  style: "steampunk",
+  subject: "a lighthouse keeper reading by a window",
+  ...patch,
+});
+
+describe("composePrompt", () => {
+  it("is deterministic", () => {
+    expect(composePrompt(state()).prompt).toBe(composePrompt(state()).prompt);
+  });
+
+  it("includes subject, concrete cues and the style palette", () => {
+    const { prompt } = composePrompt(state());
+    expect(prompt).toContain("An image of a lighthouse keeper reading by a window, in the Steampunk style.");
+    expect(prompt).toContain("brass gears");
+    expect(prompt).toMatch(/Colour palette: .*#2A1E17.*about 60%/);
+    expect(prompt).toMatch(/warm gaslight/);
+    expect(prompt).not.toContain("Camera:");
+  });
+
+  it("uses a placeholder and a note when the subject is empty", () => {
+    const r = composePrompt(state({ subject: "   " }));
+    expect(r.prompt).toContain("[describe your subject]");
+    expect(r.notes.join(" ")).toMatch(/Add a subject/);
+  });
+
+  it("scales the number of cues with intensity", () => {
+    const style = getStyle("steampunk")!;
+    const subtle = composePrompt(state({ intensity: "subtle" })).prompt;
+    const strong = composePrompt(state({ intensity: "strong" })).prompt;
+    expect(subtle).toContain("a light touch");
+    expect(subtle).not.toContain(style.prompt.cues[2]!.toLowerCase());
+    expect(strong.toLowerCase()).toContain(style.prompt.cues[4]!.toLowerCase());
+    expect(strong).toContain("fully committed");
+  });
+
+  it("adds video duration, camera and motion only for video", () => {
+    const { prompt } = composePrompt(state({ output: "video", duration: 10, camera: "orbit", movement: "dynamic" }));
+    expect(prompt).toContain("A 10-second video of");
+    expect(prompt).toContain("Camera: a slow orbit around the subject.");
+    expect(prompt).toContain("Subject motion: energetic");
+    expect(prompt).toContain("Motion character: gears turning");
+    expect(prompt).toContain("Duration: about 10 seconds");
+  });
+
+  it("changes when the output switches between image and video", () => {
+    expect(composePrompt(state({ output: "image" })).prompt).not.toBe(
+      composePrompt(state({ output: "video" })).prompt,
+    );
+  });
+
+  it("uses curated palette colours and roles", () => {
+    const { prompt } = composePrompt(state({ paletteMode: "curated", palette: "acid-night" }));
+    expect(prompt).toContain("rave black (#0C0C0C) as the background and dominant field, about 75%");
+    expect(prompt).toContain("acid green (#C4FF2E) as the primary colour, about 25%");
+  });
+
+  it("uses exactly `count` custom colours with described names", () => {
+    const s = state({ paletteMode: "custom", count: 2, custom: ["#0A2E5C", "#F5D0C5", "#000000", "#FFFFFF"] });
+    const pal = resolvePalette(s, getStyle("steampunk")!);
+    expect(pal.colours).toHaveLength(2);
+    const { prompt } = composePrompt(s);
+    expect(prompt).toContain("#0A2E5C");
+    expect(prompt).toContain("#F5D0C5");
+    expect(prompt).not.toContain("#000000");
+  });
+
+  it("drops colour-related 'avoid' items when the user picks their own palette", () => {
+    const def = composePrompt(state({ style: "steampunk" })).prompt;
+    const custom = composePrompt(state({ style: "steampunk", paletteMode: "custom" })).prompt;
+    expect(def).toContain("neon");
+    expect(custom).not.toMatch(/Avoid:.*neon/);
+  });
+
+  it("restyle: preserving composition removes composition and aspect instructions", () => {
+    const { prompt } = composePrompt(state({ task: "restyle", preserve: ["composition", "identity"], aspect: "16:9" }));
+    expect(prompt).toContain("Restyle the provided image in the Steampunk style.");
+    expect(prompt).not.toContain("Composition:");
+    expect(prompt).not.toContain("16:9");
+    expect(prompt).toMatch(/Preserve: the identity.*original composition/);
+  });
+
+  it("restyle: preserving colours replaces the palette section", () => {
+    const r = composePrompt(state({ task: "restyle", preserve: ["colours"], paletteMode: "curated", palette: "acid-night" }));
+    expect(r.prompt).not.toContain("#C4FF2E");
+    expect(r.prompt).toContain("keep the original colours");
+    expect(r.notes.join(" ")).toMatch(/palette is not used/);
+  });
+
+  it("restyle video with preserved timing omits camera and subject motion", () => {
+    const { prompt } = composePrompt(state({ task: "restyle", output: "video", preserve: ["timing"] }));
+    expect(prompt).not.toContain("Camera:");
+    expect(prompt).toContain("keep the source's motion and timing");
+  });
+
+  it("ignores the video-only 'timing' preservation for images", () => {
+    const { prompt } = composePrompt(state({ task: "restyle", output: "image", preserve: ["timing"] }));
+    expect(prompt).not.toContain("motion, timing");
+  });
+
+  it("adds lettering guidance only when text is likely", () => {
+    expect(composePrompt(state({ subject: "a quiet harbour" })).prompt).not.toContain("Lettering:");
+    expect(composePrompt(state({ subject: "a concert poster for a jazz night" })).prompt).toContain("Lettering:");
+  });
+
+  it("never writes \"Style style\"", () => {
+    for (const slug of ["swiss", "victorian-style", "clay-style"]) {
+      for (const task of ["create", "restyle"] as const) {
+        expect(composePrompt(state({ style: slug, task })).prompt).not.toMatch(/style style/i);
+      }
+    }
+    expect(composePrompt(state({ style: "swiss" })).prompt).toContain("in the Swiss / International Typographic Style.");
+  });
+
+  it("does not repeat the style lighting when a cue already states it", () => {
+    const { prompt } = composePrompt(state({ intensity: "strong" }));
+    expect(prompt.match(/gaslight/g)).toHaveLength(1);
+    // A user-chosen lighting is always stated.
+    expect(composePrompt(state({ intensity: "strong", lighting: "overcast" })).prompt).toContain("Lighting: flat, even overcast light.");
+  });
+
+  it("produces a prompt for every style without repeated lines", () => {
+    for (const slug of ["swiss", "vaporwave", "gen-x-soft-club", "cyberminimalism", "naive"]) {
+      const { prompt } = composePrompt(state({ style: slug, intensity: "strong", output: "video" }));
+      const lines = prompt.split("\n");
+      expect(new Set(lines).size).toBe(lines.length);
+    }
+  });
+
+  it("does not interpret markup in the subject", () => {
+    const { prompt } = composePrompt(state({ subject: "<img src=x onerror=alert(1)> cat" }));
+    // Text is kept verbatim (React escapes it on render); control chars are stripped.
+    expect(prompt).toContain("<img src=x onerror=alert(1)> cat");
+  });
+});
+
+describe("builder URL state", () => {
+  it("round-trips a full configuration", () => {
+    const s = state({
+      style: "vaporwave",
+      output: "video",
+      task: "restyle",
+      subject: "a café at night — with “quotes” & symbols",
+      intensity: "strong",
+      paletteMode: "custom",
+      count: 4,
+      custom: ["#112233", "#AABBCC", "#FF00FF", "#00FF00"],
+      composition: "low-angle",
+      aspect: "9:16",
+      lighting: "night",
+      preserve: ["identity", "timing"],
+      duration: 15,
+      camera: "tracking",
+      movement: "dynamic",
+    });
+    const { state: back, issues } = decodeState(new URLSearchParams(encodeState(s).toString()));
+    expect(issues).toEqual([]);
+    expect(back).toEqual(s);
+  });
+
+  it("round-trips a curated palette", () => {
+    const s = state({ paletteMode: "curated", palette: "vapor-mall", count: 4 });
+    const { state: back } = decodeState(new URLSearchParams(encodeState(s).toString()));
+    expect(back.paletteMode).toBe("curated");
+    expect(back.palette).toBe("vapor-mall");
+    expect(back.count).toBe(4);
+  });
+
+  it("a palette link sets curated mode and its size", () => {
+    const { state: s } = decodeState(new URLSearchParams("p=ink-and-signal"));
+    expect(s.paletteMode).toBe("curated");
+    expect(s.count).toBe(2);
+  });
+
+  it("reports and recovers from invalid values", () => {
+    const { state: s, issues } = decodeState(
+      new URLSearchParams("s=nope&o=gif&n=7&c=zzz-123&cm=weird&k=identity-bogus&p=missing"),
+    );
+    expect(s.style).toBe(defaultState().style);
+    expect(s.output).toBe("image");
+    expect(s.count).toBe(3);
+    expect(s.paletteMode).toBe("style");
+    expect(s.composition).toBe("style");
+    expect(s.preserve).toEqual(["identity"]);
+    expect(issues.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("caps and cleans the subject", () => {
+    const { state: s } = decodeState(new URLSearchParams({ q: `  a\u0000b   c ${"x".repeat(1000)}` }));
+    expect(s.subject.startsWith("a b c")).toBe(true);
+    expect(s.subject.length).toBeLessThanOrEqual(400);
+  });
+});

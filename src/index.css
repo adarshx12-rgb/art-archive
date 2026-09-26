@@ -1,0 +1,290 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f4f2ed;
+  --color-paper-2: #ebe8e1;
+  --color-ink: #191919;
+  --color-muted: #5c5850;
+  --color-rule: #d5d1c8;
+  --color-rule-strong: #b9b4a9;
+  --color-acid: #dfff70;
+  --color-alert: #a4271b;
+
+  --font-sans: "Schibsted Grotesk Variable", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --text-display: clamp(2.9rem, 6.6vw, 7.5rem);
+  --text-display--line-height: 0.9;
+  --text-display--letter-spacing: -0.045em;
+  --text-h1: clamp(2.5rem, 5.6vw, 5.25rem);
+  --text-h1--line-height: 0.95;
+  --text-h1--letter-spacing: -0.035em;
+  --text-h2: clamp(1.75rem, 3vw, 2.6rem);
+  --text-h2--line-height: 1.02;
+  --text-h2--letter-spacing: -0.025em;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.35;
+
+  --radius-card: 3px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    /* Keep focused elements and anchors clear of the sticky header. */
+    scroll-padding-top: 5rem;
+    -webkit-tap-highlight-color: rgba(223, 255, 112, 0.4);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  a,
+  button,
+  label,
+  select,
+  summary,
+  input {
+    touch-action: manipulation;
+  }
+  dialog {
+    overscroll-behavior: contain;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "tnum" 0;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: var(--color-acid);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-acid);
+  }
+  button,
+  [role="button"],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  img,
+  svg {
+    display: block;
+  }
+  /* Grid children may shrink below their content width (prevents mobile overflow). */
+  .grid > * {
+    min-width: 0;
+  }
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 90rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .wrap {
+      padding-inline: 1.75rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .wrap {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: var(--text-meta--line-height);
+    letter-spacing: 0.01em;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-ink);
+    border-radius: 2px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.1;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-acid);
+    color: var(--color-ink);
+  }
+  .btn-primary:hover {
+    background: var(--color-ink);
+    color: var(--color-acid);
+  }
+  .btn-ghost {
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn-sm {
+    min-height: 2rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+  .btn:disabled {
+    opacity: 0.45;
+  }
+  .btn:disabled:hover {
+    background: transparent;
+    color: inherit;
+  }
+
+  /* Segmented control: selection shown by fill AND a check mark, not colour alone. */
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--color-ink);
+    border-radius: 2px;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .seg > label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.375rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    border-right: 1px solid var(--color-ink);
+    cursor: pointer;
+    user-select: none;
+  }
+  .seg > label:last-child {
+    border-right: 0;
+  }
+  .seg input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .seg > label:has(input:checked) {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .seg > label:has(input:focus-visible) {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-acid);
+    z-index: 1;
+  }
+  .seg > label:has(input:disabled) {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #fbfaf7;
+    color: var(--color-ink);
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 2px;
+    font-size: 0.9375rem;
+  }
+  .field:hover {
+    border-color: var(--color-ink);
+  }
+  select.field {
+    appearance: none;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23191919' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 2px;
+    font-size: 0.8125rem;
+    background: transparent;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+  .chip:hover {
+    border-color: var(--color-ink);
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .art-zoom {
+    transition: transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .group:hover .art-zoom,
+  .group:focus-within .art-zoom {
+    transform: scale(1.035);
+  }
+
+
+  .enter {
+    animation: enter 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .group:hover .art-zoom,
+  .group:focus-within .art-zoom {
+    transform: none;
+  }
+}

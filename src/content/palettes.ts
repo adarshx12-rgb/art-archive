@@ -1,0 +1,329 @@
+import type { Hex, PaletteColour, PaletteRecord, PaletteRole } from "./types";
+
+const p = (hex: Hex, name: string, role: PaletteRole, share: number): PaletteColour => ({
+  hex,
+  name,
+  role,
+  share,
+});
+
+/**
+ * Curated palettes. Every palette has exactly 2, 3 or 4 colours whose
+ * `share` values total 100. Roles follow a fixed order:
+ *   2 colours: background, primary
+ *   3 colours: background, primary, accent
+ *   4 colours: background, primary, secondary, accent
+ */
+export const palettes: PaletteRecord[] = [
+  // ——— Two colours ———
+  {
+    slug: "ink-and-signal",
+    name: "Ink & Signal",
+    mood: "Urgent, graphic, decisive",
+    description: "One loud red against warm paper. Works for posters, covers and anything that must be read from across a room.",
+    colours: [p("#F1EDE4", "warm paper", "background", 70), p("#E0301E", "signal red", "primary", 30)],
+    suits: ["swiss", "constructivism", "punk", "experimental-type", "neubrutalism"],
+    composition: "split",
+    featured: 1,
+  },
+  {
+    slug: "prussian-sheet",
+    name: "Prussian Sheet",
+    mood: "Technical, calm, precise",
+    description: "Deep reprographic blue carrying fine chalk-white line. A two-colour system for diagrams and precise drawings.",
+    colours: [p("#1C3F78", "Prussian blue", "background", 80), p("#E9F0F8", "chalk white", "primary", 20)],
+    suits: ["blueprint", "tech-spec", "cyberminimalism", "vector-minimalism"],
+    composition: "window",
+  },
+  {
+    slug: "acid-night",
+    name: "Acid Night",
+    mood: "Loud, nocturnal, electric",
+    description: "Near-black with a single acid green. The accent reads as light, so keep it to type, lines and highlights.",
+    colours: [p("#0C0C0C", "rave black", "background", 75), p("#C4FF2E", "acid green", "primary", 25)],
+    suits: ["acid", "glitch", "cyberminimalism", "neubrutalism"],
+    composition: "orbit",
+    featured: 5,
+  },
+  {
+    slug: "brass-and-soot",
+    name: "Brass & Soot",
+    mood: "Heavy, warm, mechanical",
+    description: "Soot-dark ground and polished brass. Suggests metal catching gaslight rather than flat yellow.",
+    colours: [p("#1E1813", "soot", "background", 70), p("#C0914A", "polished brass", "primary", 30)],
+    suits: ["steampunk", "art-deco", "gothic", "luxury-minimal"],
+    composition: "arch",
+  },
+  {
+    slug: "bondi-frost",
+    name: "Bondi Frost",
+    mood: "Clean, translucent, optimistic",
+    description: "Frosted white with a translucent aqua. A millennium consumer-tech pairing.",
+    colours: [p("#EAF2F6", "frosted white", "background", 65), p("#2E9CC8", "translucent aqua", "primary", 35)],
+    suits: ["y2k", "gen-x-soft-club", "web-2-0-gloss", "glassmorphism"],
+    composition: "wave",
+  },
+  {
+    slug: "pink-riso",
+    name: "Pink Riso",
+    mood: "Playful, printed, zine-like",
+    description: "Fluorescent pink ink on cool grey stock, with a single-drum risograph feel.",
+    colours: [p("#E4E3DF", "cool grey stock", "background", 70), p("#FF4F9E", "fluorescent pink", "primary", 30)],
+    suits: ["punk", "type-doodles", "experimental-type", "collage-art"],
+    composition: "stripes",
+  },
+  {
+    slug: "concrete-sky",
+    name: "Concrete Sky",
+    mood: "Stoic, overcast, architectural",
+    description: "Two greys from weathered concrete and an overcast sky. Lets form and texture do the work.",
+    colours: [p("#D8D5CE", "overcast sky", "background", 60), p("#5E5B56", "shadowed concrete", "primary", 40)],
+    suits: ["brutalism", "minimalism", "surveillance", "modernism"],
+    composition: "steps",
+  },
+  {
+    slug: "midnight-cyan",
+    name: "Midnight Cyan",
+    mood: "Cold, electric, nocturnal",
+    description: "A deep night blue carrying a single neon cyan. For screens, signage and rain reflections.",
+    colours: [p("#0A0F1F", "night blue", "background", 75), p("#19E3FF", "neon cyan", "primary", 25)],
+    suits: ["cyberpunk", "cyberminimalism", "synthwave", "futuristic"],
+    composition: "fields",
+  },
+
+  // ——— Three colours ———
+  {
+    slug: "primary-school",
+    name: "Primary School",
+    mood: "Elementary, confident, constructive",
+    description: "Cream, a strong red and a deep blue: the core of a primary-colour system without the yellow noise.",
+    colours: [
+      p("#EFE7D6", "unbleached cream", "background", 60),
+      p("#1E4394", "primary blue", "primary", 28),
+      p("#D72C1B", "primary red", "accent", 12),
+    ],
+    suits: ["bauhaus", "modernism", "swiss", "constructivism"],
+    composition: "orbit",
+    featured: 2,
+  },
+  {
+    slug: "sunset-grid",
+    name: "Sunset Grid",
+    mood: "Nostalgic, nocturnal, cinematic",
+    description: "Violet night, hot magenta and a sunset orange. Works best when the magenta is emitted light.",
+    colours: [
+      p("#1A0D35", "midnight violet", "background", 60),
+      p("#FF2E97", "hot magenta", "primary", 28),
+      p("#FFA41B", "sunset orange", "accent", 12),
+    ],
+    suits: ["synthwave", "italo-disco", "vaporwave", "cyberpunk"],
+    composition: "steps",
+    featured: 3,
+  },
+  {
+    slug: "soft-club",
+    name: "Soft Club",
+    mood: "Hazy, cool, weightless",
+    description: "Icy blue-white, a hazy twilight blue and brushed silver. Low contrast by design.",
+    colours: [
+      p("#DCE6EE", "frosted blue-white", "background", 60),
+      p("#6283A6", "twilight blue", "primary", 25),
+      p("#BFC6CD", "brushed silver", "accent", 15),
+    ],
+    suits: ["gen-x-soft-club", "y2k", "glassmorphism", "cyberminimalism"],
+    composition: "wave",
+    featured: 4,
+  },
+  {
+    slug: "terracotta-afternoon",
+    name: "Terracotta Afternoon",
+    mood: "Warm, relaxed, sunlit",
+    description: "Linen, terracotta and olive. Earthy and lived-in; add texture rather than more colours.",
+    colours: [
+      p("#F0E4D2", "unbleached linen", "background", 55),
+      p("#C1653D", "terracotta", "primary", 30),
+      p("#7B8B57", "olive leaf", "accent", 15),
+    ],
+    suits: ["bohemian", "70s-retro", "mid-century-modern", "naive"],
+    composition: "arch",
+  },
+  {
+    slug: "deco-emerald",
+    name: "Deco Emerald",
+    mood: "Glamorous, formal, nocturnal",
+    description: "Deep emerald-black, gold and ivory. Keep the gold as line and edge for a metallic reading.",
+    colours: [
+      p("#13241F", "emerald black", "background", 60),
+      p("#EDE3CD", "ivory", "primary", 25),
+      p("#C8A35A", "brushed gold", "accent", 15),
+    ],
+    suits: ["art-deco", "luxury-minimal", "gothic", "maximalism"],
+    composition: "arch",
+    featured: 6,
+  },
+  {
+    slug: "halftone-pop",
+    name: "Halftone Pop",
+    mood: "Punchy, comic, bright",
+    description: "Comic yellow, tomato red and outline black: flat fills that print well as dots.",
+    colours: [
+      p("#FFE24A", "comic yellow", "background", 55),
+      p("#E8262C", "tomato red", "primary", 30),
+      p("#121212", "outline black", "accent", 15),
+    ],
+    suits: ["pop-art", "kidcore", "neubrutalism", "future-funk"],
+    composition: "orbit",
+  },
+  {
+    slug: "cathedral",
+    name: "Cathedral",
+    mood: "Solemn, rich, candlelit",
+    description: "Raven black, oxblood and aged gold: the colours of velvet, stone and candlelight.",
+    colours: [
+      p("#110E0F", "raven black", "background", 60),
+      p("#5E1722", "oxblood", "primary", 28),
+      p("#AE8F52", "aged gold", "accent", 12),
+    ],
+    suits: ["gothic", "victorian-style", "steampunk", "maximalism"],
+    composition: "window",
+  },
+  {
+    slug: "chalk-graphite-cyan",
+    name: "Chalk, Graphite, Ice",
+    mood: "Precise, quiet, cold",
+    description: "Cold white, graphite and a thin ice-cyan accent. A disciplined palette for interfaces and hardware.",
+    colours: [
+      p("#E7E9EB", "cold white", "background", 62),
+      p("#2A2E33", "graphite", "primary", 30),
+      p("#5FE9F5", "ice cyan", "accent", 8),
+    ],
+    suits: ["cyberminimalism", "tech-spec", "futuristic", "minimalism"],
+    composition: "fields",
+  },
+
+  // ——— Four colours ———
+  {
+    slug: "vapor-mall",
+    name: "Vapor Mall",
+    mood: "Dreamy, ironic, pastel",
+    description: "Pink, teal, violet and lavender white. Balanced pastels that tolerate low-resolution softness.",
+    colours: [
+      p("#F4F0FF", "lavender white", "background", 40),
+      p("#FF9ECF", "vapor pink", "primary", 30),
+      p("#7EE2E0", "pool teal", "secondary", 20),
+      p("#8A6CFF", "dusk violet", "accent", 10),
+    ],
+    suits: ["vaporwave", "future-funk", "y2k", "glassmorphism"],
+    composition: "steps",
+    featured: 7,
+  },
+  {
+    slug: "memphis-lunch",
+    name: "Memphis Lunch",
+    mood: "Clashing, joyful, loud",
+    description: "Flamingo, aqua, egg yellow and black on white. Use black for squiggles and outlines.",
+    colours: [
+      p("#F7F1E3", "laminate white", "background", 45),
+      p("#FF5E8F", "flamingo pink", "primary", 25),
+      p("#2EC4B6", "aqua", "secondary", 18),
+      p("#FFCB2E", "egg yellow", "accent", 12),
+    ],
+    suits: ["memphis", "post-modernism", "kidcore", "80s-editorial"],
+    composition: "orbit",
+  },
+  {
+    slug: "harvest-stripe",
+    name: "Harvest Stripe",
+    mood: "Warm, nostalgic, sunny",
+    description: "Cream with mustard, burnt orange and rust: a warm stripe set.",
+    colours: [
+      p("#F4E6C8", "sun-bleached cream", "background", 40),
+      p("#E3A12F", "mustard", "primary", 25),
+      p("#DB6B26", "burnt orange", "secondary", 20),
+      p("#9E3A1D", "rust", "accent", 15),
+    ],
+    suits: ["70s-retro", "retro", "mid-century-modern", "psychedelic"],
+    composition: "stripes",
+    featured: 8,
+  },
+  {
+    slug: "jewel-box",
+    name: "Jewel Box",
+    mood: "Opulent, dense, saturated",
+    description: "Bottle green, raspberry, sapphire and saffron. Even proportions suit pattern-on-pattern.",
+    colours: [
+      p("#1F3A2C", "bottle green", "background", 40),
+      p("#B2265C", "raspberry", "primary", 25),
+      p("#2C3B7C", "sapphire", "secondary", 20),
+      p("#E4A92F", "saffron", "accent", 15),
+    ],
+    suits: ["maximalism", "victorian-style", "bohemian", "psychedelic"],
+    composition: "window",
+  },
+  {
+    slug: "aurora-field",
+    name: "Aurora Field",
+    mood: "Luminous, calm, nocturnal",
+    description: "Polar night with glowing green, violet and blue. Colours read best as soft emitted light.",
+    colours: [
+      p("#070C1B", "polar night", "background", 50),
+      p("#3DFFB2", "aurora green", "primary", 22),
+      p("#7B5DFF", "violet veil", "secondary", 18),
+      p("#2F82FF", "deep sky blue", "accent", 10),
+    ],
+    suits: ["aurora", "glassmorphism", "cyberpunk", "psychedelic"],
+    composition: "wave",
+  },
+  {
+    slug: "collage-desk",
+    name: "Collage Desk",
+    mood: "Tactile, found, archival",
+    description: "Kraft paper, faded navy, printer yellow and brick red, pulled from aged printed matter.",
+    colours: [
+      p("#D9C4A1", "kraft paper", "background", 45),
+      p("#24374F", "faded navy", "primary", 25),
+      p("#E6B93B", "printer yellow", "secondary", 18),
+      p("#B9493A", "brick red", "accent", 12),
+    ],
+    suits: ["collage-art", "retro", "grunge", "constructivism"],
+    composition: "split",
+  },
+  {
+    slug: "clay-shop",
+    name: "Clay Shop",
+    mood: "Soft, friendly, handmade",
+    description: "Peach, coral, powder blue and butter: matte pastels that stay friendly under soft light.",
+    colours: [
+      p("#FBE8D6", "peach clay", "background", 40),
+      p("#F28D8D", "coral clay", "primary", 25),
+      p("#8BC7D1", "powder blue", "secondary", 20),
+      p("#F5D65E", "butter", "accent", 15),
+    ],
+    suits: ["clay-style", "kidcore", "bubbleglam", "naive"],
+    composition: "orbit",
+  },
+  {
+    slug: "signal-channels",
+    name: "Signal Channels",
+    mood: "Broken, electric, restless",
+    description: "Black with red and cyan channels and blown white, built for RGB splits and scan lines.",
+    colours: [
+      p("#0B0B0D", "dead-pixel black", "background", 55),
+      p("#F2F2F2", "blown white", "primary", 20),
+      p("#FF0845", "red channel", "secondary", 13),
+      p("#00FFD0", "cyan channel", "accent", 12),
+    ],
+    suits: ["glitch", "cyberpunk", "surveillance", "web-1-0"],
+    composition: "stripes",
+  },
+];
+
+const bySlug = new Map(palettes.map((pl) => [pl.slug, pl]));
+
+export function getPalette(slug: string | null | undefined): PaletteRecord | undefined {
+  return slug ? bySlug.get(slug) : undefined;
+}
+
+export const featuredPalettes = palettes
+  .filter((pl) => pl.featured !== undefined)
+  .sort((a, b) => (a.featured ?? 0) - (b.featured ?? 0));

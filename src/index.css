@@ -43,12 +43,16 @@
   /* Background texture strength; kept low so artwork stays the focus. */
   --texture-opacity: 0.18;
   --texture-image: url("/textures/background.webp");
+  /* Text selection: acid green in light mode. */
+  --color-selection: #dfff70;
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23191919' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --texture-opacity: 0.16;
   --texture-image: url("/textures/background-dark.webp");
+  /* A light tint of the acid green’s inverse hue (#20008F), readable on dark. */
+  --color-selection: #c9bcff;
   --color-paper: #151514;
   --color-paper-2: #1e1e1c;
   --color-ink: #ece9e2;
@@ -106,7 +110,7 @@
     pointer-events: none;
   }
   ::selection {
-    background: var(--color-acid);
+    background: var(--color-selection);
     color: var(--color-on-acid);
   }
   :focus-visible {

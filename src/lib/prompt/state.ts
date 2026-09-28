@@ -2,7 +2,10 @@ import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
 import type { Hex, PaletteSize } from "../../content/types";
 import { normaliseHex } from "../color";
-import { decodeLayers, encodeLayers, type Layer } from "../sketch/layers";
+import { shotCamera } from "../scene/camera";
+import { actorFromLayer } from "../scene/convert";
+import { decodeActors, encodeActors, type Actor } from "../scene/model";
+import { decodeLayers } from "../sketch/layers";
 import {
   angleOptions,
   aspectOptions,
@@ -63,8 +66,8 @@ export interface BuilderState {
   duration: Duration;
   camera: CameraId;
   movement: MovementId;
-  /** Subjects placed on the sketch by hand. */
-  layers: Layer[];
+  /** Subjects placed in the 3D scene. */
+  actors: Actor[];
 }
 
 export const SUBJECT_MAX = 400;
@@ -94,7 +97,7 @@ export function defaultState(): BuilderState {
     duration: 6,
     camera: "push-in",
     movement: "subtle",
-    layers: [],
+    actors: [],
   };
 }
 
@@ -131,6 +134,8 @@ const KEYS = {
   duration: "d",
   camera: "cam",
   movement: "mv",
+  actors: "sc",
+  /** Older links: flat 2D layers, converted to the 3D scene on load. */
   layers: "ly",
 } as const;
 
@@ -160,7 +165,7 @@ export function encodeState(state: BuilderState): URLSearchParams {
   put(KEYS.aspect, state.aspect, d.aspect);
   put(KEYS.lighting, state.lighting, d.lighting);
   if (state.task === "restyle") put(KEYS.preserve, state.preserve.join("-"), d.preserve.join("-"));
-  if (state.layers.length) q.set(KEYS.layers, encodeLayers(state.layers));
+  if (state.actors.length) q.set(KEYS.actors, encodeActors(state.actors));
   if (state.output === "video") {
     put(KEYS.duration, String(state.duration), String(d.duration));
     put(KEYS.camera, state.camera, d.camera);
@@ -271,11 +276,17 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   state.camera = pick<CameraId>(KEYS.camera, ids(cameraOptions), "Camera movement") ?? state.camera;
   state.movement = pick<MovementId>(KEYS.movement, ids(movementOptions), "Subject movement") ?? state.movement;
 
+  const actors = params.get(KEYS.actors);
   const layers = params.get(KEYS.layers);
-  if (layers !== null) {
+  if (actors !== null) {
+    const decoded = decodeActors(actors);
+    state.actors = decoded.actors;
+    if (decoded.bad) issues.push("Some subjects in the scene couldn’t be restored.");
+  } else if (layers !== null) {
     const decoded = decodeLayers(layers);
-    state.layers = decoded.layers;
-    if (decoded.bad) issues.push("Some subjects placed on the sketch couldn’t be restored.");
+    const cam = shotCamera(state);
+    state.actors = decoded.layers.map((l) => actorFromLayer(cam, l));
+    if (decoded.bad) issues.push("Some subjects in the scene couldn’t be restored.");
   }
 
   return { state, issues };

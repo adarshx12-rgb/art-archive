@@ -19,7 +19,9 @@ import {
   type Intensity,
   type PreserveId,
 } from "./options";
-import { describeLayer, withArticle } from "../sketch/layers";
+import { aspectOf, byPriority, projectScene, shotCamera } from "../scene/camera";
+import { describeScene } from "../scene/describe";
+import { withArticle } from "../sketch/layers";
 import { cleanSubject, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
@@ -143,13 +145,14 @@ export interface ComposeResult {
 export function composePrompt(state: BuilderState): ComposeResult {
   const style = getStyle(state.style) ?? styles[0]!;
   const notes: string[] = [];
-  // Without typed text, the subjects placed on the sketch name the subject.
-  const placedNames = joinList(state.layers.map((l) => withArticle(l.label)));
-  const subject = cleanSubject(state.subject) || placedNames || "[describe your subject]";
+  // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
+  const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
+  const placedNames = joinList([...byPriority(projected).map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
+  const subject = placedNames || "[describe your subject]";
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
   // Restyle prompts describe the source only when a subject is given, so they have no placeholder.
-  if (!cleanSubject(state.subject) && !placedNames && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
+  if (!placedNames && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
   const preserve = new Set<PreserveId>(
     isRestyle ? state.preserve.filter((id) => isVideo || id !== "timing") : [],
   );
@@ -168,7 +171,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const medium = isVideo ? "video" : "image";
   if (isRestyle) {
     add("", `Restyle the provided ${medium} in ${styleRef(style.name)}.`);
-    if (cleanSubject(state.subject)) add("Content", `The ${medium} shows ${subject}.`);
+    if (placedNames) add("Content", `The ${medium} shows ${subject}.`);
   } else if (isVideo) {
     const d = findOption(durationOptions, state.duration)!;
     add("", `A ${d.id}-second video of ${subject}, in ${styleRef(style.name)}.`);
@@ -240,9 +243,9 @@ export function composePrompt(state: BuilderState): ComposeResult {
   }
 
   // 5c. Layout of subjects placed on the sketch
-  if (state.layers.length && !keepComposition) {
-    add("Layout", `${state.layers.map(describeLayer).join("; ")}.`);
-  } else if (state.layers.length) {
+  if (projected.length && !keepComposition) {
+    add("Layout", `${describeScene(projected, aspectOf(state.aspect))}.`);
+  } else if (state.actors.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
 
@@ -316,7 +319,7 @@ export function themeState(style: StyleRecord, output: "image" | "video"): Build
     duration: 6,
     camera: "push-in",
     movement: "subtle",
-    layers: [],
+    actors: [],
   };
 }
 

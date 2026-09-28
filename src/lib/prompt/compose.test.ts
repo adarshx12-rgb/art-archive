@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { composePrompt, resolvePalette, themePrompt } from "./compose";
 import { decodeState, defaultState, encodeState, type BuilderState } from "./state";
 import { getStyle } from "../../content/styles";
+import { newActor, type Vec3 } from "../scene/model";
 
 const state = (patch: Partial<BuilderState> = {}): BuilderState => ({
   ...defaultState(),
@@ -108,15 +109,14 @@ describe("composePrompt", () => {
     expect(decodeState(new URLSearchParams("s=swiss&cm=close-up")).state.shot).toBe("close-up");
   });
 
-  it("adds a layout line for subjects placed on the sketch, and names them when there's no subject text", () => {
-    const layers = [
-      { id: "a", glyph: "person" as const, label: "knight", x: 0.3, y: 0.7, scale: 1, rotation: 0, flip: false },
-      { id: "b", glyph: "castle" as const, label: "castle", x: 0.8, y: 0.4, scale: 1, rotation: 0, flip: false },
-    ];
-    const { prompt, notes } = composePrompt(state({ subject: "", layers }));
+  it("describes the 3D scene through the shot camera, nearest subject first", () => {
+    const knight = { ...newActor("person", "knight", []), position: [-0.6, 0, 1] as Vec3, rotation: [0, 0, 0] as Vec3 };
+    const castle = { ...newActor("castle", "castle", [knight]), position: [8, 0, -30] as Vec3 };
+    const { prompt, notes } = composePrompt(state({ subject: "", actors: [castle, knight] }));
     expect(prompt).toContain("An image of a knight and a castle, in the Steampunk style.");
-    expect(prompt).toContain("Layout: a knight, in the lower left; a castle, on the right.");
+    expect(prompt).toMatch(/Layout: a knight, [^;]*facing the camera \(the main subject\); a castle, [^;]*right/);
     expect(notes.join(" ")).not.toMatch(/placeholder/);
+    expect(composePrompt(state({ subject: "a raven", actors: [castle, knight] })).prompt).toContain("An image of a knight, a castle and a raven,");
   });
 
   it("theme prompts apply the style to the user's own work without a placeholder", () => {

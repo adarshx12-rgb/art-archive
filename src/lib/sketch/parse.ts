@@ -44,7 +44,9 @@ export type Glyph =
   | "guitar"
   | "device"
   | "bottle"
-  | "bed";
+  | "bed"
+  /** Anything the word list doesn't know: drawn as a labelled placeholder. */
+  | "thing";
 
 /** Where an item lives in the frame. */
 export type Layer = "sky" | "back" | "front";
@@ -70,7 +72,7 @@ const LAYER: Record<Glyph, Layer> = {
   person: "front", child: "front", robot: "front", animal: "front", "big-animal": "front", fish: "front",
   car: "front", bike: "front", boat: "front", train: "front",
   table: "front", chair: "front", book: "front", cup: "front", candle: "front", lamp: "front", sword: "front",
-  guitar: "front", device: "front", bottle: "front", bed: "front", flower: "front",
+  guitar: "front", device: "front", bottle: "front", bed: "front", flower: "front", thing: "front",
   house: "back", tower: "back", lighthouse: "back", castle: "back", city: "back", tree: "back", palm: "back",
   mountain: "back", hill: "back", window: "back", door: "back",
   sun: "sky", moon: "sky", star: "sky", planet: "sky", cloud: "sky", bird: "sky", plane: "sky",
@@ -78,7 +80,7 @@ const LAYER: Record<Glyph, Layer> = {
 
 /** [glyph, singular words, plural words]. Plurals default to a count of 3. */
 const WORDS: [Glyph, string[], string[]][] = [
-  ["person", ["person", "man", "woman", "figure", "dancer", "singer", "musician", "knight", "soldier", "king", "queen", "prince", "princess", "astronaut", "detective", "keeper", "farmer", "worker", "student", "teacher", "doctor", "nurse", "witch", "wizard", "pirate", "cowboy", "grandmother", "grandfather", "mother", "father", "friend", "traveller", "traveler", "model", "athlete", "skater", "surfer", "rider", "portrait", "lady", "gentleman", "character", "hero", "villain", "warrior", "monk", "nun", "priest", "chef", "artist", "painter", "boxer", "player", "statue", "sculpture", "angel", "ghost", "mannequin", "saint", "goddess", "god"], ["people", "men", "women", "figures", "dancers", "singers", "musicians", "knights", "soldiers", "friends", "travellers", "travelers", "models", "athletes", "skaters", "surfers", "riders", "warriors", "players", "artists", "statues", "sculptures", "angels", "ghosts", "mannequins"]],
+  ["person", ["person", "man", "woman", "figure", "dancer", "singer", "musician", "knight", "soldier", "king", "queen", "prince", "princess", "astronaut", "detective", "keeper", "farmer", "worker", "student", "teacher", "doctor", "nurse", "witch", "wizard", "pirate", "cowboy", "grandmother", "grandfather", "mother", "father", "friend", "traveller", "traveler", "model", "athlete", "skater", "surfer", "rider", "portrait", "lady", "gentleman", "character", "hero", "villain", "warrior", "monk", "nun", "priest", "chef", "artist", "painter", "boxer", "player", "statue", "sculpture", "angel", "ghost", "mannequin", "saint", "goddess", "god", "fisherman", "sailor", "captain", "driver", "pilot", "hunter", "guard", "officer", "policeman", "firefighter", "baker", "gardener", "poet", "writer", "scientist", "engineer", "clown", "bride", "groom", "cyclist", "runner", "climber", "diver", "photographer", "shopkeeper", "vendor", "beggar", "stranger", "girlfriend", "boyfriend", "husband", "wife", "teenager", "elder", "samurai", "ninja", "cowgirl", "fairy", "vampire", "zombie", "alien", "mermaid"], ["people", "men", "women", "figures", "dancers", "singers", "musicians", "knights", "soldiers", "friends", "travellers", "travelers", "models", "athletes", "skaters", "surfers", "riders", "warriors", "players", "artists", "statues", "sculptures", "angels", "ghosts", "mannequins", "fishermen", "sailors", "guards", "officers", "hunters", "runners", "cyclists", "strangers", "teenagers", "elders", "samurai", "ninjas", "fairies", "vampires", "zombies", "aliens", "mermaids"]],
   ["child", ["child", "kid", "girl", "boy", "baby", "toddler"], ["children", "kids", "girls", "boys", "babies"]],
   ["robot", ["robot", "android", "cyborg"], ["robots", "androids", "cyborgs"]],
   ["animal", ["dog", "cat", "fox", "wolf", "rabbit", "puppy", "kitten", "animal", "sheep", "goat", "pig"], ["dogs", "cats", "foxes", "wolves", "rabbits", "puppies", "kittens", "animals", "goats", "pigs"]],
@@ -145,10 +147,23 @@ const POSES: [Pose, RegExp][] = [
   ["walk", /\b(walking|walks|walk|strolling|wandering|marching|hiking)\b/],
 ];
 
+const IRREGULAR: Record<string, string> = {
+  people: "person", men: "man", women: "woman", children: "child", fishermen: "fisherman", wolves: "wolf",
+  babies: "baby", puppies: "puppy", fairies: "fairy", cities: "city", churches: "church", torches: "torch",
+  buses: "bus", foxes: "fox", benches: "bench", glasses: "glass", samurai: "samurai", arches: "arch", boxes: "box",
+};
+
+/** The singular a plural label should read as ("friends" → "friend"). */
+function singular(plural: string, singles: string[]): string {
+  if (IRREGULAR[plural]) return IRREGULAR[plural];
+  for (const cut of [plural.slice(0, -1), plural.slice(0, -2), `${plural.slice(0, -3)}y`]) if (singles.includes(cut)) return cut;
+  return singles[0]!;
+}
+
 const lookup = new Map<string, { glyph: Glyph; singular: string; plural: boolean }>();
 for (const [glyph, singles, plurals] of WORDS) {
   singles.forEach((w) => lookup.set(w, { glyph, singular: w, plural: false }));
-  plurals.forEach((w, i) => lookup.set(w, { glyph, singular: singles[i] ?? singles[0]!, plural: true }));
+  plurals.forEach((w) => lookup.set(w, { glyph, singular: singular(w, singles), plural: true }));
 }
 
 const MAX_COUNT = 6;

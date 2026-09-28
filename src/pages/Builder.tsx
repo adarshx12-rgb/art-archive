@@ -1,7 +1,11 @@
 import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, X } from "lucide-react";
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
+import type { GizmoMode } from "../art/Scene3D";
+
+// three.js only loads when someone opens the 3D view.
+const Scene3D = lazy(() => import("../art/Scene3D"));
 import { CopyButton } from "../components/actions";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PresetBar } from "../components/PresetBar";
@@ -24,8 +28,11 @@ import {
   type Task,
 } from "../lib/prompt/options";
 import { decodeState, defaultState, encodeState, SUBJECT_MAX, type BuilderState } from "../lib/prompt/state";
-import { MAX_LAYERS, newLayer, type Layer } from "../lib/sketch/layers";
-import { parseSubject, type Glyph } from "../lib/sketch/parse";
+import { byPriority, projectScene, shotCamera } from "../lib/scene/camera";
+import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
+import { actorFromText, MAX_ACTORS, newActor, type Actor } from "../lib/scene/model";
+import type { Layer } from "../lib/sketch/layers";
+import type { Glyph } from "../lib/sketch/parse";
 import { useMeta } from "../lib/useMeta";
 import { ThemeToggle } from "../state/theme";
 import { useToast } from "../state/toast";
@@ -171,9 +178,6 @@ const byKind = (Object.keys(kindLabels) as StyleKind[]).map((k) => ({
   items: styles.filter((s) => s.kind === k).sort((a, b) => a.name.localeCompare(b.name)),
 }));
 
-/** How many of a detected subject the text asks for ("two dogs" → 2). */
-const parseCount = (text: string, label: string) => parseSubject(text).items.find((i) => i.label === label)?.count;
-
 /** The builder makes image prompts for now; video links open as images. */
 function imageOnly(r: ReturnType<typeof decodeState>): ReturnType<typeof decodeState> {
   if (r.state.output !== "video") return r;
@@ -310,39 +314,52 @@ export function Builder() {
       return { ...s, custom };
     });
 
-  // Subjects placed on the sketch
+  // Subjects in the 3D scene
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const setLayers = (fn: (layers: Layer[]) => Layer[]) => setState((s) => ({ ...s, layers: fn(s.layers) }));
-  const addLayer = (glyph: Glyph, label: string, from?: string, count = 1) => {
-    const added: Layer[] = [];
-    for (let i = 0; i < count && state.layers.length + added.length < MAX_LAYERS; i++) added.push(newLayer(glyph, label, [...state.layers, ...added], from));
-    if (!added.length) return;
-    setLayers((ls) => [...ls, ...added]);
-    setSelectedId(added[added.length - 1]!.id);
+  const [view, setView] = useState<"2d" | "3d">("2d");
+  const [gizmo, setGizmo] = useState<GizmoMode>("translate");
+  const [snapToShot, setSnapToShot] = useState(0);
+  const setActors = (fn: (actors: Actor[]) => Actor[]) => setState((s) => ({ ...s, actors: fn(s.actors) }));
+  /** New subjects land in a free spot of the current frame. */
+  const framed = (a: Actor) => placeInFrame(shotCamera(state), a, state.actors.length);
+  const addActor = (glyph: Glyph, label: string) => {
+    if (state.actors.length >= MAX_ACTORS) return;
+    const actor = framed(newActor(glyph, label, state.actors));
+    setActors((as) => [...as, actor]);
+    setSelectedId(actor.id);
   };
-  const updateLayer = (id: string, patch: Partial<Layer>) => setLayers((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
-  const deleteLayer = (id: string) => {
-    setLayers((ls) => ls.filter((l) => l.id !== id));
+  /** Put the typed subject in the scene and clear the box for the next one. */
+  const addDraft = () => {
+    const raw = actorFromText(state.subject, state.actors);
+    if (!raw || state.actors.length >= MAX_ACTORS) return;
+    const actor = framed(raw);
+    setState((s) => ({ ...s, subject: "", actors: [...s.actors, actor] }));
+    setSelectedId(actor.id);
+    subjectRef.current?.focus();
+  };
+  const updateActor = (id: string, patch: Partial<Actor>) => setActors((as) => as.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+  const deleteActor = (id: string) => {
+    setActors((as) => as.filter((a) => a.id !== id));
     setSelectedId((s) => (s === id ? null : s));
   };
-  const duplicateLayer = (id: string) => {
-    const src = state.layers.find((l) => l.id === id);
-    if (!src || state.layers.length >= MAX_LAYERS) return;
-    const copy = { ...newLayer(src.glyph, src.label, state.layers), x: src.x + 0.04, y: src.y + 0.04, scale: src.scale, rotation: src.rotation, flip: src.flip };
-    setLayers((ls) => [...ls, copy]);
+  const duplicateActor = (id: string) => {
+    const src = state.actors.find((a) => a.id === id);
+    if (!src || state.actors.length >= MAX_ACTORS) return;
+    const copy: Actor = { ...src, id: newActor(src.glyph, src.label, state.actors).id, position: [src.position[0] + 0.8, src.position[1], src.position[2]] };
+    setActors((as) => [...as, copy]);
     setSelectedId(copy.id);
   };
-  /** Move a subject one step towards the front (1) or back (-1). */
-  const orderLayer = (id: string, dir: 1 | -1) =>
-    setLayers((ls) => {
-      const i = ls.findIndex((l) => l.id === id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= ls.length) return ls;
-      const next = [...ls];
-      [next[i], next[j]] = [next[j]!, next[i]!];
-      return next;
-    });
-  const selectedLayer = state.layers.find((l) => l.id === selectedId) ?? null;
+  const selectedActor = state.actors.find((a) => a.id === selectedId) ?? null;
+
+  // The flat sketch is the scene seen through the shot camera.
+  const camera = shotCamera(state);
+  const projected = projectScene(camera, state.actors);
+  const priority = byPriority(projected);
+  /** An edit on the flat sketch, applied to the 3D subject. */
+  const editFromSketch = (id: string, patch: Partial<Layer>) => {
+    const a = state.actors.find((x) => x.id === id);
+    if (a) updateActor(id, applyLayerEdit(camera, a, patch));
+  };
 
   const togglePreserve = (id: PreserveId) =>
     setState((s) => ({ ...s, preserve: s.preserve.includes(id) ? s.preserve.filter((p) => p !== id) : [...s.preserve, id] }));
@@ -444,20 +461,28 @@ export function Builder() {
               className="field resize-none overflow-hidden"
               style={{ fieldSizing: "content" } as React.CSSProperties}
               maxLength={SUBJECT_MAX}
-              placeholder={isRestyle ? "e.g. a portrait of my grandmother in her garden…" : "e.g. a lighthouse keeper reading by a window at dusk…"}
+              placeholder={isRestyle ? "e.g. my grandmother in her garden…" : "e.g. an old fisherman in a yellow coat"}
               autoComplete="off"
               name="subject"
               value={state.subject}
               onChange={(e) => set("subject", e.target.value)}
+              onKeyDown={(e) => {
+                // Enter adds the subject to the sketch; Shift+Enter keeps a new line.
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  addDraft();
+                }
+              }}
             />
             <SubjectLayers
-              subject={state.subject}
-              layers={state.layers}
+              draft={state.subject}
+              subjects={[...priority.map((p) => ({ id: p.id, label: p.label })), ...state.actors.filter((a) => !projected.some((p) => p.id === a.id)).map((a) => ({ id: a.id, label: a.label }))]}
               selectedId={selectedId}
-              onAdd={(glyph, label, from) => addLayer(glyph, label, from, from ? (parseCount(state.subject, from) ?? 1) : 1)}
+              onAddDraft={addDraft}
+              onPick={addActor}
               onSelect={setSelectedId}
-              onRename={(id, label) => updateLayer(id, { label: label.slice(0, 40) })}
-              onDelete={deleteLayer}
+              onRename={(id, label) => updateActor(id, { label: label.slice(0, 80) })}
+              onDelete={deleteActor}
             />
           </Group>
 
@@ -598,34 +623,85 @@ export function Builder() {
       )}
 
           <div className="mx-auto max-w-5xl">
-            <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
-              <div className="overflow-hidden rounded-xl border border-rule">
-                <Storyboard
-                  state={state}
-                  colours={palette.colours}
-                  keepColours={keepColours}
-                  keepComposition={keepComposition}
-                  selectedId={selectedId}
-                  onSelect={setSelectedId}
-                  onLayerChange={updateLayer}
-                  onLayerDelete={deleteLayer}
-                />
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="seg" role="radiogroup" aria-label="Preview">
+                {(["2d", "3d"] as const).map((v) => (
+                  <label key={v}>
+                    <input type="radio" name="view" checked={view === v} onChange={() => setView(v)} />
+                    {view === v && <span aria-hidden>✓</span>}
+                    {v === "2d" ? "2D sketch" : "3D scene"}
+                  </label>
+                ))}
               </div>
+              {view === "3d" && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="seg" role="radiogroup" aria-label="Gizmo">
+                    {(
+                      [
+                        ["translate", "Move (W)"],
+                        ["rotate", "Rotate (E)"],
+                        ["scale", "Scale (R)"],
+                      ] as const
+                    ).map(([m, label]) => (
+                      <label key={m}>
+                        <input type="radio" name="gizmo" checked={gizmo === m} onChange={() => setGizmo(m)} />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSnapToShot((n) => n + 1)}>
+                    Look through shot camera
+                  </button>
+                </div>
+              )}
             </div>
+            {view === "2d" ? (
+              <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+                <div className="overflow-hidden rounded-xl border border-rule">
+                  <Storyboard
+                    state={state}
+                    layers={projected}
+                    colours={palette.colours}
+                    keepColours={keepColours}
+                    keepComposition={keepComposition}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    onLayerChange={editFromSketch}
+                    onLayerDelete={deleteActor}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="h-[58dvh] min-h-80 overflow-hidden rounded-xl border border-rule">
+                <Suspense fallback={<p className="grid h-full place-items-center text-muted">Loading 3D view…</p>}>
+                  <Scene3D
+                    state={state}
+                    colours={palette.colours}
+                    keepColours={keepColours}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    onActorChange={updateActor}
+                    mode={gizmo}
+                    onMode={setGizmo}
+                    lookThroughShot={snapToShot}
+                  />
+                </Suspense>
+              </div>
+            )}
             <p className="meta mt-2 text-center text-muted">
-              A rough sketch to check layout, camera, colour and light. It isn’t the final image.{" "}
-              {state.layers.length === 0 ? "Use ADD + under Subject to place subjects yourself." : "Click a subject to move, scale or rotate it."}
+              {view === "2d"
+                ? "The scene through the shot camera, as a rough sketch. It isn’t the final image. "
+                : "Drag to orbit, right-drag to pan, scroll to zoom. The outline is the shot camera. "}
+              {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : view === "2d" ? "Click a subject to move, scale or rotate it." : "Click a subject, then use the handles."}
             </p>
 
-            {selectedLayer && (
+            {selectedActor && (
               <div className="mt-4">
                 <TransformPanel
-                  layer={selectedLayer}
-                  frame={{ w: 1000, h: Math.round((1000 * ah) / aw) }}
-                  onChange={(patch) => updateLayer(selectedLayer.id, patch)}
-                  onDelete={() => deleteLayer(selectedLayer.id)}
-                  onDuplicate={() => duplicateLayer(selectedLayer.id)}
-                  onOrder={(dir) => orderLayer(selectedLayer.id, dir)}
+                  actor={selectedActor}
+                  onChange={(patch) => updateActor(selectedActor.id, patch)}
+                  onDelete={() => deleteActor(selectedActor.id)}
+                  onDuplicate={() => duplicateActor(selectedActor.id)}
                 />
               </div>
             )}

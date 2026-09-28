@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeLayers, describeLayer, encodeLayers, newLayer, type Layer } from "./layers";
+import { decodeLayers, describeLayer, encodeLayers, layerFromText, newLayer, type Layer } from "./layers";
 
 const layer = (patch: Partial<Layer> = {}): Layer => ({ ...newLayer("person", "woman", []), ...patch });
 
@@ -16,6 +16,16 @@ describe("layers", () => {
     expect(bad).toBe(true);
     expect(layers).toHaveLength(1);
     expect(layers[0]!.scale).toBe(8);
+  });
+
+  it("makes a layer from typed text, keeping the wording", () => {
+    const dogs = layerFromText("two scruffy dogs", [])!;
+    expect([dogs.glyph, dogs.label, dogs.count]).toEqual(["animal", "two scruffy dogs", 2]);
+    const fisher = layerFromText("an old fisherman in a yellow coat by a boat", [])!;
+    expect(fisher.glyph).toBe("person");
+    expect(layerFromText("a vintage radio", [])!.glyph).toBe("device");
+    expect(layerFromText("a mysterious glowing orb", [])!.glyph).toBe("thing");
+    expect(layerFromText("   ", [])).toBeNull();
   });
 
   it("describes placement in plain words", () => {

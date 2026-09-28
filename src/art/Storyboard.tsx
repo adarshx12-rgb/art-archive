@@ -63,13 +63,19 @@ const pts = (...p: number[]) => p.join(" ");
 
 // ——— Figures ———
 
-function figure(x: number, base: number, h: number, pose: Pose, c: Ctx, main: boolean, robot = false, bust = false): ReactNode {
+function figure(x: number, base: number, h: number, pose: Pose, c: Ctx, main: boolean, robot = false, bust = false, facing: Layer["facing"] = "front"): ReactNode {
   const r = h * 0.075;
   const sw = Math.min(Math.max(h * 0.028, 2.5), 9);
   const stroke = { stroke: c.ink, strokeWidth: sw, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
   const headFill = main ? c.accent : c.bg;
   const face = (cx: number, cy: number) =>
-    r > 28 && !robot ? (
+    facing === "back" ? null : facing === "left" || facing === "right" ? (
+      // Profile: one eye and a nose on the side it faces.
+      <g>
+        <circle cx={cx + (facing === "right" ? 1 : -1) * r * 0.45} cy={cy - r * 0.15} r={Math.max(r * 0.09, 2)} fill={c.ink} />
+        <path d={`M${cx + (facing === "right" ? 1 : -1) * r * 0.95} ${cy - r * 0.05} l${(facing === "right" ? 1 : -1) * r * 0.25} ${r * 0.2} l${(facing === "right" ? -1 : 1) * r * 0.25} ${r * 0.1}`} fill="none" stroke={c.ink} strokeWidth={Math.max(r * 0.08, 2)} />
+      </g>
+    ) : r > 28 && !robot ? (
       <g>
         <circle cx={cx - r * 0.35} cy={cy - r * 0.1} r={r * 0.08} fill={c.ink} />
         <circle cx={cx + r * 0.35} cy={cy - r * 0.1} r={r * 0.08} fill={c.ink} />
@@ -572,13 +578,13 @@ function topGlyph(g: Glyph, x: number, y: number, u: number, c: Ctx, main: boole
  * A placed subject drawn around its own centre (0, 0) at height `hh`, so a
  * transform can move, scale and rotate it like a layer.
  */
-function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose): ReactNode {
+function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, facing?: Layer["facing"]): ReactNode {
   const b = hh / 2;
   switch (g) {
     case "person":
     case "child":
     case "robot":
-      return figure(0, b, hh, pose, c, main, g === "robot");
+      return figure(0, b, hh, pose, c, main, g === "robot", false, facing);
     case "animal":
       return frontGlyph(g, 0, b, hh / 0.9, c, main);
     case "big-animal":
@@ -627,6 +633,17 @@ function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose): Re
       return skyGlyph(g, 0, b * 0.5, hh * 5, c, 0);
     case "plane":
       return skyGlyph(g, 0, 0, hh / 0.9, c, 0);
+    case "thing": {
+      // A storyboard placeholder: a box with a cross, labelled below.
+      const w = hh * 1.2;
+      const sw = Math.min(Math.max(hh * 0.02, 2.5), 6);
+      return (
+        <g stroke={c.ink} strokeWidth={sw} fill={main ? c.accent : c.secondary} fillOpacity={0.55} strokeLinejoin="round">
+          <rect x={-w / 2} y={-hh / 2} width={w} height={hh} rx={hh * 0.08} />
+          <path d={`M${-w / 2} ${-hh / 2} L${w / 2} ${hh / 2} M${w / 2} ${-hh / 2} L${-w / 2} ${hh / 2}`} fill="none" strokeOpacity={0.5} />
+        </g>
+      );
+    }
     default:
       return heldGlyph(g, 0, b, hh, c);
   }
@@ -645,6 +662,8 @@ export interface StoryboardProps {
   onSelect?: (id: string | null) => void;
   onLayerChange?: (id: string, patch: Partial<Layer>) => void;
   onLayerDelete?: (id: string) => void;
+  /** Subjects to draw, already projected from the 3D scene, furthest first. */
+  layers?: Layer[];
 }
 
 type Drag = { mode: "move" | "scale" | "rotate"; id: string; start: { x: number; y: number }; layer: Layer };
@@ -659,13 +678,14 @@ export function Storyboard({
   onSelect,
   onLayerChange,
   onLayerDelete,
+  layers = [],
 }: StoryboardProps) {
   const layersRef = useRef<SVGGElement>(null);
   const drag = useRef<Drag | null>(null);
   const [aw, ah] = state.aspect.split(":").map(Number) as [number, number];
   const H = Math.round((W * ah) / aw);
   const parsed = parseSubject(state.subject);
-  const placedLabels = new Set(state.layers.flatMap((l) => [l.label.toLowerCase(), l.from ?? ""]));
+  const placedLabels = new Set(layers.flatMap((l) => [l.label.toLowerCase(), l.from ?? ""]));
   const scene = { ...parsed, items: parsed.items.filter((i) => !placedLabels.has(i.label)) };
 
   const byRole = (role: string, fallback: number) => (colours.find((c) => c.role === role) ?? colours[fallback % colours.length])!.hex;
@@ -869,14 +889,15 @@ export function Storyboard({
     state.lens !== "auto" && findOption(lensOptions, state.lens)?.label.split(" ")[0],
   ].filter(Boolean).join(" · ");
   const film = [state.genre !== "auto" && findOption(genreOptions, state.genre)?.label, state.era !== "auto" && findOption(eraOptions, state.era)?.label].filter(Boolean).join(" · ");
-  const empty = scene.items.length === 0 && state.layers.length === 0;
+  const empty = scene.items.length === 0 && layers.length === 0;
   const hudInk = c.ink;
   // Text reads at a similar size whether the frame is tall or wide.
   const fs = Math.round(Math.min(Math.max(14 + 10 * (H / W), 18), 32));
   const font = { fontFamily: "var(--font-mono)", fontSize: fs };
   // Nudge labels up until they clear the ones already placed (mono glyphs are ~0.6em wide).
   const placed: { x: number; y: number; text: string }[] = [];
-  [...labels.values()].forEach((l) => {
+  const layerLabels = layers.map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
+  [...layerLabels, ...labels.values()].forEach((l) => {
     l.x = Math.min(Math.max(l.x, 80), W - 80);
     const clash = () => placed.some((p) => Math.abs(p.x - l.x) < 0.3 * fs * (p.text.length + l.text.length) + fs * 0.5 && Math.abs(p.y - l.y) < fs * 1.2);
     for (let tries = 0; clash() && tries < 6; tries++) l.y -= fs * 1.3;
@@ -891,9 +912,12 @@ export function Storyboard({
     const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
     return { x: p.x, y: p.y };
   };
+  /** "two dogs" draws two dogs side by side inside one layer. */
+  const copies = (l: Layer) => Math.max(1, l.count ?? 1);
   const sizeOf = (l: Layer) => {
     const hh = LAYER_HEIGHT[l.glyph] * l.scale * H;
-    return { hh, ww: hh * LAYER_ASPECT[l.glyph] };
+    const one = hh * LAYER_ASPECT[l.glyph];
+    return { hh, one, ww: one * copies(l) + one * 0.15 * (copies(l) - 1) };
   };
   const begin = (e: PointerEvent, mode: Drag["mode"], l: Layer) => {
     if (!editable) return;
@@ -924,7 +948,7 @@ export function Storyboard({
     drag.current = null;
   };
   const onKey = (e: KeyboardEvent) => {
-    const l = state.layers.find((x) => x.id === selectedId);
+    const l = layers.find((x) => x.id === selectedId);
     if (!l || !onLayerChange) return;
     const step = e.shiftKey ? 0.05 : 0.01;
     const moves: Record<string, Partial<Layer>> = {
@@ -941,7 +965,7 @@ export function Storyboard({
       onLayerDelete(l.id);
     } else if (e.key === "Escape") onSelect?.(null);
   };
-  const selected = state.layers.find((l) => l.id === selectedId);
+  const selected = layers.find((l) => l.id === selectedId);
   const handle = 16;
 
   return (
@@ -953,7 +977,7 @@ export function Storyboard({
       onPointerUp={editable ? end : undefined}
       onPointerCancel={editable ? end : undefined}
       onKeyDown={editable ? onKey : undefined}
-      style={editable ? { touchAction: "none" } : undefined} className={`block h-auto w-full ${className}`} role="img" aria-label={`Rough sketch: ${[...state.layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
+      style={editable ? { touchAction: "none" } : undefined} className={`block h-auto w-full ${className}`} role="img" aria-label={`Rough sketch: ${[...layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
       <defs>
         <radialGradient id="sb-glow">
           <stop offset="0" stopColor="#FFD27A" stopOpacity="0.75" />
@@ -1012,8 +1036,10 @@ export function Storyboard({
           {lighting === "hard-flash" && <g transform="translate(18 10)" opacity={0.3}>{frontNodes}</g>}
           {frontNodes}
           <g ref={layersRef}>
-            {state.layers.map((l, i) => {
-              const { hh, ww } = sizeOf(l);
+            {layers.map((l, i) => {
+              const { hh, ww, one } = sizeOf(l);
+              const n = copies(l);
+              const front = i === layers.length - 1;
               return (
                 <g
                   key={l.id}
@@ -1023,7 +1049,11 @@ export function Storyboard({
                   aria-label={l.label}
                 >
                   <rect x={-ww / 2} y={-hh / 2} width={ww} height={hh} fill="transparent" />
-                  {layerGlyph(l.glyph, hh, c, i === 0, "stand")}
+                  {Array.from({ length: n }, (_, k) => (
+                    <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
+                      {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing)}
+                    </g>
+                  ))}
                 </g>
               );
             })}
@@ -1050,19 +1080,11 @@ export function Storyboard({
           </g>
           {/* Labels */}
           <g {...font} textAnchor="middle" fill={c.ink} stroke={pal.bg} strokeWidth={6} paintOrder="stroke" strokeLinejoin="round" pointerEvents="none">
-            {placed.map((l) => (
-              <text key={l.text} x={l.x} y={l.y}>
+            {placed.map((l, i) => (
+              <text key={`${i}${l.text}`} x={l.x} y={l.y}>
                 {l.text}
               </text>
             ))}
-            {state.layers.map((l) => {
-              const { hh } = sizeOf(l);
-              return (
-                <text key={l.id} x={l.x * W} y={l.y * H + hh / 2 + fs * 1.3}>
-                  {l.label}
-                </text>
-              );
-            })}
           </g>
           {selected &&
             (() => {

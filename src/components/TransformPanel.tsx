@@ -1,6 +1,6 @@
-import { ArrowDownToLine, ArrowUpToLine, Copy, FlipHorizontal2, RotateCcw, Trash2 } from "lucide-react";
+import { Copy, FlipHorizontal2, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Layer } from "../lib/sketch/layers";
+import { POSES, type Actor, type Vec3 } from "../lib/scene/model";
 
 /**
  * A number you can drag left/right to change (like After Effects), or
@@ -119,35 +119,30 @@ const parseTurns = (s: string) => {
 };
 
 export interface TransformPanelProps {
-  layer: Layer;
-  /** Frame size in sketch units, so position reads in pixels. */
-  frame: { w: number; h: number };
-  onChange: (patch: Partial<Layer>) => void;
+  actor: Actor;
+  onChange: (patch: Partial<Actor>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
-  onOrder: (dir: 1 | -1) => void;
 }
 
-/** Transform controls for the selected subject, modelled on Premiere Pro / After Effects "Effect Controls". */
-export function TransformPanel({ layer, frame, onChange, onDelete, onDuplicate, onOrder }: TransformPanelProps) {
+const FIGURES = new Set(["person", "child", "robot"]);
+
+/** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls", in 3D. */
+export function TransformPanel({ actor, onChange, onDelete, onDuplicate }: TransformPanelProps) {
+  const [px, py, pz] = actor.position;
+  const [rx, ry, rz] = actor.rotation;
+  const setPos = (i: 0 | 1 | 2, v: number) => onChange({ position: actor.position.map((p, j) => (j === i ? Math.round(v * 100) / 100 : p)) as Vec3 });
+  const setRot = (i: 0 | 1 | 2, v: number) => onChange({ rotation: actor.rotation.map((p, j) => (j === i ? Math.round(v * 10) / 10 : p)) as Vec3 });
   return (
-    <section aria-label={`Transform: ${layer.label}`} className="rounded-xl border border-rule bg-field/70 p-3">
+    <section aria-label={`Transform: ${actor.label}`} className="rounded-xl border border-rule bg-field/70 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rule pb-2">
-        <p className="text-sm">
-          <span className="meta text-muted">Transform</span> <span className="font-semibold">{layer.label}</span>
+        <p className="min-w-0 truncate text-sm">
+          <span className="meta text-muted">Transform</span> <span className="font-semibold">{actor.label}</span>
         </p>
         <div className="flex flex-wrap gap-1">
-          <button type="button" className="btn btn-ghost btn-sm" aria-pressed={layer.flip} onClick={() => onChange({ flip: !layer.flip })} title="Flip horizontally">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({ rotation: [rx, ry + 180, rz] })} title="Turn around (rotate 180° on Y)">
             <FlipHorizontal2 size={14} aria-hidden />
-            Flip
-          </button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onOrder(1)} title="Bring forward">
-            <ArrowUpToLine size={14} aria-hidden />
-            <span className="sr-only">Bring forward</span>
-          </button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onOrder(-1)} title="Send backward">
-            <ArrowDownToLine size={14} aria-hidden />
-            <span className="sr-only">Send backward</span>
+            Turn
           </button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={onDuplicate} title="Duplicate">
             <Copy size={14} aria-hidden />
@@ -160,18 +155,34 @@ export function TransformPanel({ layer, frame, onChange, onDelete, onDuplicate, 
         </div>
       </div>
       <div className="pt-1">
-        <Row name="Position" onReset={() => onChange({ x: 0.5, y: 0.5 })}>
-          <Scrub label="Position X" value={layer.x * frame.w} onChange={(v) => onChange({ x: v / frame.w })} />
-          <Scrub label="Position Y" value={layer.y * frame.h} onChange={(v) => onChange({ y: v / frame.h })} />
+        <Row name="Position" onReset={() => onChange({ position: [0, actor.position[1] > 30 ? actor.position[1] : 0, 0] })}>
+          <Scrub label="Position X" value={px} onChange={(v) => setPos(0, v)} step={0.05} precision={2} suffix="m" />
+          <Scrub label="Position Y" value={py} onChange={(v) => setPos(1, v)} step={0.05} precision={2} suffix="m" />
+          <Scrub label="Position Z" value={pz} onChange={(v) => setPos(2, v)} step={0.05} precision={2} suffix="m" />
+        </Row>
+        <Row name="Rotation" onReset={() => onChange({ rotation: [0, 0, 0] })}>
+          <Scrub label="Rotation X" value={rx} onChange={(v) => setRot(0, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+          <Scrub label="Rotation Y" value={ry} onChange={(v) => setRot(1, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+          <Scrub label="Rotation Z" value={rz} onChange={(v) => setRot(2, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
         </Row>
         <Row name="Scale" onReset={() => onChange({ scale: 1 })}>
-          <Scrub label="Scale" value={layer.scale * 100} onChange={(v) => onChange({ scale: Math.min(Math.max(v / 100, 0.05), 8) })} suffix="%" />
+          <Scrub label="Scale" value={actor.scale * 100} onChange={(v) => onChange({ scale: Math.min(Math.max(v / 100, 0.05), 20) })} suffix="%" />
         </Row>
-        <Row name="Rotation" onReset={() => onChange({ rotation: 0 })}>
-          <Scrub label="Rotation" value={layer.rotation} onChange={(v) => onChange({ rotation: Math.round(v * 10) / 10 })} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
-        </Row>
+        {FIGURES.has(actor.glyph) && (
+          <Row name="Pose" onReset={() => onChange({ pose: "stand" })}>
+            <select aria-label="Pose" value={actor.pose} onChange={(e) => onChange({ pose: e.target.value as Actor["pose"] })} className="rounded border border-rule-strong bg-transparent px-1.5 py-1 text-sm">
+              {POSES.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </Row>
+        )}
       </div>
-      <p className="meta mt-2 text-muted">Drag a value or click to type. On the sketch: drag to move, a corner to scale, the top handle to rotate. Arrow keys nudge; Delete removes.</p>
+      <p className="meta mt-2 text-muted">
+        X is left–right, Y is up, Z is towards the camera (metres). Rotation Y turns the subject; 0° faces the camera. Drag a value or click to type.
+      </p>
     </section>
   );
 }

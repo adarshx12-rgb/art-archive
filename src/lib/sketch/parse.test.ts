@@ -11,6 +11,7 @@ describe("parseSubject", () => {
     expect(summary("a couple under the moon")).toEqual(["2 person", "1 moon"]);
     expect(summary("dancers under palm trees")).toEqual(["3 dancer", "3 palm"]);
     expect(summary("a marble statue")).toEqual(["1 statue"]);
+    expect(summary("friends, fishermen and puppies")).toEqual(["3 friend", "3 fisherman", "3 puppy"]);
   });
 
   it("merges repeated words and caps counts", () => {

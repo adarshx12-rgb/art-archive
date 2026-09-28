@@ -1,4 +1,4 @@
-import type { Glyph } from "./parse";
+import { parseSubject, type Glyph, type Pose, type SketchItem } from "./parse";
 
 /**
  * Subjects the user places on the sketch by hand. Position is the centre of
@@ -18,10 +18,15 @@ export interface Layer {
   flip: boolean;
   /** The word in the subject text this layer stands for, so the auto-sketch doesn't draw it twice. */
   from?: string;
+  /** How many are drawn side by side ("two dogs"). */
+  count: number;
+  /** Set when the layer is a projection of a 3D subject. */
+  pose?: Pose;
+  facing?: "front" | "back" | "left" | "right";
 }
 
 export const MAX_LAYERS = 12;
-export const LABEL_MAX = 40;
+export const LABEL_MAX = 80;
 
 /** Menu of subjects that can be added, grouped for the picker. */
 export const LAYER_TYPES: { group: string; items: { glyph: Glyph; label: string }[] }[] = [
@@ -34,7 +39,7 @@ export const LAYER_TYPES: { group: string; items: { glyph: Glyph; label: string 
   { group: "Objects", items: [{ glyph: "table", label: "table" }, { glyph: "chair", label: "chair" }, { glyph: "bed", label: "bed" }, { glyph: "lamp", label: "lamp" }, { glyph: "book", label: "book" }, { glyph: "cup", label: "cup" }, { glyph: "candle", label: "candle" }, { glyph: "sword", label: "sword" }, { glyph: "guitar", label: "guitar" }, { glyph: "device", label: "phone" }, { glyph: "bottle", label: "bottle" }] },
 ];
 
-const GLYPHS = new Set<Glyph>(LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)));
+const GLYPHS = new Set<Glyph>([...LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)), "thing"]);
 
 /** Natural height of each subject at scale 1, as a fraction of the frame height. */
 export const LAYER_HEIGHT: Record<Glyph, number> = {
@@ -44,6 +49,7 @@ export const LAYER_HEIGHT: Record<Glyph, number> = {
   tree: 0.35, palm: 0.4, flower: 0.1, mountain: 0.35, hill: 0.12,
   sun: 0.16, moon: 0.14, star: 0.06, planet: 0.14, cloud: 0.1,
   table: 0.18, chair: 0.22, bed: 0.16, lamp: 0.26, book: 0.06, cup: 0.06, candle: 0.1, sword: 0.25, guitar: 0.22, device: 0.06, bottle: 0.08,
+  thing: 0.2,
 };
 
 /** Width relative to height, for the selection box. */
@@ -54,13 +60,14 @@ export const LAYER_ASPECT: Record<Glyph, number> = {
   tree: 0.65, palm: 1, flower: 0.4, mountain: 2.3, hill: 5,
   sun: 1, moon: 0.8, star: 1, planet: 1.8, cloud: 2.2,
   table: 1.4, chair: 0.7, bed: 2.6, lamp: 0.45, book: 1.2, cup: 1, candle: 0.45, sword: 0.35, guitar: 0.75, device: 0.9, bottle: 0.45,
+  thing: 1.2,
 };
 
 const SKY = new Set<Glyph>(["sun", "moon", "star", "planet", "cloud", "bird", "plane"]);
 const BACK = new Set<Glyph>(["house", "tower", "lighthouse", "castle", "city", "window", "door", "tree", "palm", "mountain", "hill"]);
 
 /** Where a new subject lands: people and objects in front, places along the horizon, sky up top. */
-export function newLayer(glyph: Glyph, label: string, existing: Layer[], from?: string): Layer {
+export function newLayer(glyph: Glyph, label: string, existing: Layer[], from?: string, count = 1): Layer {
   const n = existing.length;
   const offset = n === 0 ? 0 : (n % 2 ? -1 : 1) * 0.12 * Math.ceil(n / 2);
   const y = SKY.has(glyph) ? 0.2 : BACK.has(glyph) ? 0.42 : 0.66;
@@ -73,18 +80,38 @@ export function newLayer(glyph: Glyph, label: string, existing: Layer[], from?: 
     scale: 1,
     rotation: 0,
     flip: false,
+    count: clamp(Math.round(count), 1, 6),
     ...(from ? { from } : {}),
   };
+}
+
+/** Which recognised thing a typed subject is mainly about: people and animals first, then objects, places, sky. */
+const PICK_ORDER: Glyph[] = ["person", "child", "robot", "big-animal", "animal", "bird", "fish", "car", "bike", "boat", "train", "plane"];
+function mainItem(items: SketchItem[]): SketchItem | undefined {
+  return (
+    PICK_ORDER.map((g) => items.find((i) => i.glyph === g)).find(Boolean) ??
+    items.find((i) => i.layer === "front") ??
+    items.find((i) => i.layer === "back") ??
+    items[0]
+  );
+}
+
+/** A layer for whatever the user typed: "two old dogs" draws two dogs and keeps the full wording. */
+export function layerFromText(text: string, existing: Layer[]): Layer | null {
+  const label = cleanLabel(text);
+  if (!label) return null;
+  const item = mainItem(parseSubject(label).items);
+  return newLayer(item?.glyph ?? "thing", label, existing, undefined, item?.count ?? 1);
 }
 
 export const cleanLabel = (s: string) => s.replace(/[~|\u0000-\u001F]/g, " ").replace(/\s+/g, " ").trim().slice(0, LABEL_MAX);
 
 const round = (n: number, d: number) => Math.round(n * 10 ** d) / 10 ** d;
 
-/** Compact form for share links: glyph~label~x~y~scale~rotation~flip~from, joined with "|". */
+/** Compact form for share links: glyph~label~x~y~scale~rotation~flip~from~count, joined with "|". */
 export function encodeLayers(layers: Layer[]): string {
   return layers
-    .map((l) => [l.glyph, l.label, round(l.x, 3), round(l.y, 3), round(l.scale, 2), round(l.rotation, 1), l.flip ? 1 : 0, l.from ?? ""].join("~"))
+    .map((l) => [l.glyph, l.label, round(l.x, 3), round(l.y, 3), round(l.scale, 2), round(l.rotation, 1), l.flip ? 1 : 0, l.from ?? "", l.count].join("~"))
     .join("|");
 }
 
@@ -92,7 +119,7 @@ export function decodeLayers(raw: string): { layers: Layer[]; bad: boolean } {
   let bad = false;
   const layers: Layer[] = [];
   raw.split("|").filter(Boolean).slice(0, MAX_LAYERS).forEach((part, i) => {
-    const [glyph, label, x, y, scale, rotation, flip, from] = part.split("~");
+    const [glyph, label, x, y, scale, rotation, flip, from, count] = part.split("~");
     const nums = [x, y, scale, rotation].map(Number);
     if (!GLYPHS.has(glyph as Glyph) || nums.some((v) => !Number.isFinite(v))) {
       bad = true;
@@ -107,6 +134,7 @@ export function decodeLayers(raw: string): { layers: Layer[]; bad: boolean } {
       scale: clamp(nums[2]!, 0.05, 8),
       rotation: clamp(nums[3]!, -3600, 3600),
       flip: flip === "1",
+      count: clamp(Math.round(Number(count) || 1), 1, 6),
       ...(from ? { from: cleanLabel(from) } : {}),
     });
   });

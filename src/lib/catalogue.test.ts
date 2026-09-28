@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { palettes } from "../content/palettes";
+import { coverPrompts } from "../content/coverPrompts";
+import { covers, similarCovers } from "../content/covers";
 import { references } from "../content/references";
 import { styles } from "../content/styles";
 import { renderers } from "../art/studies";
@@ -26,6 +28,31 @@ describe("content integrity", () => {
       s.references.forEach((r) => expect(refIds.has(r), `${s.slug} → ${r}`).toBe(true));
       expect(renderers[s.art.renderer ?? s.slug], `renderer for ${s.slug}`).toBeTypeOf("function");
     }
+  });
+
+  it("every cover belongs to a style and exists in public/", () => {
+    const slugs = new Set(styles.map((s) => s.slug));
+    const files = new Set(Object.keys(import.meta.glob("/public/covers/*.webp")).map((f) => f.slice("/public".length)));
+    for (const [slug, cover] of Object.entries(covers)) {
+      expect(slugs.has(slug), `cover slug ${slug}`).toBe(true);
+      for (const c of [cover, ...similarCovers(slug)]) expect(files.has(c.src), c.src).toBe(true);
+    }
+    expect(Object.keys(covers).length).toBeGreaterThanOrEqual(26);
+    // Image 2 is the main cover; the others are similar covers.
+    expect(covers["italo-disco"]?.src).toBe("/covers/italo-disco.webp");
+    expect(similarCovers("italo-disco").map((c) => c.src)).toEqual(["/covers/italo-disco-1.webp"]);
+  });
+
+  it("parses a cover prompt for real styles from docs/cover-prompts.md", () => {
+    const slugs = new Set(styles.map((s) => s.slug));
+    const entries = Object.values(coverPrompts);
+    expect(entries).toHaveLength(32);
+    for (const c of entries) {
+      expect(slugs.has(c.slug), `cover prompt slug ${c.slug}`).toBe(true);
+      expect(c.prompt, c.slug).not.toContain("```");
+      expect(c.artwork && c.format, c.slug).toBeTruthy();
+    }
+    expect(coverPrompts.swiss?.prompt).toMatch(/^An original 1962 Swiss concert poster/);
   });
 
   it("style content is genuinely distinct between entries", () => {

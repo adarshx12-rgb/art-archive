@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { covers } from "../content/covers";
 import type { StyleRecord } from "../content/types";
 import { renderers } from "./studies";
 import { H, W, type Colours } from "./util";
@@ -34,6 +35,7 @@ export function StyleArt({ style, colours, className = "", eager = false, label 
   const k = toFour(colours ?? style.swatches.map((s) => s.hex));
   const render = renderers[style.art.renderer ?? style.slug];
   const recoloured = Boolean(colours);
+  const cover = recoloured ? undefined : covers[style.slug];
 
   useEffect(() => {
     if (visible || !ref.current) return;
@@ -53,6 +55,23 @@ export function StyleArt({ style, colours, className = "", eager = false, label 
     io.observe(ref.current);
     return () => io.disconnect();
   }, [visible]);
+
+  if (cover) {
+    return (
+      <div className={`relative overflow-hidden ${aspect} ${className}`} style={{ background: k[0] }}>
+        <img
+          src={cover.src}
+          width={cover.width}
+          height={cover.height}
+          alt={`Cover image for ${style.name}: ${style.look.composition}.`}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          className={`h-full w-full object-cover ${zoom ? "art-zoom" : ""}`}
+        />
+        {label && <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">Cover image</span>}
+      </div>
+    );
+  }
 
   const alt = `${recoloured ? "Recoloured illustrative" : "Illustrative"} study for ${style.name}: ${style.look.composition}.`;
 

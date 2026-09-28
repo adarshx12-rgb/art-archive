@@ -1,4 +1,5 @@
 import { ArrowRight, Info, Wand2 } from "lucide-react";
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { PaletteArt } from "../art/PaletteArt";
 import { ReferenceFigure } from "../art/ReferenceFigure";
@@ -8,6 +9,8 @@ import { StyleCard } from "../components/cards";
 import { Recovery } from "../components/Recovery";
 import { HexSwatch } from "../components/Swatches";
 import { Tabs } from "../components/Tabs";
+import { coverPrompts } from "../content/coverPrompts";
+import { covers, similarCovers } from "../content/covers";
 import { kindDescriptions, kindLabels } from "../content/facets";
 import { getReference } from "../content/references";
 import { getStyle } from "../content/styles";
@@ -45,7 +48,7 @@ const LOOK_ROWS: [keyof StyleRecord["look"], string][] = [
   ["typography", "Typography"],
 ];
 
-function PromptBlock({ text, what, builderHref }: { text: string; what: string; builderHref: string }) {
+function PromptBlock({ text, what, builderHref, children }: { text: string; what: string; builderHref?: string; children?: React.ReactNode }) {
   return (
     <div>
       <pre className="max-h-[28rem] overflow-auto border border-rule-strong bg-field p-4 font-mono text-[0.8125rem] leading-relaxed whitespace-pre-wrap">
@@ -55,12 +58,65 @@ function PromptBlock({ text, what, builderHref }: { text: string; what: string; 
         <CopyButton text={text} what={what} variant="primary">
           Copy prompt
         </CopyButton>
-        <Link to={builderHref} className="btn btn-ghost">
-          <Wand2 size={16} aria-hidden />
-          Customise in builder
-        </Link>
+        {builderHref && (
+          <Link to={builderHref} className="btn btn-ghost">
+            <Wand2 size={16} aria-hidden />
+            Customise in builder
+          </Link>
+        )}
       </div>
+      {children}
     </div>
+  );
+}
+
+/** The main cover (or SVG study), with any similar covers as thumbnails that swap into the main spot. */
+function HeaderArt({ style }: { style: StyleRecord }) {
+  const main = covers[style.slug];
+  const all = main ? [main, ...similarCovers(style.slug)] : [];
+  const [shown, setShown] = useState(0);
+  const current = all[shown];
+
+  return (
+    <>
+      {shown > 0 && current ? (
+        <div className="relative aspect-[4/5] overflow-hidden" style={{ background: style.swatches[0].hex }}>
+          <img
+            src={current.src}
+            width={current.width}
+            height={current.height}
+            alt={`Similar cover image ${shown + 1} of ${all.length} for ${style.name}.`}
+            className="h-full w-full object-cover"
+          />
+          <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">Similar cover</span>
+        </div>
+      ) : (
+        <StyleArt style={style} eager />
+      )}
+      {all.length > 1 && (
+        <div className="mt-3">
+          <p className="meta text-muted">Similar covers</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {all.map((c, i) => (
+              <li key={c.src}>
+                <button
+                  type="button"
+                  onClick={() => setShown(i)}
+                  aria-pressed={i === shown}
+                  aria-label={i === 0 ? "Show main cover" : `Show similar cover ${i + 1}`}
+                  className={`block size-16 overflow-hidden border-2 ${i === shown ? "border-ink" : "border-transparent opacity-80 hover:opacity-100"}`}
+                >
+                  <img src={c.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="meta mt-2 text-muted">
+        {main ? "Cover image" : "Original study"} made for this library to show the look’s ingredients. Not a historical artwork.
+      </p>
+    </>
   );
 }
 
@@ -72,6 +128,7 @@ function StyleView({ style }: { style: StyleRecord }) {
   const imagePrompt = stylePreviewPrompt(style, "image");
   const videoPrompt = stylePreviewPrompt(style, "video");
   const restyle = restyleTemplate(style);
+  const cover = coverPrompts[style.slug];
   const builder = `/builder?s=${style.slug}`;
 
   return (
@@ -132,8 +189,7 @@ function StyleView({ style }: { style: StyleRecord }) {
           </ul>
         </div>
         <div className="lg:col-span-5">
-          <StyleArt style={style} eager />
-          <p className="meta mt-2 text-muted">Original study made for this library to show the look’s ingredients. Not a historical artwork.</p>
+          <HeaderArt key={style.slug} style={style} />
         </div>
       </header>
 
@@ -213,6 +269,26 @@ function StyleView({ style }: { style: StyleRecord }) {
                   label: "Restyle an existing image",
                   content: <PromptBlock text={restyle} what="restyle prompt" builderHref={`${builder}&t=restyle`} />,
                 },
+                ...(cover
+                  ? [
+                      {
+                        id: "cover",
+                        label: "Cover image",
+                        content: (
+                          <PromptBlock text={cover.prompt} what="cover image prompt">
+                            <p className="meta mt-4 text-muted">
+                              The prompt for this style’s cover: {cover.artwork}, {cover.format}.
+                            </p>
+                            {cover.ifItMisses && (
+                              <p className="mt-2 max-w-2xl text-[0.9375rem] text-muted">
+                                <span className="font-semibold text-ink">If it misses:</span> {cover.ifItMisses}
+                              </p>
+                            )}
+                          </PromptBlock>
+                        ),
+                      },
+                    ]
+                  : []),
               ]}
             />
           </div>

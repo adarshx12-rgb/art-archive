@@ -1,0 +1,189 @@
+{
+  "art-deco": [
+    {
+      "src": "/covers/art-deco.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "art-nouveau": [
+    {
+      "src": "/covers/art-nouveau.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "bauhaus": [
+    {
+      "src": "/covers/bauhaus.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "blueprint": [
+    {
+      "src": "/covers/blueprint.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "brutalism": [
+    {
+      "src": "/covers/brutalism.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "bubbleglam": [
+    {
+      "src": "/covers/bubbleglam.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "chromecore": [
+    {
+      "src": "/covers/chromecore.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "clay-style": [
+    {
+      "src": "/covers/clay-style.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "collage-art": [
+    {
+      "src": "/covers/collage-art.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "cyberminimalism": [
+    {
+      "src": "/covers/cyberminimalism.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "cyberpop": [
+    {
+      "src": "/covers/cyberpop.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "gen-x-soft-club": [
+    {
+      "src": "/covers/gen-x-soft-club.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "glitch": [
+    {
+      "src": "/covers/glitch.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "italo-disco": [
+    {
+      "src": "/covers/italo-disco.webp",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "src": "/covers/italo-disco-1.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "memphis": [
+    {
+      "src": "/covers/memphis.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "mid-century-modern": [
+    {
+      "src": "/covers/mid-century-modern.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "pop-art": [
+    {
+      "src": "/covers/pop-art.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "psychedelic": [
+    {
+      "src": "/covers/psychedelic.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "steampunk": [
+    {
+      "src": "/covers/steampunk.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "surreal-design": [
+    {
+      "src": "/covers/surreal-design.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "swiss": [
+    {
+      "src": "/covers/swiss.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "synthwave": [
+    {
+      "src": "/covers/synthwave.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "vaporwave": [
+    {
+      "src": "/covers/vaporwave.webp",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "web-1-0": [
+    {
+      "src": "/covers/web-1-0.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "web-2-0-gloss": [
+    {
+      "src": "/covers/web-2-0-gloss.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "y2k": [
+    {
+      "src": "/covers/y2k.webp",
+      "width": 1024,
+      "height": 1536
+    }
+  ]
+}

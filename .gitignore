@@ -5,3 +5,6 @@ dist
 
 # Unused full-size texture originals (the site uses the optimised .webp files)
 public/textures/*.png
+
+# Full-size cover originals (the site uses the optimised .webp files)
+public/covers/*.png

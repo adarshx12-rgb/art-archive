@@ -57,7 +57,7 @@ export function Saved() {
             {savedStyles.map((s) => (
               <li key={s.slug}>
                 <StyleCard style={s} />
-                <Link to={`/builder?s=${s.slug}`} className="mt-3 inline-block text-sm underline underline-offset-2">
+                <Link to={`/builder?s=${s.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="mt-3 inline-block text-sm underline underline-offset-2">
                   Use in builder
                 </Link>
               </li>
@@ -91,7 +91,7 @@ export function Saved() {
             {savedPalettes.map((p) => (
               <li key={p.slug}>
                 <PaletteCard palette={p} />
-                <Link to={`/builder?p=${p.slug}`} className="mt-3 inline-block text-sm underline underline-offset-2">
+                <Link to={`/builder?p=${p.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="mt-3 inline-block text-sm underline underline-offset-2">
                   Use in builder
                 </Link>
               </li>

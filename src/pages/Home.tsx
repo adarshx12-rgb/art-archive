@@ -168,12 +168,12 @@ export function Home() {
           {[
             ["Pick a look", "Browse styles by colour, form and density. Each page lists the textures, lighting and composition that define it.", "/styles", "Explore styles"],
             ["Choose your colours", "Use the style’s own colours, a curated palette, or your own two to four hex values.", "/palettes", "Explore palettes"],
-            ["Describe and copy", "Add your subject, choose image or video, then copy, download or share the finished prompt.", "/builder", "Open the builder"],
+            ["Describe and copy", "Add your subject, place it on a rough sketch, then copy, download or share the finished image prompt.", "/builder", "Open the builder"],
           ].map(([title, body, to, cta]) => (
             <li key={title} className="border-t border-ink pt-4">
               <h3 className="text-2xl font-semibold tracking-[-0.02em]">{title}</h3>
               <p className="mt-2 text-muted">{body}</p>
-              <Link to={to!} className="mt-3 inline-flex items-center gap-1.5 text-[0.9375rem] underline underline-offset-4">
+              <Link to={to!} {...(to === "/builder" ? { target: "_blank", rel: "noopener", "aria-describedby": "new-tab-note" } : {})} className="mt-3 inline-flex items-center gap-1.5 text-[0.9375rem] underline underline-offset-4">
                 {cta} <ArrowRight size={15} aria-hidden />
               </Link>
             </li>

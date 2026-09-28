@@ -22,17 +22,82 @@ export type Intensity = (typeof intensities)[number];
 export const paletteModes = ["style", "curated", "custom"] as const;
 export type PaletteMode = (typeof paletteModes)[number];
 
+/** Where the subject sits in the frame. Shot size and angle live in the camera options below. */
 export const compositionOptions = [
   { id: "style", label: "Style default", phrase: "" },
   { id: "centred", label: "Centred subject", phrase: "the subject centred with balanced space around it" },
   { id: "thirds", label: "Rule of thirds", phrase: "the subject placed on a rule-of-thirds line with open space opposite" },
   { id: "symmetrical", label: "Symmetrical", phrase: "a strictly symmetrical, frontal arrangement" },
-  { id: "close-up", label: "Close-up", phrase: "a tight close-up that fills the frame with the subject" },
-  { id: "wide", label: "Wide / environmental", phrase: "a wide shot showing the subject within its surroundings" },
-  { id: "overhead", label: "Overhead / flat lay", phrase: "a top-down overhead view" },
-  { id: "low-angle", label: "Low angle", phrase: "a low camera angle looking up at the subject" },
 ] as const satisfies readonly Option<string>[];
+/** Old share links used these framing values; they now map to a shot size or angle. */
+export const legacyCompositions: Record<string, { shot?: ShotId; angle?: AngleId }> = {
+  "close-up": { shot: "close-up" },
+  wide: { shot: "wide" },
+  overhead: { angle: "overhead" },
+  "low-angle": { angle: "low" },
+};
 export type CompositionId = (typeof compositionOptions)[number]["id"];
+
+export const shotOptions = [
+  { id: "auto", label: "Auto", phrase: "" },
+  { id: "extreme-wide", label: "Extreme wide", phrase: "an extreme wide shot where the subject is small in a vast setting" },
+  { id: "wide", label: "Wide", phrase: "a wide shot showing the subject within its surroundings" },
+  { id: "full", label: "Full shot", phrase: "a full shot showing the subject from head to toe" },
+  { id: "medium", label: "Medium", phrase: "a medium shot framing the subject from the waist up" },
+  { id: "close-up", label: "Close-up", phrase: "a close-up on the face and shoulders" },
+  { id: "extreme-close-up", label: "Extreme close-up", phrase: "an extreme close-up on a single detail" },
+] as const satisfies readonly Option<string>[];
+export type ShotId = (typeof shotOptions)[number]["id"];
+
+export const angleOptions = [
+  { id: "auto", label: "Auto", phrase: "" },
+  { id: "eye", label: "Eye level", phrase: "at eye level" },
+  { id: "low", label: "Low angle", phrase: "from a low angle looking up" },
+  { id: "high", label: "High angle", phrase: "from a high angle looking down" },
+  { id: "overhead", label: "Overhead", phrase: "from directly overhead, looking straight down" },
+  { id: "dutch", label: "Dutch tilt", phrase: "with a tilted, off-kilter Dutch angle" },
+] as const satisfies readonly Option<string>[];
+export type AngleId = (typeof angleOptions)[number]["id"];
+
+export const lensOptions = [
+  { id: "auto", label: "Auto", phrase: "" },
+  { id: "14", label: "14mm ultra-wide", phrase: "a 14mm ultra-wide lens with strong perspective" },
+  { id: "24", label: "24mm wide", phrase: "a 24mm wide-angle lens" },
+  { id: "35", label: "35mm", phrase: "a 35mm lens with natural perspective" },
+  { id: "50", label: "50mm", phrase: "a 50mm lens, close to how the eye sees" },
+  { id: "85", label: "85mm portrait", phrase: "an 85mm portrait lens with a softly blurred background" },
+  { id: "135", label: "135mm telephoto", phrase: "a 135mm telephoto lens that compresses depth" },
+] as const satisfies readonly Option<string>[];
+export type LensId = (typeof lensOptions)[number]["id"];
+
+export const genreOptions = [
+  { id: "auto", label: "Auto", phrase: "" },
+  { id: "drama", label: "Drama", phrase: "the grounded, emotional tone of a drama" },
+  { id: "thriller", label: "Thriller", phrase: "the tense, suspenseful tone of a thriller" },
+  { id: "horror", label: "Horror", phrase: "the unsettling, ominous tone of a horror film" },
+  { id: "sci-fi", label: "Sci-fi", phrase: "the speculative, otherworldly tone of science fiction" },
+  { id: "fantasy", label: "Fantasy", phrase: "the enchanted, mythic tone of fantasy" },
+  { id: "romance", label: "Romance", phrase: "the tender, intimate tone of a romance" },
+  { id: "comedy", label: "Comedy", phrase: "the bright, playful tone of a comedy" },
+  { id: "noir", label: "Noir", phrase: "the moody, shadowy tone of film noir" },
+  { id: "documentary", label: "Documentary", phrase: "the observational, unposed feel of a documentary" },
+  { id: "commercial", label: "Commercial", phrase: "the polished, aspirational feel of an advertisement" },
+  { id: "music-video", label: "Music video", phrase: "the bold, rhythmic energy of a music video" },
+] as const satisfies readonly Option<string>[];
+export type GenreId = (typeof genreOptions)[number]["id"];
+
+export const eraOptions = [
+  { id: "auto", label: "Auto", phrase: "" },
+  { id: "1920s", label: "1920s", phrase: "the 1920s" },
+  { id: "1950s", label: "1950s", phrase: "the 1950s" },
+  { id: "1970s", label: "1970s", phrase: "the 1970s" },
+  { id: "1980s", label: "1980s", phrase: "the 1980s" },
+  { id: "1990s", label: "1990s", phrase: "the 1990s" },
+  { id: "2000s", label: "2000s", phrase: "the 2000s" },
+  { id: "today", label: "Today", phrase: "the present day" },
+  { id: "future", label: "Future", phrase: "the near future" },
+] as const satisfies readonly Option<string>[];
+export type EraId = (typeof eraOptions)[number]["id"];
 
 export const aspectOptions = [
   { id: "1:1", label: "1:1 Square", phrase: "a square 1:1 frame" },

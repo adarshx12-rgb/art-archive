@@ -18,7 +18,8 @@ import { getReference } from "../content/references";
 import { getStyle } from "../content/styles";
 import type { ReferenceImage, StyleRecord } from "../content/types";
 import { palettesForStyle, relatedStyles, suggestStyles } from "../lib/catalogue";
-import { restyleTemplate, stylePreviewPrompt } from "../lib/prompt/compose";
+import { themePrompt, themeState } from "../lib/prompt/compose";
+import { encodeState } from "../lib/prompt/state";
 import { useMeta } from "../lib/useMeta";
 
 export function StyleDetail() {
@@ -61,7 +62,7 @@ function PromptBlock({ text, what, builderHref, children }: { text: string; what
           Copy prompt
         </CopyButton>
         {builderHref && (
-          <Link to={builderHref} className="btn btn-ghost">
+          <Link to={builderHref} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
             <Wand2 size={16} aria-hidden />
             Customise in builder
           </Link>
@@ -142,9 +143,8 @@ function StyleView({ style }: { style: StyleRecord }) {
   const refs = style.references.map(getReference).filter((r): r is ReferenceImage => Boolean(r));
   const matches = palettesForStyle(style);
   const related = relatedStyles(style);
-  const imagePrompt = stylePreviewPrompt(style, "image");
-  const videoPrompt = stylePreviewPrompt(style, "video");
-  const restyle = restyleTemplate(style);
+  const imagePrompt = themePrompt(style, "image");
+  const videoPrompt = themePrompt(style, "video");
   const mainCover = covers[style.slug];
   const cover = (mainCover && promptForImage(mainCover.file)) ?? coverPrompts[style.slug];
   const similar = similarCovers(style.slug).flatMap((c) => {
@@ -191,12 +191,12 @@ function StyleView({ style }: { style: StyleRecord }) {
             </p>
           )}
           <div className="mt-8 flex flex-wrap gap-2">
-            <Link to={builder} className="btn btn-primary">
+            <Link to={builder} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
               <Wand2 size={16} aria-hidden />
               Use in builder
             </Link>
-            <CopyButton text={imagePrompt} what={`${style.name} image prompt`}>
-              Copy image prompt
+            <CopyButton text={imagePrompt} what={`${style.name} theme prompt`}>
+              Copy theme prompt
             </CopyButton>
             <SaveButton kind="styles" slug={style.slug} label={style.name} />
           </div>
@@ -295,20 +295,27 @@ function StyleView({ style }: { style: StyleRecord }) {
               Prompts
             </h2>
             <p className="mt-3 max-w-sm text-muted">
-              Starting points built from the ingredients above. Replace the bracketed subject, or open the builder to set subject, palette,
-              framing and motion.
+              Give the {style.name} look to your own work. Attach your image or video with the prompt: it changes the style, colours and light,
+              and keeps what your work shows. To make something new from scratch, use the{" "}
+              <Link to={builder} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="underline underline-offset-2 hover:text-ink">
+                prompt builder
+              </Link>
+              .
             </p>
           </div>
           <div className="min-w-0 lg:col-span-8">
             <Tabs
               label="Prompt type"
               tabs={[
-                { id: "image", label: "Image", content: <PromptBlock text={imagePrompt} what="image prompt" builderHref={builder} /> },
-                { id: "video", label: "Video", content: <PromptBlock text={videoPrompt} what="video prompt" builderHref={`${builder}&o=video`} /> },
                 {
-                  id: "restyle",
-                  label: "Restyle an existing image",
-                  content: <PromptBlock text={restyle} what="restyle prompt" builderHref={`${builder}&t=restyle`} />,
+                  id: "image",
+                  label: "Your image",
+                  content: <PromptBlock text={imagePrompt} what="image theme prompt" builderHref={`/builder?${encodeState(themeState(style, "image"))}`} />,
+                },
+                {
+                  id: "video",
+                  label: "Your video",
+                  content: <PromptBlock text={videoPrompt} what="video theme prompt" />,
                 },
                 ...(cover
                   ? [
@@ -358,7 +365,7 @@ function StyleView({ style }: { style: StyleRecord }) {
               <p className="meta text-muted">
                 {palette.colours.length} colours · {reason === "curated" ? "curated pairing" : "close colour match"}
               </p>
-              <Link to={`/builder?s=${style.slug}&p=${palette.slug}`} className="mt-2 inline-flex items-center gap-1 text-sm underline underline-offset-2">
+              <Link to={`/builder?s=${style.slug}&p=${palette.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="mt-2 inline-flex items-center gap-1 text-sm underline underline-offset-2">
                 Use with {style.name.split(" / ")[0]}
               </Link>
             </li>

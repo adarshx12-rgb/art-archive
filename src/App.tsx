@@ -44,11 +44,17 @@ const router = createBrowserRouter([
       { path: "styles/:slug", lazy: async () => ({ Component: (await import("./pages/StyleDetail")).StyleDetail }) },
       { path: "palettes", lazy: async () => ({ Component: (await import("./pages/Palettes")).Palettes }) },
       { path: "palettes/:slug", lazy: async () => ({ Component: (await import("./pages/PaletteDetail")).PaletteDetail }) },
-      { path: "builder", lazy: async () => ({ Component: (await import("./pages/Builder")).Builder }) },
       { path: "saved", lazy: async () => ({ Component: (await import("./pages/Saved")).Saved }) },
       { path: "credits", lazy: async () => ({ Component: (await import("./pages/Credits")).Credits }) },
       { path: "*", element: <NotFound /> },
     ],
+  },
+  // The builder is a full-screen studio with its own header, opened in a new tab.
+  {
+    path: "builder",
+    errorElement: <RouteError />,
+    hydrateFallbackElement: <div className="min-h-dvh" />,
+    lazy: async () => ({ Component: (await import("./pages/Builder")).Builder }),
   },
 ]);
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { composePrompt, resolvePalette } from "./compose";
+import { composePrompt, resolvePalette, themePrompt } from "./compose";
 import { decodeState, defaultState, encodeState, type BuilderState } from "./state";
 import { getStyle } from "../../content/styles";
 
@@ -86,6 +86,50 @@ describe("composePrompt", () => {
     expect(prompt).toMatch(/Preserve: the identity.*original composition/);
   });
 
+  it("adds camera and film setup lines only when set", () => {
+    expect(composePrompt(state()).prompt).not.toMatch(/Shot:|Film setup:/);
+    const { prompt } = composePrompt(state({ shot: "medium", angle: "low", lens: "35", genre: "thriller", era: "1970s" }));
+    expect(prompt).toContain("Shot: a medium shot framing the subject from the waist up, from a low angle looking up, on a 35mm lens");
+    expect(prompt).toContain("Film setup: the tense, suspenseful tone of a thriller, set in the 1970s");
+    expect(composePrompt(state({ lens: "85" })).prompt).toContain("Shot: shot on an 85mm portrait lens");
+  });
+
+  it("drops camera settings when the source composition is preserved", () => {
+    const r = composePrompt(state({ task: "restyle", preserve: ["composition"], shot: "close-up" }));
+    expect(r.prompt).not.toContain("Shot:");
+    expect(r.notes.join(" ")).toMatch(/camera settings are not used/);
+  });
+
+  it("maps old framing links to the new camera settings", () => {
+    const { state: s, issues } = decodeState(new URLSearchParams("s=swiss&cm=low-angle"));
+    expect(issues).toEqual([]);
+    expect(s.angle).toBe("low");
+    expect(s.composition).toBe("style");
+    expect(decodeState(new URLSearchParams("s=swiss&cm=close-up")).state.shot).toBe("close-up");
+  });
+
+  it("adds a layout line for subjects placed on the sketch, and names them when there's no subject text", () => {
+    const layers = [
+      { id: "a", glyph: "person" as const, label: "knight", x: 0.3, y: 0.7, scale: 1, rotation: 0, flip: false },
+      { id: "b", glyph: "castle" as const, label: "castle", x: 0.8, y: 0.4, scale: 1, rotation: 0, flip: false },
+    ];
+    const { prompt, notes } = composePrompt(state({ subject: "", layers }));
+    expect(prompt).toContain("An image of a knight and a castle, in the Steampunk style.");
+    expect(prompt).toContain("Layout: a knight, in the lower left; a castle, on the right.");
+    expect(notes.join(" ")).not.toMatch(/placeholder/);
+  });
+
+  it("theme prompts apply the style to the user's own work without a placeholder", () => {
+    const gothic = getStyle("gothic")!;
+    const image = themePrompt(gothic, "image");
+    expect(image).toMatch(/^Restyle the provided image in the Gothic style\./);
+    expect(image).not.toContain("[describe your subject]");
+    expect(image).toMatch(/Preserve: .*original composition/);
+    const video = themePrompt(gothic, "video");
+    expect(video).toContain("Restyle the provided video");
+    expect(video).toContain("keep the source's motion and timing");
+  });
+
   it("restyle: preserving colours replaces the palette section", () => {
     const r = composePrompt(state({ task: "restyle", preserve: ["colours"], paletteMode: "curated", palette: "acid-night" }));
     expect(r.prompt).not.toContain("#C4FF2E");
@@ -151,7 +195,12 @@ describe("builder URL state", () => {
       paletteMode: "custom",
       count: 4,
       custom: ["#112233", "#AABBCC", "#FF00FF", "#00FF00"],
-      composition: "low-angle",
+      composition: "thirds",
+      shot: "medium",
+      angle: "low",
+      lens: "35",
+      genre: "thriller",
+      era: "1970s",
       aspect: "9:16",
       lighting: "night",
       preserve: ["identity", "timing"],

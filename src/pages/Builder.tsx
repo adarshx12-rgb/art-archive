@@ -1,9 +1,12 @@
 import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, X } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
-import { StyleArt } from "../art/StyleArt";
+import { Storyboard } from "../art/Storyboard";
 import { CopyButton } from "../components/actions";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PresetBar } from "../components/PresetBar";
+import { SubjectLayers } from "../components/SubjectLayers";
+import { TransformPanel } from "../components/TransformPanel";
 import { site } from "../config/site";
 import { kindLabels } from "../content/facets";
 import { palettes, getPalette } from "../content/palettes";
@@ -14,20 +17,17 @@ import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
 import {
   aspectOptions,
-  cameraOptions,
-  compositionOptions,
-  durationOptions,
-  lightingOptions,
-  movementOptions,
   preserveOptions,
   type Intensity,
-  type Output,
   type PaletteMode,
   type PreserveId,
   type Task,
 } from "../lib/prompt/options";
 import { decodeState, defaultState, encodeState, SUBJECT_MAX, type BuilderState } from "../lib/prompt/state";
+import { MAX_LAYERS, newLayer, type Layer } from "../lib/sketch/layers";
+import { parseSubject, type Glyph } from "../lib/sketch/parse";
 import { useMeta } from "../lib/useMeta";
+import { ThemeToggle } from "../state/theme";
 import { useToast } from "../state/toast";
 
 // ——— Small form primitives ———
@@ -171,13 +171,26 @@ const byKind = (Object.keys(kindLabels) as StyleKind[]).map((k) => ({
   items: styles.filter((s) => s.kind === k).sort((a, b) => a.name.localeCompare(b.name)),
 }));
 
+/** How many of a detected subject the text asks for ("two dogs" → 2). */
+const parseCount = (text: string, label: string) => parseSubject(text).items.find((i) => i.label === label)?.count;
+
+/** The builder makes image prompts for now; video links open as images. */
+function imageOnly(r: ReturnType<typeof decodeState>): ReturnType<typeof decodeState> {
+  if (r.state.output !== "video") return r;
+  const aspect = r.state.aspect === "16:9" ? "4:5" : r.state.aspect;
+  return {
+    state: { ...r.state, output: "image", aspect, preserve: r.state.preserve.filter((p) => p !== "timing") },
+    issues: [...r.issues, "The builder makes image prompts for now, so this video link opened as an image prompt."],
+  };
+}
+
 export function Builder() {
-  useMeta("Prompt builder", "Compose a detailed image or video prompt from a style, a 2 to 4 colour palette and your subject.");
+  useMeta("Prompt builder", "Compose a detailed image prompt from a style, a 2 to 4 colour palette, your subject and a rough sketch of the layout.");
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [initial] = useState(() => decodeState(new URLSearchParams(location.search)));
+  const [initial] = useState(() => imageOnly(decodeState(new URLSearchParams(location.search))));
   const [state, setState] = useState<BuilderState>(initial.state);
   const [issues, setIssues] = useState<string[]>(initial.issues);
   const lastWritten = useRef<string>(location.search);
@@ -188,6 +201,7 @@ export function Builder() {
   const [basis, setBasis] = useState(""); // generated prompt the edit started from
   const [confirm, setConfirm] = useState<null | "regenerate" | "reset">(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const subjectRef = useRef<HTMLTextAreaElement>(null);
 
   const style = getStyle(state.style) ?? styles[0]!;
   const composed = useMemo(() => composePrompt(state), [state]);
@@ -207,32 +221,39 @@ export function Builder() {
   // Keep the URL in sync so the address bar is always a share link.
   useEffect(() => {
     const search = `?${encodeState(state).toString()}`;
-    if (search !== lastWritten.current) {
+    if (search === lastWritten.current) return;
+    const t = window.setTimeout(() => {
       lastWritten.current = search;
       navigate({ pathname: "/builder", search }, { replace: true, preventScrollReset: true });
-    }
+    }, 250);
+    return () => window.clearTimeout(t);
   }, [state, navigate]);
 
   // Arriving at /builder with new params from elsewhere (e.g. "Use in builder") restores them.
   useEffect(() => {
     if (location.search !== lastWritten.current) {
-      const next = decodeState(new URLSearchParams(location.search));
+      const next = imageOnly(decodeState(new URLSearchParams(location.search)));
       lastWritten.current = location.search;
       setState(next.state);
       setIssues(next.issues);
     }
   }, [location.search]);
 
-  const set = <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => setState((s) => ({ ...s, [key]: value }));
+  // The subject box grows with its text instead of leaving empty lines. Browsers with
+  // CSS field-sizing do this natively; elsewhere, match the height to the content.
+  useLayoutEffect(() => {
+    const el = subjectRef.current;
+    if (!el || CSS.supports?.("field-sizing", "content")) return;
+    const fit = () => {
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight + 2}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [state.subject]);
 
-  /** Swap the untouched default frame (4:5 for image, 16:9 for video); a chosen aspect is kept. */
-  const setOutput = (output: Output) =>
-    setState((s) => {
-      let aspect = s.aspect;
-      if (output === "video" && aspect === "4:5") aspect = "16:9";
-      if (output === "image" && aspect === "16:9") aspect = "4:5";
-      return { ...s, output, aspect };
-    });
+  const set = <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => setState((s) => ({ ...s, [key]: value }));
 
   const setCount = (n: PaletteSize) =>
     setState((s) => {
@@ -273,12 +294,55 @@ export function Builder() {
       return { ...s, paletteMode: "custom", count: cols.length as PaletteSize, custom };
     });
 
+  const setCurated = (slug: string) =>
+    setState((s) => ({ ...s, paletteMode: "curated", palette: slug, count: getPalette(slug)!.colours.length as PaletteSize }));
+
+  /** Switch to editable colours and bring the palette controls into view. */
+  const editCustom = () => {
+    customise();
+    requestAnimationFrame(() => document.getElementById("palette-group")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
   const setCustom = (i: number, hex: Hex) =>
     setState((s) => {
       const custom = [...s.custom] as BuilderState["custom"];
       custom[i] = hex;
       return { ...s, custom };
     });
+
+  // Subjects placed on the sketch
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const setLayers = (fn: (layers: Layer[]) => Layer[]) => setState((s) => ({ ...s, layers: fn(s.layers) }));
+  const addLayer = (glyph: Glyph, label: string, from?: string, count = 1) => {
+    const added: Layer[] = [];
+    for (let i = 0; i < count && state.layers.length + added.length < MAX_LAYERS; i++) added.push(newLayer(glyph, label, [...state.layers, ...added], from));
+    if (!added.length) return;
+    setLayers((ls) => [...ls, ...added]);
+    setSelectedId(added[added.length - 1]!.id);
+  };
+  const updateLayer = (id: string, patch: Partial<Layer>) => setLayers((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  const deleteLayer = (id: string) => {
+    setLayers((ls) => ls.filter((l) => l.id !== id));
+    setSelectedId((s) => (s === id ? null : s));
+  };
+  const duplicateLayer = (id: string) => {
+    const src = state.layers.find((l) => l.id === id);
+    if (!src || state.layers.length >= MAX_LAYERS) return;
+    const copy = { ...newLayer(src.glyph, src.label, state.layers), x: src.x + 0.04, y: src.y + 0.04, scale: src.scale, rotation: src.rotation, flip: src.flip };
+    setLayers((ls) => [...ls, copy]);
+    setSelectedId(copy.id);
+  };
+  /** Move a subject one step towards the front (1) or back (-1). */
+  const orderLayer = (id: string, dir: 1 | -1) =>
+    setLayers((ls) => {
+      const i = ls.findIndex((l) => l.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= ls.length) return ls;
+      const next = [...ls];
+      [next[i], next[j]] = [next[j]!, next[i]!];
+      return next;
+    });
+  const selectedLayer = state.layers.find((l) => l.id === selectedId) ?? null;
 
   const togglePreserve = (id: PreserveId) =>
     setState((s) => ({ ...s, preserve: s.preserve.includes(id) ? s.preserve.filter((p) => p !== id) : [...s.preserve, id] }));
@@ -296,6 +360,7 @@ export function Builder() {
     setEdited(false);
     setText("");
     setIssues([]);
+    setSelectedId(null);
     setConfirm(null);
     toast("Builder reset");
   };
@@ -304,42 +369,43 @@ export function Builder() {
   const isVideo = state.output === "video";
   const keepColours = isRestyle && state.preserve.includes("colours");
   const keepComposition = isRestyle && state.preserve.includes("composition");
-  const keepTiming = isRestyle && isVideo && state.preserve.includes("timing");
   const curatedOfSize = palettes.filter((p) => p.colours.length === state.count);
   const roles = ROLE_ORDER[state.count];
 
   const filename = `${slugify(site.shortName)}-${style.slug}-${state.output}.txt`;
 
+  const [aw, ah] = state.aspect.split(":").map(Number) as [number, number];
+
   return (
-    <div className="wrap pt-10 sm:pt-14">
-      <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="text-h1 font-bold lg:col-span-7">Prompt builder</h1>
-        <p className="max-w-xl self-end text-muted lg:col-span-5">
-          Choose a style, colours and framing. The prompt on the right updates as you go and is yours to edit before you copy it.
-        </p>
+    <div className="flex min-h-dvh flex-col">
+      <a href="#output-title" className="btn btn-primary sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50">
+        Skip to the prompt
+      </a>
+      <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-4 border-b border-rule bg-paper/95 px-4 backdrop-blur-[2px] sm:px-6">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link to="/" className="font-extrabold tracking-[-0.03em] whitespace-nowrap" aria-label={`${site.name} home`}>
+            {site.name}
+          </Link>
+          <span className="text-muted" aria-hidden>
+            /
+          </span>
+          <h1 className="truncate text-[0.9375rem] font-semibold">Prompt builder</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link to="/styles" className="btn btn-ghost btn-sm">
+            Styles
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
-      {issues.length > 0 && (
-        <div role="alert" className="mt-6 flex items-start gap-3 border border-alert p-4 text-[0.9375rem]">
-          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-alert" aria-hidden />
-          <div className="flex-1">
-            <p className="font-semibold">Some settings in this link couldn’t be restored.</p>
-            <ul className="mt-1 list-disc pl-5 text-muted">
-              {issues.map((i) => (
-                <li key={i}>{i}</li>
-              ))}
-            </ul>
-          </div>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setIssues([])}>
-            <X size={14} aria-hidden />
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      <div className="grid gap-10 pt-2 lg:grid-cols-12 lg:gap-12">
+      <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
         {/* ——— Controls ——— */}
-        <form className="lg:col-span-6 xl:col-span-5" onSubmit={(e) => e.preventDefault()} aria-label="Prompt settings">
+        <form
+          className="order-2 border-rule px-4 pb-10 sm:px-6 lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:border-r"
+          onSubmit={(e) => e.preventDefault()}
+          aria-label="Prompt settings"
+        >
           <Group legend="Style">
             <label htmlFor="style-select" className="sr-only">
               Style
@@ -363,14 +429,9 @@ export function Builder() {
             </p>
           </Group>
 
-          <div className="grid gap-x-6 sm:grid-cols-2">
-            <Group legend="Output">
-              <Segmented<Output> name="output" value={state.output} onChange={setOutput} options={[{ id: "image", label: "Image" }, { id: "video", label: "Video" }]} />
-            </Group>
-            <Group legend="Task">
-              <Segmented<Task> name="task" value={state.task} onChange={(v) => set("task", v)} options={[{ id: "create", label: "Create new" }, { id: "restyle", label: "Restyle existing" }]} />
-            </Group>
-          </div>
+          <Group legend="Task">
+            <Segmented<Task> name="task" value={state.task} onChange={(v) => set("task", v)} options={[{ id: "create", label: "Create new image" }, { id: "restyle", label: "Restyle an image" }]} />
+          </Group>
 
           <Group legend={isRestyle ? "What’s in your source? (optional)" : "Subject"} hint={`${state.subject.length}/${SUBJECT_MAX} characters`}>
             <label htmlFor="subject" className="sr-only">
@@ -378,13 +439,25 @@ export function Builder() {
             </label>
             <textarea
               id="subject"
-              className="field min-h-24 resize-y"
+              ref={subjectRef}
+              rows={1}
+              className="field resize-none overflow-hidden"
+              style={{ fieldSizing: "content" } as React.CSSProperties}
               maxLength={SUBJECT_MAX}
               placeholder={isRestyle ? "e.g. a portrait of my grandmother in her garden…" : "e.g. a lighthouse keeper reading by a window at dusk…"}
               autoComplete="off"
               name="subject"
               value={state.subject}
               onChange={(e) => set("subject", e.target.value)}
+            />
+            <SubjectLayers
+              subject={state.subject}
+              layers={state.layers}
+              selectedId={selectedId}
+              onAdd={(glyph, label, from) => addLayer(glyph, label, from, from ? (parseCount(state.subject, from) ?? 1) : 1)}
+              onSelect={setSelectedId}
+              onRename={(id, label) => updateLayer(id, { label: label.slice(0, 40) })}
+              onDelete={deleteLayer}
             />
           </Group>
 
@@ -476,20 +549,12 @@ export function Builder() {
             )}
           </Group>
 
-          <Group legend="Composition">
+          <Group legend="Frame" hint="Camera, lighting, film setup and quick palettes are in the bar under the sketch.">
             {keepComposition ? (
               <p className="border-l-2 border-ink pl-3 text-sm text-muted">Composition and aspect ratio are preserved from your source.</p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Select label="Framing" value={state.composition} options={compositionOptions} onChange={(v) => set("composition", v)} />
-                <Select label="Aspect ratio" value={state.aspect} options={aspectOptions} onChange={(v) => set("aspect", v)} />
-              </div>
+              <Select label="Aspect ratio" value={state.aspect} options={aspectOptions} onChange={(v) => set("aspect", v)} />
             )}
-          </Group>
-
-          <Group legend="Lighting (optional)">
-            <Select label="Lighting" value={state.lighting} options={lightingOptions} onChange={(v) => set("lighting", v)} />
-            {state.lighting === "style" && <p className="meta mt-2 text-muted">Style default: {style.look.lighting}.</p>}
           </Group>
 
           {isRestyle && (
@@ -510,50 +575,82 @@ export function Builder() {
             </Group>
           )}
 
-          {isVideo && (
-            <Group legend="Motion">
-              {keepTiming ? (
-                <p className="border-l-2 border-ink pl-3 text-sm text-muted">Camera and subject motion follow your source clip.</p>
-              ) : (
-                <div className="space-y-4">
-                  {!isRestyle && (
-                    <div>
-                      <span className="meta mb-1.5 block text-muted" id="dur-label">
-                        Duration
-                      </span>
-                      <div role="group" aria-labelledby="dur-label">
-                        <Segmented name="duration" value={state.duration} onChange={(v) => set("duration", v)} options={durationOptions.map((d) => ({ id: d.id, label: d.label }))} />
-                      </div>
-                    </div>
-                  )}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Select label="Camera movement" value={state.camera} options={cameraOptions} onChange={(v) => set("camera", v)} />
-                    <Select label="Subject movement" value={state.movement} options={movementOptions} onChange={(v) => set("movement", v)} />
-                  </div>
-                </div>
-              )}
-            </Group>
-          )}
         </form>
 
-        {/* ——— Output ——— */}
-        <section className="lg:col-span-6 xl:col-span-7" aria-labelledby="output-title">
-          <div className="lg:sticky lg:top-20">
-            <div className="flex items-start gap-4 border-t border-rule pt-5">
-              <div className="w-24 shrink-0 sm:w-28">
-                <StyleArt style={style} colours={keepColours ? undefined : palette.colours.map((c) => c.hex)} eager label={false} />
+        {/* ——— Sketch and prompt ——— */}
+        <main className="order-1 min-w-0 px-4 py-6 sm:px-6 lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto">
+      {issues.length > 0 && (
+        <div role="alert" className="mb-6 flex items-start gap-3 border border-alert p-4 text-[0.9375rem]">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-alert" aria-hidden />
+          <div className="flex-1">
+            <p className="font-semibold">Some settings in this link couldn’t be restored.</p>
+            <ul className="mt-1 list-disc pl-5 text-muted">
+              {issues.map((i) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
+          </div>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setIssues([])}>
+            <X size={14} aria-hidden />
+            Dismiss
+          </button>
+        </div>
+      )}
+
+          <div className="mx-auto max-w-5xl">
+            <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+              <div className="overflow-hidden rounded-xl border border-rule">
+                <Storyboard
+                  state={state}
+                  colours={palette.colours}
+                  keepColours={keepColours}
+                  keepComposition={keepComposition}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onLayerChange={updateLayer}
+                  onLayerDelete={deleteLayer}
+                />
               </div>
-              <div className="min-w-0">
-                <h2 id="output-title" className="text-2xl font-semibold tracking-[-0.02em]">
-                  {state.output === "video" ? "Video" : "Image"} prompt
-                </h2>
-                <p className="meta mt-1 text-muted">
-                  {style.name}, {state.task === "restyle" ? "restyling a source" : "new"}, {state.intensity} intensity.
-                  <br />
-                  Colours: {keepColours ? "original colours" : palette.label}.
-                </p>
-                <p className="meta mt-1 text-muted">Preview: the style study{keepColours ? "" : " recoloured with your palette"}.</p>
+            </div>
+            <p className="meta mt-2 text-center text-muted">
+              A rough sketch to check layout, camera, colour and light. It isn’t the final image.{" "}
+              {state.layers.length === 0 ? "Use ADD + under Subject to place subjects yourself." : "Click a subject to move, scale or rotate it."}
+            </p>
+
+            {selectedLayer && (
+              <div className="mt-4">
+                <TransformPanel
+                  layer={selectedLayer}
+                  frame={{ w: 1000, h: Math.round((1000 * ah) / aw) }}
+                  onChange={(patch) => updateLayer(selectedLayer.id, patch)}
+                  onDelete={() => deleteLayer(selectedLayer.id)}
+                  onDuplicate={() => duplicateLayer(selectedLayer.id)}
+                  onOrder={(dir) => orderLayer(selectedLayer.id, dir)}
+                />
               </div>
+            )}
+
+            <div className="mt-4">
+              <PresetBar
+                state={state}
+                style={style}
+                palette={palette}
+                keepColours={keepColours}
+                keepComposition={keepComposition}
+                set={set}
+                onStylePalette={() => setMode("style")}
+                onCurated={setCurated}
+                onCustom={editCustom}
+              />
+            </div>
+
+            <div className="mt-8 border-t border-rule pt-5">
+              <h2 id="output-title" className="text-2xl font-semibold tracking-[-0.02em]">
+                Image prompt
+              </h2>
+              <p className="meta mt-1 text-muted">
+                {style.name}, {state.task === "restyle" ? "restyling a source" : "new"}, {state.intensity} intensity. Colours: {keepColours ? "original colours" : palette.label}.
+              </p>
             </div>
 
             {staleEdit && (
@@ -653,7 +750,7 @@ export function Builder() {
               <p>This tool writes prompts only. Paste the prompt into the image or video tool of your choice.</p>
             </div>
           </div>
-        </section>
+        </main>
       </div>
 
       <ConfirmDialog

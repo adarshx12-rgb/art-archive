@@ -3,17 +3,23 @@ import { getStyle, styles } from "../../content/styles";
 import type { Hex, PaletteRole, PaletteSize, StyleRecord } from "../../content/types";
 import { describeHex } from "../color";
 import {
+  angleOptions,
   aspectOptions,
   cameraOptions,
   compositionOptions,
   durationOptions,
+  eraOptions,
   findOption,
+  genreOptions,
+  lensOptions,
   lightingOptions,
   movementOptions,
   preserveOptions,
+  shotOptions,
   type Intensity,
   type PreserveId,
 } from "./options";
+import { describeLayer, withArticle } from "../sketch/layers";
 import { cleanSubject, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
@@ -137,11 +143,13 @@ export interface ComposeResult {
 export function composePrompt(state: BuilderState): ComposeResult {
   const style = getStyle(state.style) ?? styles[0]!;
   const notes: string[] = [];
-  const subject = cleanSubject(state.subject) || "[describe your subject]";
-  if (!cleanSubject(state.subject)) notes.push("Add a subject to replace the placeholder in brackets.");
-
+  // Without typed text, the subjects placed on the sketch name the subject.
+  const placedNames = joinList(state.layers.map((l) => withArticle(l.label)));
+  const subject = cleanSubject(state.subject) || placedNames || "[describe your subject]";
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
+  // Restyle prompts describe the source only when a subject is given, so they have no placeholder.
+  if (!cleanSubject(state.subject) && !placedNames && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
   const preserve = new Set<PreserveId>(
     isRestyle ? state.preserve.filter((id) => isVideo || id !== "timing") : [],
   );
@@ -187,6 +195,14 @@ export function composePrompt(state: BuilderState): ComposeResult {
     add("Materials", `${style.look.materials}.`);
   }
 
+  // 3b. Film setup: genre tone and period
+  const genre = findOption(genreOptions, state.genre)?.phrase ?? "";
+  const era = findOption(eraOptions, state.era)?.phrase ?? "";
+  if (genre || era) {
+    const period = era ? `set in ${era}, with period-accurate clothing, objects and ${isVideo ? "film stock" : "photographic look"}` : "";
+    add("Film setup", `${[genre, period].filter(Boolean).join(", ")}.`);
+  }
+
   // 4. Colour
   if (keepColours) {
     add("Colour", "keep the original colours of the source; apply the style through form, texture and light only.");
@@ -208,6 +224,26 @@ export function composePrompt(state: BuilderState): ComposeResult {
     // A style-default composition already expressed by the cues only needs the frame.
     if (state.composition === "style" && isRedundant(comp, seen)) add("Framing", `${aspect}.`);
     else add("Composition", `${comp}, in ${aspect}.`);
+  }
+
+  // 5b. Shot: size, angle and lens ("Camera" is the video movement line)
+  const cameraSet = state.shot !== "auto" || state.angle !== "auto" || state.lens !== "auto";
+  if (cameraSet && keepComposition) {
+    notes.push("Composition is preserved from the source, so the camera settings are not used.");
+  } else if (cameraSet) {
+    const shot = findOption(shotOptions, state.shot)?.phrase ?? "";
+    const angle = findOption(angleOptions, state.angle)?.phrase ?? "";
+    const lens = findOption(lensOptions, state.lens)?.phrase ?? "";
+    // e.g. "a medium shot …, from a low angle looking up, on a 35mm lens …"
+    const parts = [shot, angle, lens && `${shot || angle ? "on" : "shot on"} ${lens}`].filter(Boolean);
+    add("Shot", `${parts.join(", ")}.`);
+  }
+
+  // 5c. Layout of subjects placed on the sketch
+  if (state.layers.length && !keepComposition) {
+    add("Layout", `${state.layers.map(describeLayer).join("; ")}.`);
+  } else if (state.layers.length) {
+    notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
 
   // 6. Lighting
@@ -252,25 +288,16 @@ export function composePrompt(state: BuilderState): ComposeResult {
   return { prompt: lines.join("\n"), notes };
 }
 
-/** The generic "restyle an existing image" template shown on style pages. */
-export function restyleTemplate(style: StyleRecord): string {
-  const cues = joinList(style.prompt.cues.slice(0, 4).map(lowerFirst));
-  return [
-    `Restyle the provided image in ${styleRef(style.name)}.`,
-    `Style: ${cues}.`,
-    `Texture: ${style.look.texture}.`,
-    `Lighting: ${style.look.lighting}.`,
-    `Preserve: the identity and facial features of any people, poses, and the original composition and framing.`,
-    `Avoid: ${joinList(style.prompt.avoid)}.`,
-  ].join("\n");
-}
-
-/** Short default prompts for the style detail page tabs. */
-export function stylePreviewPrompt(style: StyleRecord, output: "image" | "video"): string {
-  const base: BuilderState = {
+/**
+ * Builder settings for the style page's theme prompts: apply the style to
+ * the user's own image or video, keeping what it shows and changing only
+ * its look.
+ */
+export function themeState(style: StyleRecord, output: "image" | "video"): BuilderState {
+  return {
     style: style.slug,
     output,
-    task: "create",
+    task: "restyle",
     subject: "",
     intensity: "balanced",
     paletteMode: "style",
@@ -278,12 +305,22 @@ export function stylePreviewPrompt(style: StyleRecord, output: "image" | "video"
     palette: null,
     custom: style.swatches.map((s) => s.hex) as BuilderState["custom"],
     composition: "style",
+    shot: "auto",
+    angle: "auto",
+    lens: "auto",
+    genre: "auto",
+    era: "auto",
     aspect: output === "video" ? "16:9" : "4:5",
     lighting: "style",
-    preserve: [],
+    preserve: ["identity", "pose", "composition", "proportions", "background", "text", ...(output === "video" ? (["timing"] as const) : [])],
     duration: 6,
     camera: "push-in",
     movement: "subtle",
+    layers: [],
   };
-  return composePrompt(base).prompt;
+}
+
+/** A prompt that applies the style to the user's own image or video. */
+export function themePrompt(style: StyleRecord, output: "image" | "video"): string {
+  return composePrompt(themeState(style, output)).prompt;
 }

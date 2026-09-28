@@ -8,7 +8,7 @@ import { ThemeToggle } from "../state/theme";
 const nav = [
   { to: "/styles", label: "Styles" },
   { to: "/palettes", label: "Palettes" },
-  { to: "/builder", label: "Prompt Builder" },
+  { to: "/builder", label: "Prompt Builder", newTab: true },
   { to: "/saved", label: "Saved" },
 ];
 
@@ -22,6 +22,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           <NavLink
             to={item.to}
             onClick={onNavigate}
+            {...("newTab" in item ? { target: "_blank", rel: "noopener" } : {})}
             className={({ isActive }) =>
               `relative inline-flex min-h-10 items-center gap-1.5 px-1 text-[0.9375rem] decoration-2 underline-offset-[6px] hover:underline ${
                 isActive ? "font-semibold underline decoration-ink" : ""
@@ -29,6 +30,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
             }
           >
             {item.label}
+            {"newTab" in item && <span className="sr-only"> (opens in a new tab)</span>}
             {item.to === "/saved" && count > 0 && (
               <span className="meta rounded-[2px] bg-acid px-1 text-on-acid" aria-label={`${count} saved`}>
                 {count}
@@ -65,6 +67,10 @@ export function Layout() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Referenced by links that open the builder in a new tab. */}
+      <span id="new-tab-note" hidden>
+        Opens in a new tab
+      </span>
       <a href="#main" className="btn btn-primary sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50">
         Skip to content
       </a>
@@ -118,7 +124,7 @@ export function Layout() {
             <ul className="space-y-1.5 text-[0.9375rem]">
               <li><Link className="hover:underline" to="/styles">All styles</Link></li>
               <li><Link className="hover:underline" to="/palettes">All palettes</Link></li>
-              <li><Link className="hover:underline" to="/builder">Prompt builder</Link></li>
+              <li><Link className="hover:underline" to="/builder" target="_blank" rel="noopener">Prompt builder<span className="sr-only"> (opens in a new tab)</span></Link></li>
               <li><Link className="hover:underline" to="/saved">Saved items</Link></li>
             </ul>
           </nav>

@@ -71,19 +71,39 @@ await step("favourites", async () => {
 let prompt = "";
 await step("builder", async () => {
   await page.goto(BASE + "/styles/steampunk", { waitUntil: "networkidle" });
-  await page.getByRole("link", { name: "Use in builder" }).first().click();
-  await page.waitForURL(/\/builder/);
+  const [tab] = await Promise.all([ctx.waitForEvent("page"), page.getByRole("link", { name: "Use in builder" }).first().click()]);
+  await tab.waitForLoadState("networkidle");
+  check("builder opens in a new tab", tab.url().includes("/builder?s=steampunk"));
+  const builderUrl = tab.url();
+  await tab.close();
+  await page.goto(builderUrl, { waitUntil: "networkidle" });
   await page.waitForSelector("#style-select");
   check("style carries into builder", (await page.locator("#style-select").inputValue()) === "steampunk");
   await page.locator("#subject").fill("a lighthouse keeper reading");
   prompt = await page.locator("#prompt").inputValue();
   check("image prompt uses subject", prompt.startsWith("An image of a lighthouse keeper reading, in the Steampunk style.") && !prompt.includes("Camera:"));
-  await page.getByText("Video", { exact: true }).click();
+  check("sketch draws the subject", /lighthouse, keeper/.test((await page.locator("main svg[role=img]").getAttribute("aria-label")) ?? ""));
+  await page.getByRole("button", { name: /Camera/ }).click();
+  await page.getByRole("button", { name: "Low angle" }).click();
+  await page.getByRole("button", { name: "35mm", exact: true }).click();
   prompt = await page.locator("#prompt").inputValue();
-  check("video prompt adds motion", prompt.includes("-second video of") && prompt.includes("Camera:") && prompt.includes("Motion character:"));
-  await page.getByLabel("Camera movement").selectOption("orbit");
+  check("camera preset adds a shot line", prompt.includes("Shot: from a low angle looking up, on a 35mm lens"));
+  await page.getByRole("button", { name: /Film setup/ }).click();
+  await page.getByRole("button", { name: "Noir" }).click();
   prompt = await page.locator("#prompt").inputValue();
-  check("camera selection reflected", prompt.includes("a slow orbit around the subject"));
+  check("film preset adds a film line", prompt.includes("Film setup: the moody, shadowy tone of film noir"));
+
+  check("builder is image-only", (await page.getByText("Video", { exact: true }).count()) === 0);
+  await page.getByRole("button", { name: "Add keeper to the sketch" }).click();
+  check("adding a detected subject selects it", (await page.locator("section[aria-label='Transform: keeper']").count()) === 1);
+  await page.getByLabel("Rotation", { exact: true }).click();
+  await page.getByLabel("Rotation", { exact: true }).fill("0x+90");
+  await page.getByLabel("Rotation", { exact: true }).press("Enter");
+  await page.waitForTimeout(400);
+  prompt = await page.locator("#prompt").inputValue();
+  check("placed subject adds a layout line", /Layout: a keeper, in the centre, on its side\./.test(prompt), prompt.split(String.fromCharCode(10)).find((l) => l.startsWith("Layout")));
+  check("layers are in the share link", (new URL(page.url()).searchParams.get("ly") ?? "").startsWith("person~keeper~"));
+  await page.getByRole("button", { name: "Remove keeper" }).click();
   await page.getByText("Curated", { exact: true }).click();
   await page.locator("label").filter({ hasText: /^4$/ }).click();
   prompt = await page.locator("#prompt").inputValue();
@@ -120,9 +140,10 @@ await step("copy/download/share", async () => {
   const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download .txt" }).click()]);
   const txt = fs.readFileSync(await dl.path(), "utf8");
   check("download .txt content", txt.trim() === prompt.trim(), dl.suggestedFilename());
-  await page.getByText("Restyle existing", { exact: true }).click();
+  await page.getByText("Restyle an image", { exact: true }).click();
   await page.locator("label").filter({ hasText: /^Background$/ }).click();
-  await page.getByLabel("Lighting", { exact: true }).selectOption("golden-hour");
+  await page.getByRole("button", { name: /Lighting/ }).click();
+  await page.getByRole("button", { name: "Golden hour" }).click();
   const before = await page.locator("#prompt").inputValue();
   await page.getByRole("button", { name: "Copy share link" }).click();
   const link = await clip();
@@ -132,7 +153,7 @@ await step("copy/download/share", async () => {
   await p2.close();
   await page.getByRole("button", { name: "Reset" }).click();
   await page.getByRole("button", { name: "Reset builder" }).click();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(600); // the address bar updates after a short pause
   check("reset returns defaults", (await page.locator("#subject").inputValue()) === "" && new URL(page.url()).searchParams.get("t") === null);
 });
 
@@ -146,9 +167,9 @@ await step("recovery", async () => {
   await page.goto(BASE + "/totally/unknown", { waitUntil: "networkidle" });
   check("unknown route -> 404 screen", await page.getByRole("heading", { name: "This page doesn\u2019t exist." }).isVisible());
   await page.goto(BASE + "/styles/y2k", { waitUntil: "networkidle" });
-  await page.getByRole("tab", { name: "Image", exact: true }).focus();
+  await page.getByRole("tab", { name: "Your image", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  check("tabs arrow-key navigation", (await page.getByRole("tab", { name: "Video" }).getAttribute("aria-selected")) === "true");
+  check("tabs arrow-key navigation", (await page.getByRole("tab", { name: "Your video" }).getAttribute("aria-selected")) === "true");
   // mobile menu
   const m = await (await browser.newContext({ viewport: { width: 390, height: 800 } })).newPage();
   await m.goto(BASE + "/", { waitUntil: "networkidle" });
@@ -158,16 +179,22 @@ await step("recovery", async () => {
   check("mobile menu navigates and closes", !(await m.locator("#mobile-nav").isVisible()));
 });
 
+await step("video links open as image prompts", async () => {
+  await page.goto(BASE + "/builder?s=swiss&o=video", { waitUntil: "networkidle" });
+  check("video link notice", await page.getByText("this video link opened as an image prompt").isVisible());
+  check("video link prompt is an image", (await page.locator("#prompt").inputValue()).startsWith("An image of"));
+});
+
 await step("leave warning", async () => {
   await page.goto(BASE + "/builder?s=memphis", { waitUntil: "networkidle" });
   await page.locator("#prompt").fill("edited text");
-  await page.locator("header nav").getByRole("link", { name: "Styles" }).click();
+  await page.locator("header").getByRole("link", { name: "Styles" }).click();
   const dlg = page.getByRole("dialog", { name: "Leave with unsaved edits?" });
   await dlg.waitFor({ timeout: 3000 });
   check("in-app navigation with edits asks first", await dlg.isVisible());
   await page.getByRole("button", { name: "Cancel" }).click();
   check("cancel stays on builder with edits", page.url().includes("/builder") && (await page.locator("#prompt").inputValue()) === "edited text");
-  await page.locator("header nav").getByRole("link", { name: "Styles" }).click();
+  await page.locator("header").getByRole("link", { name: "Styles" }).click();
   await page.getByRole("button", { name: "Leave and discard" }).click();
   await page.waitForURL(/\/styles$/);
   check("confirm leaves", true);

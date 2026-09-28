@@ -2,28 +2,40 @@ import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
 import type { Hex, PaletteSize } from "../../content/types";
 import { normaliseHex } from "../color";
+import { decodeLayers, encodeLayers, type Layer } from "../sketch/layers";
 import {
+  angleOptions,
   aspectOptions,
   cameraOptions,
   compositionOptions,
   durationOptions,
+  eraOptions,
+  genreOptions,
   intensities,
+  legacyCompositions,
+  lensOptions,
   lightingOptions,
   movementOptions,
   outputs,
   paletteModes,
   preserveOptions,
+  shotOptions,
   tasks,
+  type AngleId,
   type AspectId,
   type CameraId,
   type CompositionId,
   type Duration,
+  type EraId,
+  type GenreId,
   type Intensity,
+  type LensId,
   type LightingId,
   type MovementId,
   type Output,
   type PaletteMode,
   type PreserveId,
+  type ShotId,
   type Task,
 } from "./options";
 
@@ -40,12 +52,19 @@ export interface BuilderState {
   /** Always four slots; only the first `count` are used. */
   custom: [Hex, Hex, Hex, Hex];
   composition: CompositionId;
+  shot: ShotId;
+  angle: AngleId;
+  lens: LensId;
+  genre: GenreId;
+  era: EraId;
   aspect: AspectId;
   lighting: LightingId;
   preserve: PreserveId[];
   duration: Duration;
   camera: CameraId;
   movement: MovementId;
+  /** Subjects placed on the sketch by hand. */
+  layers: Layer[];
 }
 
 export const SUBJECT_MAX = 400;
@@ -64,12 +83,18 @@ export function defaultState(): BuilderState {
     palette: null,
     custom: firstStyle.swatches.map((s) => s.hex) as [Hex, Hex, Hex, Hex],
     composition: "style",
+    shot: "auto",
+    angle: "auto",
+    lens: "auto",
+    genre: "auto",
+    era: "auto",
     aspect: "4:5",
     lighting: "style",
     preserve: ["identity", "composition"],
     duration: 6,
     camera: "push-in",
     movement: "subtle",
+    layers: [],
   };
 }
 
@@ -95,12 +120,18 @@ const KEYS = {
   palette: "p",
   custom: "c",
   composition: "cm",
+  shot: "sh",
+  angle: "an",
+  lens: "ln",
+  genre: "g",
+  era: "er",
   aspect: "ar",
   lighting: "l",
   preserve: "k",
   duration: "d",
   camera: "cam",
   movement: "mv",
+  layers: "ly",
 } as const;
 
 /** Only non-default values are written, keeping share links short. */
@@ -121,9 +152,15 @@ export function encodeState(state: BuilderState): URLSearchParams {
   if (state.paletteMode === "custom")
     q.set(KEYS.custom, state.custom.slice(0, state.count).map((h) => h.slice(1)).join("-"));
   put(KEYS.composition, state.composition, d.composition);
+  put(KEYS.shot, state.shot, d.shot);
+  put(KEYS.angle, state.angle, d.angle);
+  put(KEYS.lens, state.lens, d.lens);
+  put(KEYS.genre, state.genre, d.genre);
+  put(KEYS.era, state.era, d.era);
   put(KEYS.aspect, state.aspect, d.aspect);
   put(KEYS.lighting, state.lighting, d.lighting);
   if (state.task === "restyle") put(KEYS.preserve, state.preserve.join("-"), d.preserve.join("-"));
+  if (state.layers.length) q.set(KEYS.layers, encodeLayers(state.layers));
   if (state.output === "video") {
     put(KEYS.duration, String(state.duration), String(d.duration));
     put(KEYS.camera, state.camera, d.camera);
@@ -204,7 +241,19 @@ export function decodeState(params: URLSearchParams): DecodeResult {
     }
   }
 
-  state.composition = pick<CompositionId>(KEYS.composition, ids(compositionOptions), "Composition") ?? state.composition;
+  // Older links put shot sizes and angles in the composition field.
+  const legacy = legacyCompositions[params.get(KEYS.composition) ?? ""];
+  if (legacy) {
+    if (legacy.shot) state.shot = legacy.shot;
+    if (legacy.angle) state.angle = legacy.angle;
+  } else {
+    state.composition = pick<CompositionId>(KEYS.composition, ids(compositionOptions), "Composition") ?? state.composition;
+  }
+  state.shot = pick<ShotId>(KEYS.shot, ids(shotOptions), "Shot size") ?? state.shot;
+  state.angle = pick<AngleId>(KEYS.angle, ids(angleOptions), "Camera angle") ?? state.angle;
+  state.lens = pick<LensId>(KEYS.lens, ids(lensOptions), "Lens") ?? state.lens;
+  state.genre = pick<GenreId>(KEYS.genre, ids(genreOptions), "Genre") ?? state.genre;
+  state.era = pick<EraId>(KEYS.era, ids(eraOptions), "Era") ?? state.era;
   state.aspect = pick<AspectId>(KEYS.aspect, ids(aspectOptions), "Aspect ratio") ?? state.aspect;
   state.lighting = pick<LightingId>(KEYS.lighting, ids(lightingOptions), "Lighting") ?? state.lighting;
 
@@ -221,6 +270,13 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   if (duration) state.duration = Number(duration) as Duration;
   state.camera = pick<CameraId>(KEYS.camera, ids(cameraOptions), "Camera movement") ?? state.camera;
   state.movement = pick<MovementId>(KEYS.movement, ids(movementOptions), "Subject movement") ?? state.movement;
+
+  const layers = params.get(KEYS.layers);
+  if (layers !== null) {
+    const decoded = decodeLayers(layers);
+    state.layers = decoded.layers;
+    if (decoded.bad) issues.push("Some subjects placed on the sketch couldn’t be restored.");
+  }
 
   return { state, issues };
 }

@@ -67,11 +67,11 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
           <p className="mt-3 text-xl">{palette.mood}</p>
           <p className="mt-5 max-w-lg text-muted">{palette.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
-            <Link to={`/builder?p=${palette.slug}${suits[0] ? `&s=${suits[0].slug}` : ""}`} className="btn btn-primary">
+            <Link to={`/builder?p=${palette.slug}${suits[0] ? `&s=${suits[0].slug}` : ""}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
               <Wand2 size={16} aria-hidden />
               Use in builder
             </Link>
-            <Link to={customHref} className="btn btn-ghost">
+            <Link to={customHref} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
               <Pencil size={16} aria-hidden />
               Edit colours
             </Link>
@@ -150,7 +150,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {suits.slice(0, 4).map((s) => (
               <li key={s.slug}>
-                <Link to={`/builder?s=${s.slug}&p=${palette.slug}`} className="group block">
+                <Link to={`/builder?s=${s.slug}&p=${palette.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="group block">
                   <StyleArt style={s} colours={hexes} zoom />
                   <span className="mt-1.5 block text-sm group-hover:underline">
                     {s.name} <span className="text-muted">in the builder</span>

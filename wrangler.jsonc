@@ -4,6 +4,10 @@
   "name": "form-field",
   "main": "worker/index.ts",
   "compatibility_date": "2026-09-01",
+  // Served at https://form-field.form-field.workers.dev. Per-version preview
+  // URLs stay off so older builds aren't publicly reachable.
+  "workers_dev": true,
+  "preview_urls": false,
   "assets": {
     // The site is a single-page app; only /api/* reaches the Worker code.
     "not_found_handling": "single-page-application",
@@ -15,8 +19,8 @@
     "OPENROUTER_MODELS": "google/gemini-3.8-flash,anthropic/claude-sonnet-5",
     // Last resort, called on Anthropic directly if OpenRouter is down.
     "AI_MODEL": "claude-sonnet-5",
-    // Your live address, for OpenRouter's app attribution (optional).
-    "SITE_URL": ""
+    // The live address, for OpenRouter's app attribution.
+    "SITE_URL": "https://form-field.form-field.workers.dev"
   },
   // Keys are secrets, never in this file:
   //   npx wrangler secret put OPENROUTER_API_KEY

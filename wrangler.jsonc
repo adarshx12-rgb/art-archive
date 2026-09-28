@@ -1,0 +1,22 @@
+{
+  // One Worker serves the built site and the small AI backend under /api.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "form-field",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    // The site is a single-page app; only /api/* reaches the Worker code.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+    "binding": "ASSETS"
+  },
+  "vars": {
+    // Which model does the AI work. Change here to switch.
+    "AI_MODEL": "claude-sonnet-5"
+  },
+  // Per-visitor limit on AI calls. ANTHROPIC_API_KEY is a secret:
+  //   npx wrangler secret put ANTHROPIC_API_KEY   (production)
+  //   .dev.vars                                   (local, never committed)
+  "ratelimits": [{ "name": "AI_LIMIT", "namespace_id": "1001", "simple": { "limit": 12, "period": 60 } }],
+  "observability": { "enabled": true }
+}

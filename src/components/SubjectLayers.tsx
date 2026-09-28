@@ -1,4 +1,4 @@
-import { Plus, Shapes, X } from "lucide-react";
+import { Plus, Shapes, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MAX_ACTORS } from "../lib/scene/model";
 import { LAYER_TYPES } from "../lib/sketch/layers";
@@ -17,10 +17,13 @@ export interface SubjectLayersProps {
   onSelect: (id: string) => void;
   onRename: (id: string, label: string) => void;
   onDelete: (id: string) => void;
+  /** Build (empty scene) or edit (existing scene) the scene with AI from the typed text. */
+  onAi?: () => void;
+  aiBusy?: boolean;
 }
 
 /** Under the subject box: ADD + puts the typed subject on the sketch; the list orders subjects front to back. */
-export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onPick, onSelect, onRename, onDelete }: SubjectLayersProps) {
+export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onPick, onSelect, onRename, onDelete, onAi, aiBusy = false }: SubjectLayersProps) {
   const [menu, setMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const full = subjects.length >= MAX_ACTORS;
@@ -29,12 +32,12 @@ export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onPick,
   useEffect(() => {
     if (!menu) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
-    const onDown = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && setMenu(false);
+    const onDown = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setMenu(false);
     window.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("click", onDown);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("click", onDown);
     };
   }, [menu]);
 
@@ -47,6 +50,18 @@ export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onPick,
           <Plus size={14} aria-hidden />
           <span className="sr-only">the typed subject to the sketch</span>
         </button>
+        {onAi && (
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            disabled={!hasDraft || aiBusy}
+            onClick={onAi}
+            title={subjects.length ? "Change the scene as the text describes, e.g. “make the dog sit by the door”" : "Build the whole scene from the text"}
+          >
+            <Sparkles size={14} aria-hidden />
+            {aiBusy ? "Thinking…" : subjects.length ? "Edit scene with AI" : "Build scene with AI"}
+          </button>
+        )}
         <button type="button" className="btn btn-sm btn-ghost" aria-expanded={menu} disabled={full} onClick={() => setMenu((m) => !m)}>
           <Shapes size={14} aria-hidden />
           Pick a shape

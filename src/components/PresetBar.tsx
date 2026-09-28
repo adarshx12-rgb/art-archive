@@ -1,4 +1,4 @@
-import { Aperture, Clapperboard, ChevronUp, Check } from "lucide-react";
+import { Aperture, Clapperboard, ChevronUp, Check, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { palettes } from "../content/palettes";
 import type { StyleRecord } from "../content/types";
@@ -84,24 +84,29 @@ export interface PresetBarProps {
   onStylePalette: () => void;
   onCurated: (slug: string) => void;
   onCustom: () => void;
+  /** Ask the AI for a palette; resolves to a note to show, or an error message. */
+  onAiPalette?: (request: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 /** Cinema-style quick settings under the sketch. Each pill opens a panel of choices. */
-export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onCustom }: PresetBarProps) {
+export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onCustom, onAiPalette }: PresetBarProps) {
+  const [mood, setMood] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [aiNote, setAiNote] = useState<{ ok: boolean; message: string } | null>(null);
   const [open, setOpen] = useState<PresetId | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
-    const onDown = (e: PointerEvent) => {
+    const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(null);
     };
     window.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("click", onDown);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("click", onDown);
     };
   }, [open]);
 
@@ -171,6 +176,30 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
                       Custom colours…
                     </button>
                   </div>
+                  {onAiPalette && (
+                    <form
+                      className="rounded-lg border border-rule p-2"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!mood.trim() || asking) return;
+                        setAsking(true);
+                        setAiNote(await onAiPalette(mood.trim()));
+                        setAsking(false);
+                      }}
+                    >
+                      <label htmlFor="ai-mood" className="meta mb-1 block text-muted">
+                        Suggest {state.count} colours with AI
+                      </label>
+                      <div className="flex gap-2">
+                        <input id="ai-mood" value={mood} maxLength={400} onChange={(e) => setMood(e.target.value)} placeholder="e.g. misty harbour at dawn, calm and cold" className="field min-w-0 flex-1 py-1.5 text-sm" />
+                        <button type="submit" className="btn btn-sm btn-primary" disabled={asking || !mood.trim()}>
+                          <Sparkles size={14} aria-hidden />
+                          {asking ? "Thinking…" : "Suggest"}
+                        </button>
+                      </div>
+                      {aiNote && <p className={`mt-1.5 text-sm ${aiNote.ok ? "text-muted" : "text-alert"}`} role="status">{aiNote.message}</p>}
+                    </form>
+                  )}
                   <p className="meta text-muted">Curated palettes</p>
                   <ul className="grid gap-1.5 sm:grid-cols-2">
                     {palettes.map((p) => {

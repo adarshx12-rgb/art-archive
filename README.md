@@ -15,14 +15,31 @@ npm run dev          # http://localhost:5173
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Development server with hot reload |
-| `npm run typecheck` | TypeScript check (`tsc -b`) |
+| `npm run dev` | Development server with hot reload (site and `/api` Worker) |
+| `npm run typecheck` | TypeScript check for the site and the Worker |
 | `npm test` | Unit tests (Vitest) — prompt composition, URL state, filters, storage, content integrity |
-| `npm run build` | Type check + production build to `dist/` |
+| `npm run build` | Type check + production build to `dist/` (`client/` site, `form_field/` Worker) |
 | `npm run preview` | Serve the production build at http://localhost:4173 |
 | `npm run e2e` | Browser acceptance checks against `npm run preview` (see below) |
+| `npm run eval:ai` | Scores the AI endpoints on fixed test cases (calls the model; costs money) |
+| `npm run deploy` | Build and deploy to Cloudflare |
 
 `npm run e2e` drives your **installed Chrome** through `playwright-core` (no browser download). Start `npm run preview` in another terminal first. If Chrome isn’t at the default Windows path, set `CHROME_PATH`; use `BASE` to target another URL.
+
+## AI features and deployment
+
+The site runs on one Cloudflare Worker (`wrangler.jsonc`): Cloudflare serves the built files directly, and only `/api/*` reaches the Worker code in `worker/`.
+
+| Endpoint | Does | Effort |
+| --- | --- | --- |
+| `POST /api/scene` | Text or an instruction → 3D scene (subjects, poses, facing, camera, light) | medium |
+| `POST /api/palette` | Mood → 2–4 named colours in role order, contrast-checked | low |
+| `POST /api/prompt` | Builder settings → polished prompt; code checks every subject, colour, the style and lens made it in, with one repair pass | high |
+
+- **Model:** `AI_MODEL` in `wrangler.jsonc` (default `claude-sonnet-5`). All provider code is in `worker/ai.ts`; replies are validated against Zod schemas before use.
+- **Key:** `ANTHROPIC_API_KEY` is a secret, never in the code. Locally, copy `.dev.vars.example` to `.dev.vars` and fill it in (git ignores it). In production: `npx wrangler secret put ANTHROPIC_API_KEY`.
+- **Protection:** same-origin requests only, 32 KB request cap, 12 AI calls a minute per visitor (`ratelimits` in `wrangler.jsonc`). Also set a monthly spend limit in the Anthropic Console.
+- **Deploy:** `npx wrangler login` once, then `npm run deploy`.
 
 ## Routes
 

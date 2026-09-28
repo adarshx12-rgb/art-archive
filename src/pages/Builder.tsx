@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, X } from "lucide-react";
+import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
@@ -16,6 +16,7 @@ import { kindLabels } from "../content/facets";
 import { palettes, getPalette } from "../content/palettes";
 import { getStyle, styles } from "../content/styles";
 import type { Hex, PaletteSize, StyleKind } from "../content/types";
+import { aiPalette, aiPrompt, aiScene } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
@@ -351,6 +352,26 @@ export function Builder() {
   };
   const selectedActor = state.actors.find((a) => a.id === selectedId) ?? null;
 
+  // ——— AI (server side; see worker/) ———
+  const [aiBusy, setAiBusy] = useState<null | "scene" | "prompt">(null);
+  const [aiNote, setAiNote] = useState<{ text: string; undo?: () => void } | null>(null);
+  const [promptWarnings, setPromptWarnings] = useState<string[]>([]);
+  /** Build, edit or re-sync the scene with AI. The previous scene can be restored. */
+  const runScene = async (mode: "new" | "edit" | "from-prompt", text: string, clearDraft: boolean) => {
+    setAiBusy("scene");
+    const before = { actors: state.actors, shot: state.shot, angle: state.angle, lens: state.lens, composition: state.composition, lighting: state.lighting };
+    const res = await aiScene(state, shotCamera(state), mode, text);
+    setAiBusy(null);
+    if (!res.ok) {
+      toast(res.error, "error");
+      return;
+    }
+    const { actors, camera: cam, lighting } = res.data;
+    setState((s) => ({ ...s, actors, shot: cam.shot, angle: cam.angle, lens: cam.lens, composition: cam.placement, lighting, subject: clearDraft ? "" : s.subject }));
+    setSelectedId(null);
+    setAiNote({ text: res.data.reply, undo: () => setState((s) => ({ ...s, ...before })) });
+  };
+
   // The flat sketch is the scene seen through the shot camera.
   const camera = shotCamera(state);
   const projected = projectScene(camera, state.actors);
@@ -483,6 +504,8 @@ export function Builder() {
               onSelect={setSelectedId}
               onRename={(id, label) => updateActor(id, { label: label.slice(0, 80) })}
               onDelete={deleteActor}
+              onAi={() => runScene(state.actors.length ? "edit" : "new", state.subject, true)}
+              aiBusy={aiBusy === "scene"}
             />
           </Group>
 
@@ -695,6 +718,29 @@ export function Builder() {
               {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : view === "2d" ? "Click a subject to move, scale or rotate it." : "Click a subject, then use the handles."}
             </p>
 
+            {aiNote && (
+              <div role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-rule p-2 text-sm">
+                <Sparkles size={14} className="shrink-0 text-muted" aria-hidden />
+                <p className="min-w-0 flex-1">{aiNote.text}</p>
+                {aiNote.undo && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      aiNote.undo?.();
+                      setAiNote(null);
+                    }}
+                  >
+                    <Undo2 size={14} aria-hidden />
+                    Undo
+                  </button>
+                )}
+                <button type="button" className="btn btn-ghost btn-sm" aria-label="Dismiss" onClick={() => setAiNote(null)}>
+                  <X size={14} aria-hidden />
+                </button>
+              </div>
+            )}
+
             {selectedActor && (
               <div className="mt-4">
                 <TransformPanel
@@ -717,6 +763,16 @@ export function Builder() {
                 onStylePalette={() => setMode("style")}
                 onCurated={setCurated}
                 onCustom={editCustom}
+                onAiPalette={async (request) => {
+                  const res = await aiPalette(state, request);
+                  if (!res.ok) return { ok: false, message: res.error };
+                  setState((s) => {
+                    const custom = [...s.custom] as BuilderState["custom"];
+                    res.data.colours.forEach((c, i) => (custom[i] = c.hex));
+                    return { ...s, paletteMode: "custom", count: res.data.colours.length as PaletteSize, custom };
+                  });
+                  return { ok: true, message: [`${res.data.name}: ${res.data.why}`, ...res.data.warnings].join(" ") };
+                }}
               />
             </div>
 
@@ -727,6 +783,36 @@ export function Builder() {
               <p className="meta mt-1 text-muted">
                 {style.name}, {state.task === "restyle" ? "restyling a source" : "new"}, {state.intensity} intensity. Colours: {keepColours ? "original colours" : palette.label}.
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  disabled={aiBusy !== null}
+                  onClick={async () => {
+                    setAiBusy("prompt");
+                    const res = await aiPrompt(state);
+                    setAiBusy(null);
+                    if (!res.ok) {
+                      toast(res.error, "error");
+                      return;
+                    }
+                    setBasis(composed.prompt);
+                    setText(res.data.prompt);
+                    setEdited(true);
+                    setPromptWarnings(res.data.warnings);
+                    toast(res.data.warnings.length ? "Prompt written. Check the notes below it." : "Prompt written and checked against your scene");
+                  }}
+                >
+                  <Sparkles size={14} aria-hidden />
+                  {aiBusy === "prompt" ? "Writing…" : "Perfect with AI"}
+                </button>
+                {edited && (
+                  <button type="button" className="btn btn-sm btn-ghost" disabled={aiBusy !== null} onClick={() => runScene("from-prompt", prompt, false)} title="Rebuild the scene so it matches the prompt as you’ve edited it">
+                    <RefreshCw size={14} aria-hidden />
+                    {aiBusy === "scene" ? "Updating…" : "Update scene from prompt"}
+                  </button>
+                )}
+              </div>
             </div>
 
             {staleEdit && (
@@ -762,6 +848,14 @@ export function Builder() {
                 </button>
               )}
             </div>
+
+            {edited && promptWarnings.length > 0 && (
+              <ul className="mt-3 space-y-1 text-sm text-alert">
+                {promptWarnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            )}
 
             {composed.notes.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm text-muted">

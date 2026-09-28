@@ -1,0 +1,69 @@
+import type { Hex, PaletteRole } from "../content/types";
+import type { BuilderState } from "./prompt/state";
+import { encodeState } from "./prompt/state";
+import type { ShotCamera } from "./scene/camera";
+import type { Actor } from "./scene/model";
+
+/**
+ * Browser side of the /api Worker. Every call returns either data or a
+ * message that can be shown as-is.
+ */
+
+export type AiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+async function post<T>(path: string, body: unknown): Promise<AiResult<T>> {
+  try {
+    const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const data = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
+    if (!res.ok || !data) return { ok: false, error: data?.error ?? (res.status === 404 ? "AI isn’t available on this version of the site." : "Something went wrong. Please try again.") };
+    return { ok: true, data };
+  } catch {
+    return { ok: false, error: "Couldn’t reach the server. Check your connection and try again." };
+  }
+}
+
+export interface SceneReply {
+  actors: Actor[];
+  camera: { shot: BuilderState["shot"]; angle: BuilderState["angle"]; lens: BuilderState["lens"]; placement: BuilderState["composition"] };
+  lighting: BuilderState["lighting"];
+  reply: string;
+}
+
+/** What the shot camera covers at z = 0, so the model can place subjects in frame. */
+function frameAtOrigin(cam: ShotCamera) {
+  const dist = Math.max(Math.hypot(cam.eye[0] - cam.target[0], cam.eye[1] - cam.target[1], cam.eye[2] - cam.target[2]), 0.5);
+  const half = dist * Math.tan((cam.fov * Math.PI) / 360);
+  return { halfWidth: half * cam.aspect, height: cam.target[1] + half, cameraZ: cam.eye[2] };
+}
+
+export function aiScene(state: BuilderState, cam: ShotCamera, mode: "new" | "edit" | "from-prompt", text: string) {
+  return post<SceneReply>("/api/scene", {
+    mode,
+    text,
+    scene: state.actors,
+    frame: frameAtOrigin(cam),
+    style: state.style,
+    settings: { shot: state.shot, angle: state.angle, lens: state.lens, composition: state.composition, lighting: state.lighting },
+  });
+}
+
+export interface PaletteReply {
+  name: string;
+  colours: { hex: Hex; name: string; role: PaletteRole }[];
+  why: string;
+  warnings: string[];
+}
+
+export function aiPalette(state: BuilderState, request: string) {
+  return post<PaletteReply>("/api/palette", { request, style: state.style, count: state.count });
+}
+
+export interface PromptReply {
+  prompt: string;
+  warnings: string[];
+}
+
+/** The server re-derives every fact from the settings themselves (the share-link form). */
+export function aiPrompt(state: BuilderState) {
+  return post<PromptReply>("/api/prompt", { query: encodeState(state).toString() });
+}

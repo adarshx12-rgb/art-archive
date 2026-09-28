@@ -84,7 +84,12 @@ Modes:
 
 Reply in one short, plain sentence.`;
 
-export async function buildScene(env: Env, body: z.infer<typeof SceneRequest>, current: { shot: string; angle: string; lens: string; composition: string; lighting: string }) {
+export async function buildScene(
+  env: Env,
+  body: z.infer<typeof SceneRequest>,
+  current: { shot: string; angle: string; lens: string; composition: string; lighting: string },
+  override?: string | null,
+) {
   const r = (n: number, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
   const input = {
     mode: body.mode,
@@ -98,7 +103,7 @@ export async function buildScene(env: Env, body: z.infer<typeof SceneRequest>, c
         ? []
         : body.scene.map((a) => ({ id: a.id, kind: a.glyph, label: a.label, count: a.count, x: r(a.position[0]), y: r(a.position[1]), z: r(a.position[2]), turn: r(a.rotation[1], 0), lean: r(a.rotation[0], 0), roll: r(a.rotation[2], 0), scale: r(a.scale), pose: a.pose })),
   };
-  const { data, usage } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: SceneOut, effort: "medium" });
+  const { data, usage, model } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: SceneOut, name: "scene", effort: "medium" }, override);
 
   // Trust nothing: clamp every number, keep only known ids, cap the count.
   const known = new Set(body.mode === "new" ? [] : body.scene.map((a) => a.id));
@@ -112,5 +117,5 @@ export async function buildScene(env: Env, body: z.infer<typeof SceneRequest>, c
     pose: s.pose as Actor["pose"],
     count: clamp(Math.round(s.count || 1), 1, 6),
   }));
-  return { actors, camera: data.camera, lighting: data.lighting, reply: data.reply.slice(0, 300), usage };
+  return { actors, camera: data.camera, lighting: data.lighting, reply: data.reply.slice(0, 300), model, usage };
 }

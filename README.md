@@ -36,8 +36,9 @@ The site runs on one Cloudflare Worker (`wrangler.jsonc`): Cloudflare serves the
 | `POST /api/palette` | Mood → 2–4 named colours in role order, contrast-checked | low |
 | `POST /api/prompt` | Builder settings → polished prompt; code checks every subject, colour, the style and lens made it in, with one repair pass | high |
 
-- **Model:** `AI_MODEL` in `wrangler.jsonc` (default `claude-sonnet-5`). All provider code is in `worker/ai.ts`; replies are validated against Zod schemas before use.
-- **Key:** `ANTHROPIC_API_KEY` is a secret, never in the code. Locally, copy `.dev.vars.example` to `.dev.vars` and fill it in (git ignores it). In production: `npx wrangler secret put ANTHROPIC_API_KEY`.
+- **Models:** a fallback chain, all in `worker/ai.ts`. First OpenRouter tries `OPENROUTER_MODELS` in order (default `google/gemini-3.8-flash`, then `anthropic/claude-sonnet-5`; OpenRouter switches on outages and rate limits). If OpenRouter fails, the Worker calls Anthropic directly (`AI_MODEL`). A reply that doesn't fit the schema moves on to the next model, and a prompt that still misses a subject after a repair pass is rewritten by the next model. Each reply says which model answered and, via OpenRouter, what it cost.
+- **Keys:** `OPENROUTER_API_KEY` and `ANTHROPIC_API_KEY` are secrets, never in the code. Locally, copy `.dev.vars.example` to `.dev.vars` and fill it in (git ignores it). In production: `npx wrangler secret put OPENROUTER_API_KEY` and `npx wrangler secret put ANTHROPIC_API_KEY`. Either key alone also works; the chain skips a provider without a key.
+- **Comparing models:** with `ALLOW_MODEL_OVERRIDE=1` in `.dev.vars`, `MODEL=openai/gpt-6-luna npm run eval:ai` pins one model. Never set it in production.
 - **Protection:** same-origin requests only, 32 KB request cap, 12 AI calls a minute per visitor (`ratelimits` in `wrangler.jsonc`). Also set a monthly spend limit in the Anthropic Console.
 - **Deploy:** `npx wrangler login` once, then `npm run deploy`.
 

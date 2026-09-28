@@ -1,14 +1,25 @@
 // Scores the AI endpoints against fixed test cases. Every run calls the model
-// and costs money (roughly $0.02-0.04 per case with Claude Sonnet 5).
+// and costs money (the report prints what OpenRouter charged).
 //
-// Usage: put ANTHROPIC_API_KEY in .dev.vars, run `npm run dev` in one
-// terminal, then `npm run eval:ai` (BASE=http://localhost:5173 by default).
+// Usage: put your keys in .dev.vars (see .dev.vars.example), run `npm run dev`
+// in one terminal, then in another:
+//   npm run eval:ai                                  # the normal chain
+//   MODEL=google/gemini-3.8-flash npm run eval:ai    # pin one OpenRouter model
+//   MODEL=openai/gpt-6-luna npm run eval:ai
+//   MODEL=claude-sonnet-5 npm run eval:ai            # Anthropic directly
+// Pinning needs ALLOW_MODEL_OVERRIDE=1 in .dev.vars.
 
 const BASE = process.env.BASE || "http://localhost:5173";
+const MODEL = process.env.MODEL;
+const models = new Set();
+let cost = 0;
 const post = async (path, body) => {
-  const res = await fetch(BASE + path, { method: "POST", headers: { "content-type": "application/json", origin: BASE }, body: JSON.stringify(body) });
+  const headers = { "content-type": "application/json", origin: BASE, ...(MODEL ? { "x-ai-model": MODEL } : {}) };
+  const res = await fetch(BASE + path, { method: "POST", headers, body: JSON.stringify(body) });
   const data = await res.json();
   if (!res.ok) throw new Error(`${path}: ${res.status} ${data.error}`);
+  if (data.model) models.add(data.model);
+  if (data.usage?.cost) cost += data.usage.cost;
   return data;
 };
 
@@ -93,3 +104,4 @@ for (const c of cases) {
   }
 }
 console.log(`\n${pass}/${total} checks passed (${Math.round((pass / total) * 100)}%)`);
+console.log(`Answered by: ${[...models].join(", ") || "none"}${cost ? ` · OpenRouter cost $${cost.toFixed(4)}` : ""}`);

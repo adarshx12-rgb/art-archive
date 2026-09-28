@@ -34,6 +34,8 @@ const fail = (message: string, status: number) => json({ error: message }, statu
 
 async function handle(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+  // Local evals can pin one model (honoured only when ALLOW_MODEL_OVERRIDE is "1").
+  const override = request.headers.get("x-ai-model");
   if (request.method !== "POST") return fail("Use POST.", 405);
 
   // Only this site's own pages may call the API.
@@ -62,17 +64,17 @@ async function handle(request: Request, env: Env): Promise<Response> {
     case "/api/scene": {
       const body = SceneBody.safeParse(raw);
       if (!body.success) return fail("That scene request isn’t valid.", 400);
-      return json(await buildScene(env, body.data, body.data.settings));
+      return json(await buildScene(env, body.data, body.data.settings, override));
     }
     case "/api/palette": {
       const body = PaletteRequest.safeParse(raw);
       if (!body.success) return fail("That palette request isn’t valid.", 400);
-      return json(await suggestPalette(env, body.data));
+      return json(await suggestPalette(env, body.data, override));
     }
     case "/api/prompt": {
       const body = PromptRequest.safeParse(raw);
       if (!body.success) return fail("That prompt request isn’t valid.", 400);
-      return json(await perfectPrompt(env, body.data));
+      return json(await perfectPrompt(env, body.data, override));
     }
     default:
       return fail("Not found.", 404);

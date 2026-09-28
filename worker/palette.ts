@@ -3,7 +3,7 @@ import { getStyle } from "../src/content/styles";
 import type { Hex, PaletteSize } from "../src/content/types";
 import { contrastRatio, normaliseHex } from "../src/lib/color";
 import { ROLE_ORDER } from "../src/lib/prompt/compose";
-import { ask } from "./ai";
+import { AiError, ask } from "./ai";
 import type { Env } from "./env";
 
 export const PaletteRequest = z.object({
@@ -31,21 +31,21 @@ const SYSTEM = `You design small colour palettes for image prompts. Return exact
 - 4 colours: background, primary, secondary, accent
 The background covers most of the image; the primary must read clearly against it; the accent is used sparingly. Suit the requested mood and the given style, avoid near-duplicates, and give each colour a plain, specific name a person would say ("oxblood", "sea-glass green").`;
 
-export async function suggestPalette(env: Env, body: z.infer<typeof PaletteRequest>) {
+export async function suggestPalette(env: Env, body: z.infer<typeof PaletteRequest>, override?: string | null) {
   const style = getStyle(body.style);
   const input = {
     request: body.request,
     colours: body.count,
     style: style ? { name: style.name, colour: style.look.colour, swatches: style.swatches.map((s) => `${s.name} ${s.hex}`) } : null,
   };
-  const { data, usage } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PaletteOut, effort: "low" });
+  const { data, usage, model } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PaletteOut, name: "palette", effort: "low" }, override);
 
   const roles = ROLE_ORDER[body.count as PaletteSize];
   const colours = data.colours
     .slice(0, body.count)
     .map((c) => ({ hex: normaliseHex(c.hex), name: c.name.slice(0, 40) }))
     .filter((c): c is { hex: Hex; name: string } => Boolean(c.hex));
-  if (colours.length !== body.count) throw new Error("palette-shape");
+  if (colours.length !== body.count) throw new AiError("The suggested palette didn’t have the right number of colours. Try again.", 502, false);
   const warnings: string[] = [];
   const ratio = contrastRatio(colours[0]!.hex, colours[1]!.hex);
   if (ratio < 3) warnings.push(`The primary colour is hard to read on the background (contrast ${ratio.toFixed(1)}:1).`);
@@ -54,6 +54,7 @@ export async function suggestPalette(env: Env, body: z.infer<typeof PaletteReque
     colours: colours.map((c, i) => ({ ...c, role: roles[i]! })),
     why: data.why.slice(0, 300),
     warnings,
+    model,
     usage,
   };
 }

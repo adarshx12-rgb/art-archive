@@ -1,3 +1,6 @@
-# Copy this file to .dev.vars (which git ignores) and fill in your key
-# for local development. Never commit the real key.
+# Copy this file to .dev.vars (which git ignores) and fill in your keys
+# for local development. Never commit real keys.
+OPENROUTER_API_KEY=
 ANTHROPIC_API_KEY=
+# Lets `MODEL=... npm run eval:ai` pin one model. Keep this local only.
+ALLOW_MODEL_OVERRIDE=1

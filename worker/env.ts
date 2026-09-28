@@ -2,7 +2,15 @@
 export interface Env {
   ASSETS: Fetcher;
   AI_LIMIT?: RateLimit;
-  /** Secret. Never in code or config files. */
+  /** Secrets. Never in code or config files. */
+  OPENROUTER_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
+  /** Comma-separated OpenRouter model IDs, tried in order. */
+  OPENROUTER_MODELS?: string;
+  /** Anthropic model used directly as the last resort. */
   AI_MODEL?: string;
+  /** Sent to OpenRouter for app attribution. */
+  SITE_URL?: string;
+  /** "1" lets requests pin one model with an x-ai-model header (local evals only). */
+  ALLOW_MODEL_OVERRIDE?: string;
 }

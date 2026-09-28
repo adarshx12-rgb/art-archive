@@ -4,7 +4,7 @@ import { composePrompt, resolvePalette } from "../src/lib/prompt/compose";
 import { lensOptions, findOption } from "../src/lib/prompt/options";
 import { decodeState, type BuilderState } from "../src/lib/prompt/state";
 import { parseSubject } from "../src/lib/sketch/parse";
-import { ask } from "./ai";
+import { ask, chain, type AskResult, type Usage } from "./ai";
 import type { Env } from "./env";
 
 export const PromptRequest = z.object({
@@ -48,7 +48,14 @@ const missing = (prompt: string, checks: ReturnType<typeof mustInclude>) => {
   return checks.filter((c) => !c.any.some((w) => text.includes(w))).map((c) => c.label);
 };
 
-export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest>) {
+const add = (a: Usage, b: Usage): Usage => ({
+  input: a.input + b.input,
+  output: a.output + b.output,
+  cached: a.cached + b.cached,
+  ...(a.cost !== undefined || b.cost !== undefined ? { cost: (a.cost ?? 0) + (b.cost ?? 0) } : {}),
+});
+
+export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest>, override?: string | null) {
   const { state } = decodeState(new URLSearchParams(body.query));
   const style = getStyle(state.style);
   if (!style) throw new Error("style");
@@ -62,27 +69,50 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     style: { name: style.name, cues: style.prompt.cues, typography: style.look.typography },
     facts,
   };
-  let { data, usage } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PromptOut, effort: "high" });
-  let gaps = missing(data.prompt, checks);
+  const write = (from = 0) => ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PromptOut, name: "prompt", effort: "high", from }, override);
+  let best: AskResult<z.infer<typeof PromptOut>> = await write();
+  let usage = best.usage;
+  let gaps = missing(best.data.prompt, checks);
 
-  // One repair pass if anything was dropped.
+  // 1. One repair pass on the same model if anything was dropped.
   if (gaps.length) {
-    const repair = await ask(env, {
-      system: SYSTEM,
-      user: JSON.stringify({ ...input, previousDraft: data.prompt, youLeftOut: gaps, instruction: "Rewrite the draft so it also includes everything listed in youLeftOut, changing nothing else." }),
-      schema: PromptOut,
-      effort: "medium",
-    });
-    usage = { input: usage.input + repair.usage.input, output: usage.output + repair.usage.output, cached: usage.cached + repair.usage.cached };
-    const stillMissing = missing(repair.data.prompt, checks);
-    if (stillMissing.length <= gaps.length) {
-      data = repair.data;
-      gaps = stillMissing;
+    const repair = await ask(
+      env,
+      {
+        system: SYSTEM,
+        user: JSON.stringify({ ...input, previousDraft: best.data.prompt, youLeftOut: gaps, instruction: "Rewrite the draft so it also includes everything listed in youLeftOut, changing nothing else." }),
+        schema: PromptOut,
+        name: "prompt",
+        effort: "medium",
+        from: best.index,
+      },
+      override,
+    );
+    usage = add(usage, repair.usage);
+    const left = missing(repair.data.prompt, checks);
+    if (left.length <= gaps.length) {
+      best = repair;
+      gaps = left;
     }
   }
+
+  // 2. Still incomplete: let the next model in the chain write it from scratch.
+  if (gaps.length && best.index + 1 < chain(env, override).length) {
+    const next = await write(best.index + 1).catch(() => null);
+    if (next) {
+      usage = add(usage, next.usage);
+      const left = missing(next.data.prompt, checks);
+      if (left.length < gaps.length) {
+        best = next;
+        gaps = left;
+      }
+    }
+  }
+
   return {
-    prompt: data.prompt.trim(),
+    prompt: best.data.prompt.trim(),
     warnings: gaps.map((g) => `The prompt may not mention ${g}. Check it before using it.`),
+    model: best.model,
     usage,
   };
 }

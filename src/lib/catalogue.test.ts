@@ -47,7 +47,9 @@ describe("content integrity", () => {
   it("parses a cover prompt for real styles from docs/cover-prompts.md", () => {
     const slugs = new Set(styles.map((s) => s.slug));
     const entries = Object.values(coverPrompts);
-    expect(entries).toHaveLength(32);
+    // One prompt per style, however many have been written so far.
+    expect(entries.length).toBeGreaterThanOrEqual(32);
+    expect(new Set(entries.map((c) => c.slug)).size).toBe(entries.length);
     for (const c of entries) {
       expect(slugs.has(c.slug), `cover prompt slug ${c.slug}`).toBe(true);
       expect(c.prompt, c.slug).not.toContain("```");

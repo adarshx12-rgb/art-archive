@@ -5,13 +5,15 @@ import { PaletteArt } from "../art/PaletteArt";
 import { ReferenceFigure } from "../art/ReferenceFigure";
 import { StyleArt } from "../art/StyleArt";
 import { CopyButton, SaveButton } from "../components/actions";
+import { FontSuggestions } from "../components/FontSuggestions";
 import { StyleCard } from "../components/cards";
 import { Recovery } from "../components/Recovery";
 import { HexSwatch } from "../components/Swatches";
 import { Tabs } from "../components/Tabs";
-import { coverPrompts } from "../content/coverPrompts";
+import { coverPrompts, promptForImage, type CoverPrompt } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
 import { kindDescriptions, kindLabels } from "../content/facets";
+import { fontSuggestions } from "../content/fonts";
 import { getReference } from "../content/references";
 import { getStyle } from "../content/styles";
 import type { ReferenceImage, StyleRecord } from "../content/types";
@@ -120,6 +122,21 @@ function HeaderArt({ style }: { style: StyleRecord }) {
   );
 }
 
+function CoverPromptBlock({ prompt, what }: { prompt: CoverPrompt; what: string }) {
+  return (
+    <PromptBlock text={prompt.prompt} what={what}>
+      <p className="meta mt-4 text-muted">
+        {prompt.artwork}, {prompt.format}.
+      </p>
+      {prompt.ifItMisses && (
+        <p className="mt-2 max-w-2xl text-[0.9375rem] text-muted">
+          <span className="font-semibold text-ink">If it misses:</span> {prompt.ifItMisses}
+        </p>
+      )}
+    </PromptBlock>
+  );
+}
+
 function StyleView({ style }: { style: StyleRecord }) {
   useMeta(style.name, `${style.summary} Visual ingredients, colours and ready-to-copy image and video prompts.`);
   const refs = style.references.map(getReference).filter((r): r is ReferenceImage => Boolean(r));
@@ -128,7 +145,12 @@ function StyleView({ style }: { style: StyleRecord }) {
   const imagePrompt = stylePreviewPrompt(style, "image");
   const videoPrompt = stylePreviewPrompt(style, "video");
   const restyle = restyleTemplate(style);
-  const cover = coverPrompts[style.slug];
+  const mainCover = covers[style.slug];
+  const cover = (mainCover && promptForImage(mainCover.file)) ?? coverPrompts[style.slug];
+  const similar = similarCovers(style.slug).flatMap((c) => {
+    const p = promptForImage(c.file);
+    return p ? [{ image: c, prompt: p }] : [];
+  });
   const builder = `/builder?s=${style.slug}`;
 
   return (
@@ -246,6 +268,25 @@ function StyleView({ style }: { style: StyleRecord }) {
         </div>
       </section>
 
+      {/* ——— Fonts ——— */}
+      {fontSuggestions[style.slug] && (
+        <section className="wrap border-t border-ink py-12" aria-labelledby="fonts-title">
+          <div className="grid gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <h2 id="fonts-title" className="text-h2 font-bold">
+                Suggested fonts
+              </h2>
+              <p className="mt-3 max-w-sm text-muted">
+                Typefaces that suit the look. Free fonts are on Google Fonts and free for commercial use; paid fonts need a licence.
+              </p>
+            </div>
+            <div className="min-w-0 lg:col-span-8">
+              <FontSuggestions fonts={fontSuggestions[style.slug]!} sample={style.name} />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ——— Prompts ——— */}
       <section className="wrap border-t border-ink py-12" aria-labelledby="prompts-title">
         <div className="grid gap-8 lg:grid-cols-12">
@@ -275,16 +316,18 @@ function StyleView({ style }: { style: StyleRecord }) {
                         id: "cover",
                         label: "Cover image",
                         content: (
-                          <PromptBlock text={cover.prompt} what="cover image prompt">
-                            <p className="meta mt-4 text-muted">
-                              The prompt for this style’s cover: {cover.artwork}, {cover.format}.
-                            </p>
-                            {cover.ifItMisses && (
-                              <p className="mt-2 max-w-2xl text-[0.9375rem] text-muted">
-                                <span className="font-semibold text-ink">If it misses:</span> {cover.ifItMisses}
-                              </p>
-                            )}
-                          </PromptBlock>
+                          <div>
+                            <CoverPromptBlock prompt={cover} what="cover image prompt" />
+                            {similar.map(({ image, prompt }, i) => (
+                              <div key={image.src} className="mt-10 border-t border-rule-strong pt-6">
+                                <div className="mb-3 flex items-center gap-3">
+                                  <img src={image.src} alt="" loading="lazy" decoding="async" className="size-14 object-cover" />
+                                  <p className="font-semibold">Similar cover {i + 2}</p>
+                                </div>
+                                <CoverPromptBlock prompt={prompt} what={`similar cover ${i + 2} prompt`} />
+                              </div>
+                            ))}
+                          </div>
                         ),
                       },
                     ]

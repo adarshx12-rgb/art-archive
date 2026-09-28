@@ -17,37 +17,22 @@ function storedTheme(): Theme | null {
   }
 }
 
-function systemTheme(): Theme {
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 function apply(theme: Theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", META_COLOUR[theme]);
 }
 
 /**
- * Follows the operating-system setting until the visitor picks a theme;
- * after that the choice is remembered (when storage is available).
+ * Dark by default; the visitor's choice is remembered (when storage is
+ * available).
  */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     const t = document.documentElement.dataset.theme;
-    return t === "dark" || t === "light" ? t : storedTheme() ?? systemTheme();
+    return t === "dark" || t === "light" ? t : storedTheme() ?? "dark";
   });
 
   useEffect(() => apply(theme), [theme]);
-
-  // Track system changes only while no explicit choice has been made.
-  useEffect(() => {
-    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    if (!mq) return;
-    const onChange = () => {
-      if (!storedTheme()) setTheme(mq.matches ? "dark" : "light");
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
 
   const toggle = useCallback(() => {
     setTheme((t) => {

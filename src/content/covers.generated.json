@@ -1,7 +1,16 @@
 {
+  "acid": [
+    {
+      "src": "/covers/acid.webp",
+      "file": "acid.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "art-deco": [
     {
       "src": "/covers/art-deco.webp",
+      "file": "art-deco.png",
       "width": 1080,
       "height": 1080
     }
@@ -9,6 +18,7 @@
   "art-nouveau": [
     {
       "src": "/covers/art-nouveau.webp",
+      "file": "art-nouveau.png",
       "width": 1024,
       "height": 1536
     }
@@ -16,6 +26,7 @@
   "bauhaus": [
     {
       "src": "/covers/bauhaus.webp",
+      "file": "bauhaus.png",
       "width": 1024,
       "height": 1536
     }
@@ -23,6 +34,7 @@
   "blueprint": [
     {
       "src": "/covers/blueprint.webp",
+      "file": "blueprint.png",
       "width": 1024,
       "height": 1536
     }
@@ -30,6 +42,7 @@
   "brutalism": [
     {
       "src": "/covers/brutalism.webp",
+      "file": "brutalism.png",
       "width": 1024,
       "height": 1536
     }
@@ -37,6 +50,7 @@
   "bubbleglam": [
     {
       "src": "/covers/bubbleglam.webp",
+      "file": "bubbleglam.png",
       "width": 1024,
       "height": 1536
     }
@@ -44,6 +58,7 @@
   "chromecore": [
     {
       "src": "/covers/chromecore.webp",
+      "file": "chromecore.png",
       "width": 1024,
       "height": 1536
     }
@@ -51,6 +66,7 @@
   "clay-style": [
     {
       "src": "/covers/clay-style.webp",
+      "file": "clay-art.png",
       "width": 1024,
       "height": 1536
     }
@@ -58,6 +74,7 @@
   "collage-art": [
     {
       "src": "/covers/collage-art.webp",
+      "file": "collage-art.png",
       "width": 1024,
       "height": 1536
     }
@@ -65,6 +82,7 @@
   "cyberminimalism": [
     {
       "src": "/covers/cyberminimalism.webp",
+      "file": "cyberminimalism.png",
       "width": 1080,
       "height": 1080
     }
@@ -72,6 +90,7 @@
   "cyberpop": [
     {
       "src": "/covers/cyberpop.webp",
+      "file": "cyperpop.png",
       "width": 1024,
       "height": 1536
     }
@@ -79,6 +98,7 @@
   "gen-x-soft-club": [
     {
       "src": "/covers/gen-x-soft-club.webp",
+      "file": "gen-x-softclub.png",
       "width": 1024,
       "height": 1536
     }
@@ -86,6 +106,27 @@
   "glitch": [
     {
       "src": "/covers/glitch.webp",
+      "file": "glitch2.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "src": "/covers/glitch-1.webp",
+      "file": "glitch1.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "gothic": [
+    {
+      "src": "/covers/gothic.webp",
+      "file": "gothic2.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "src": "/covers/gothic-1.webp",
+      "file": "gothic1.png",
       "width": 1024,
       "height": 1536
     }
@@ -93,18 +134,35 @@
   "italo-disco": [
     {
       "src": "/covers/italo-disco.webp",
+      "file": "italo-disco2.png",
       "width": 1080,
       "height": 1080
     },
     {
       "src": "/covers/italo-disco-1.webp",
+      "file": "italo-disco1.png",
       "width": 1080,
       "height": 1080
+    }
+  ],
+  "maximalism": [
+    {
+      "src": "/covers/maximalism.webp",
+      "file": "maximalism1.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "src": "/covers/maximalism-2.webp",
+      "file": "maximalism2.png",
+      "width": 1024,
+      "height": 1536
     }
   ],
   "memphis": [
     {
       "src": "/covers/memphis.webp",
+      "file": "memphis.png",
       "width": 1024,
       "height": 1536
     }
@@ -112,6 +170,7 @@
   "mid-century-modern": [
     {
       "src": "/covers/mid-century-modern.webp",
+      "file": "mid-century-modern.png",
       "width": 1024,
       "height": 1536
     }
@@ -119,6 +178,7 @@
   "pop-art": [
     {
       "src": "/covers/pop-art.webp",
+      "file": "pop-art.png",
       "width": 1080,
       "height": 1080
     }
@@ -126,6 +186,7 @@
   "psychedelic": [
     {
       "src": "/covers/psychedelic.webp",
+      "file": "psychedelic.png",
       "width": 1024,
       "height": 1536
     }
@@ -133,6 +194,7 @@
   "steampunk": [
     {
       "src": "/covers/steampunk.webp",
+      "file": "steampunk.png",
       "width": 1080,
       "height": 1080
     }
@@ -140,6 +202,15 @@
   "surreal-design": [
     {
       "src": "/covers/surreal-design.webp",
+      "file": "surreal-design.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "surveillance": [
+    {
+      "src": "/covers/surveillance.webp",
+      "file": "surveillance.png",
       "width": 1024,
       "height": 1536
     }
@@ -147,6 +218,7 @@
   "swiss": [
     {
       "src": "/covers/swiss.webp",
+      "file": "swiss.png",
       "width": 1024,
       "height": 1536
     }
@@ -154,6 +226,7 @@
   "synthwave": [
     {
       "src": "/covers/synthwave.webp",
+      "file": "synthwave.png",
       "width": 1080,
       "height": 1080
     }
@@ -161,6 +234,7 @@
   "vaporwave": [
     {
       "src": "/covers/vaporwave.webp",
+      "file": "vapourwave.png",
       "width": 1080,
       "height": 1080
     }
@@ -168,6 +242,7 @@
   "web-1-0": [
     {
       "src": "/covers/web-1-0.webp",
+      "file": "web-1-0.png",
       "width": 1024,
       "height": 1536
     }
@@ -175,6 +250,7 @@
   "web-2-0-gloss": [
     {
       "src": "/covers/web-2-0-gloss.webp",
+      "file": "web-2-0.png",
       "width": 1024,
       "height": 1536
     }
@@ -182,6 +258,7 @@
   "y2k": [
     {
       "src": "/covers/y2k.webp",
+      "file": "y2k.png",
       "width": 1024,
       "height": 1536
     }

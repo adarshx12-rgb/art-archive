@@ -1,14 +1,13 @@
 # FORM / FIELD cover prompts: alternate versions
 
-Second versions of some style prompts. The site reads only `docs/cover-prompts.md`, one prompt per style. To make one of these the live prompt for a style, swap it into that file.
+Second versions of some style prompts. The site reads only `docs/cover-prompts.md`, one prompt per style. To make one of these the live prompt for a style, swap it into that file. Each prompt's `Cover` line names the image it made; the site shows these prompts beside their similar covers.
 
 ## Italo Disco: beach compilation sleeve
 
 - Slug: `italo-disco`
 - Artwork: 1985 dance compilation LP cover (Airbrush on board)
 - Format: square 1:1
-- Cover made: `public/covers/italo-disco1.png`
-- The live prompt in `cover-prompts.md` is the "STELLA NOVA" dancer (`italo-disco2.png`).
+- Cover: `public/covers/italo-disco1.png`
 
 ```text
 The original front cover of a 1985 Italo disco dance compilation LP, painted in airbrush and gouache on illustration board.
@@ -32,68 +31,12 @@ Avoid: the likeness of a real person, daylight realism, paper texture, earth-ton
 
 **If it misses:** Make it look hand-airbrushed: smoother sprayed sky, crisper palm silhouettes and glossy airbrushed skin. Correct the logo to read exactly "costa neon" and "Dance Hits Vol. 2".
 
-## Gothic: gilt blackletter book cover
-
-- Slug: `gothic`
-- Artwork: 1887 gothic novel binding (Tooled oxblood leather and gold leaf)
-- Format: tall 2:3
-- Cover made: not yet
-- The live prompt in `cover-prompts.md` is the cathedral oil painting.
-
-```text
-An original 1887 gothic novel, bound in oxblood leather with tooled gold decoration, photographed straight on for an antiquarian book catalogue.
-
-Composition: the front cover fills the frame. At its centre, a tall pointed Gothic arch in gilt tracery frames a black raven perched on a skull-free stone ledge beneath a crescent moon, with a single lit candle below. Around the arch, an intricate border of thorned roses, ivy, bats' wings and interlaced Gothic tracery is tooled into the leather in gold and blind-embossed black. Heavy black iron corner pieces with pointed trefoil shapes guard each corner. Symmetrical, dense and ornate, with every inch decorated.
-
-Typography: ornate blackletter capitals and lowercase in gold leaf, with decorative flourishes on the first letter. Set exactly this text: "Nocturne" as the title above the arch, and "1887" small below it.
-
-Colours: raven black #0F0D0E, oxblood #5A1520 leather, aged gold #A88A4E for the gilding, cathedral stone #6B6966 for the worn highlights.
-
-Light: low, warm candle-like light from one side that rakes across the cover, catching the raised gold and embossing and leaving the edges in deep shadow.
-
-Finish: a real old book: cracked and scuffed leather grain, gold leaf worn away on the raised edges, slightly rounded corners, a faint dust sheen and tiny scratches on the iron. Moody, mysterious and richly detailed.
-
-Format: tall portrait (2:3). Show the front cover itself, straight on, filling the image edge to edge, with no table, hands or other books.
-
-Text: spell the lettering exactly as written; add no other words, logos or signatures.
-
-Avoid: bright pastels, flat vector shapes, cheerful daylight, gore, cartoon styling, modern fonts.
-```
-
-**If it misses:** Correct the gold lettering so it reads exactly "Nocturne" and "1887", in clear blackletter. Change nothing else.
-
-## Maximalism: cut-up portrait poster
-
-- Slug: `maximalism`
-- Artwork: Maximalist graphic-design poster (Risograph, screen print and marker)
-- Format: tall 2:3
-- Cover made: not yet
-- The live prompt in `cover-prompts.md` is the green drawing-room photograph.
-
-```text
-An original maximalist graphic-design poster, printed in risograph and screen print, with hand-drawn marker added on top.
-
-Composition: a large black-and-white halftone portrait of a young man in a light shirt fills most of the sheet. It is cut into strips and reassembled slightly out of line, with one eye and part of the face swapped for fragments from other photographs at different scales. Over it run loose hand-drawn marker scribbles: electric-blue lines tracing the hair and tie, lime-green zigzags over the shirt and collar, and a yellow outline around one eye. Behind the portrait, torn colour blocks in pink, sky blue and yellow peek out, and a few flat geometric shapes overlap the edges. A giant condensed title runs the full width of the top and overlaps the head. The poster is layered, loud and full, but the face stays the clear centre.
-
-Typography: very tall, extra-condensed bold sans-serif capitals in poster red for the title, a small bold condensed subline in red, and one scrawled handwritten marker word. Set exactly this text: "MAXIMALISM" as the giant title across the top; "MORE IS MORE" as the red subline below it; "yes" as a blue marker scrawl near the collar.
-
-Colours: cream paper, black halftone, poster red, electric cobalt blue, lime green and sunshine yellow, with small touches of pink and sky blue.
-
-Finish: coarse halftone dots in the photo, slight misregistration between the ink layers, riso grain, real marker strokes with uneven pressure and ink bleed, and visible paper texture.
-
-Format: tall portrait (2:3). Show it as a flat archival scan of the complete poster, evenly lit and filling the image edge to edge, with no wall, frame, mockup or hands.
-
-Text: spell the lettering exactly as written; add no other words, no paragraphs of small text, and no names, logos or signatures.
-
-Avoid: empty space, neat grids, muted colours, copying any existing poster, the likeness of a real person.
-```
-
 ## Maximalism: bright muralled living room
 
 - Slug: `maximalism`
 - Artwork: Interior photograph (Design-magazine editorial)
 - Format: tall 2:3
-- Cover made: not yet
+- Cover: `public/covers/maximalism2.png`
 
 ```text
 An editorial interior photograph for a design magazine: a joyful maximalist living room, shot with a wide lens.
@@ -113,43 +56,12 @@ Text: no lettering, readable book titles, logos or watermarks anywhere.
 Avoid: empty space, beige or muted palettes, sterile minimalism, CGI-looking furniture, clutter with no arrangement.
 ```
 
-## Surveillance: drone tracking poster
-
-- Slug: `surveillance`
-- Artwork: Graphic-design poster (Drone photograph with survey-drawing overlays)
-- Format: tall 2:3
-- Cover made: not yet
-- The live prompt in `cover-prompts.md` is the car-park security-camera still.
-
-```text
-An original contemporary graphic-design poster about surveillance, combining an overhead drone photograph with the look of a technical survey drawing. Printed as a large digital print.
-
-Composition: the base image is a high-angle drone photograph looking down at a grey asphalt street crossed by faded yellow road markings. A single person in a hooded jacket and shorts walks away from the camera near the centre, casting a long shadow, face never visible. Thin bright-green tracking boxes lock onto the figure, with corner brackets and a small label tab. Three square close-up crops of the same figure (the hood from above, the torso, the legs mid-stride) sit in green-outlined frames at the top left, left edge and lower left, joined to the main box by thin leader lines. Over the whole photo lies a faint survey grid with a horizontal measuring scale along the bottom, elevation numbers up the left edge and a dashed trajectory line tracing the walker's path. Pale halftone fragments of an office building and a few small black human silhouettes are collaged into the grid at the edges. Small flat interface icons float in the frame: a warning triangle, a folder, a speech bubble and a red recording dot. Layered and precise, with the walking figure as the clear focal point.
-
-Typography: a small, blocky monospace for all labels and numbers, in green and white. Set exactly this text: "SUBJECT 07" on the tracking box label; "14:07:22" in the top left corner; "REC" beside the red dot at the top right; "0+00", "1+00", "2+00", "3+00" along the bottom scale; "1180", "1190", "1200" up the left edge.
-
-Colours: washed grey #C7CCC6 asphalt and paper, monitor dark #1C221E for the silhouettes and shadows, a bright tracking green for the boxes and labels (with night-vision green #7F9A84 for the fainter grid), record red #E94B3C for the dot only, and a small touch of warning yellow on the triangle.
-
-Light: flat, overcast daylight in the drone photo with a soft, long shadow from the walker.
-
-Finish: a crisp photograph with slight compression and sensor noise, fine hairline technical linework, grainy halftone in the collaged building fragments, and flat, clean interface graphics: clinical, detached and observational.
-
-Format: tall portrait (2:3). Show the flat poster artwork itself, edge to edge, with no wall, frame, mockup or hands.
-
-Text: spell the labels and numbers exactly as written; add no other words, names, logos or signatures.
-
-Avoid: a visible face, the likeness of a real person, cinematic shallow depth of field, vivid saturated colour across the whole image, clutter that hides the walker.
-```
-
-**If it misses:** Keep the walking figure as the clear focal point: thin out the grid and icons, push the close-up crops to the edges, and keep all labels exactly as they are.
-
 ## Glitch: dissolving portrait
 
 - Slug: `glitch`
 - Artwork: Glitch-art portrait (Archival pigment print)
 - Format: tall 2:3
-- Cover made: not yet
-- The live prompt in `cover-prompts.md` is the "DATA BLOOM" poster (`glitch2.png`).
+- Cover: `public/covers/glitch1.png`
 
 ```text
 An original contemporary glitch-art portrait, printed as a large archival pigment print for a gallery.
@@ -170,3 +82,86 @@ Avoid: the likeness of a real person, a fully destroyed or unreadable face, mudd
 ```
 
 **If it misses:** Keep the eyes, nose and lips clear and sharp, and move the streaks and smears to the hair, forehead and edges. Keep the colours.
+
+## Maximalism: green drawing-room photograph
+
+- Slug: `maximalism`
+- Artwork: Interior photograph (Design-magazine editorial)
+- Format: tall 2:3
+- Cover: not yet
+
+```text
+An editorial interior photograph for a design magazine: a maximalist drawing room in an old townhouse, shot on medium format.
+
+Composition: a straight-on view of one wall and the seating in front of it. Bottle-green chinoiserie wallpaper with birds and branches, a dense gallery wall of framed paintings and plates, a curved raspberry velvet sofa with fringe and a pile of patterned cushions, a lacquered sapphire side table, brass lamps with pleated shades, stacked books, ceramics, a leopard-print footstool and layered patterned rugs on the floor. Every surface is patterned, yet the room is carefully arranged and balanced around the sofa.
+
+Colours: bottle green #1F3B2D, raspberry #B0265B, saffron #E3A72F, sapphire #2B3A7A.
+
+Light: warm lamplight mixed with soft window light, with rich shadows.
+
+Finish: a real photograph of a real, lived-in room: velvet pile, lacquer reflections, brass patina, slight film grain and natural depth.
+
+Format: Tall portrait (2:3). Show the photograph itself, full frame.
+
+Text: no lettering, readable book titles, logos or watermarks anywhere.
+
+Avoid: empty space, monochrome palettes, sterile minimalism, CGI-looking furniture.
+```
+
+**If it misses:** Make it feel like a real photographed room: warmer lamplight, richer shadows and more natural texture. Keep the arrangement and colours.
+
+## Gothic: cathedral oil painting
+
+- Slug: `gothic`
+- Artwork: 19th-century cathedral interior (Oil on canvas)
+- Format: tall 2:3
+- Cover: `public/covers/gothic1.png`
+
+```text
+An original 19th-century oil painting of a Gothic cathedral interior at night.
+
+Composition: a view down the nave toward the altar, with tall pointed arches and clustered stone columns rising into ribbed vaults on both sides. High up, a stained-glass window casts slanting shafts of red and gold light into the dark. Rows of candles glow near the altar, and a lone hooded figure in an oxblood cloak stands small in the aisle. Strong vertical lines frame the scene.
+
+Colours: raven black #0F0D0E, oxblood #5A1520, aged gold #A88A4E, cathedral stone #6B6966.
+
+Light: candlelight and shafts of coloured light through stained glass; everything else falls into deep shadow.
+
+Finish: rich, layered oil paint with glazed shadows, fine detail in the tracery, visible brushwork in the light shafts, gentle craquelure and canvas weave: a real old painting.
+
+Format: Tall portrait (2:3). Show it as a flat museum photograph of the whole canvas, cropped exactly to its edges, with no wall, frame or gallery.
+
+Text: no lettering, signatures, logos or watermarks anywhere.
+
+Avoid: bright pastels, flat vector shapes, cheerful daylight, fantasy effects.
+```
+
+**If it misses:** Make it look like a real old oil painting: glazed shadows, visible brushwork in the light shafts and faint craquelure. Keep the composition.
+
+## Surveillance: car-park security-camera still
+
+- Slug: `surveillance`
+- Artwork: 1997 CCTV still (Video frame, exhibited as a gallery print)
+- Format: square 1:1
+- Cover: not yet
+
+```text
+A single frame from 1997 security-camera footage, exhibited as a large print in a contemporary photography show.
+
+Composition: a fixed, high-angle wide shot from a camera mounted in the ceiling corner of an empty underground car park at night, with strong fisheye distortion. Concrete pillars, painted bay lines, one parked car and a single figure in a hooded jacket crossing the floor, slightly blurred mid-step. The camera looks down, detached and still.
+
+Typography: a blocky white monospace video overlay. Set exactly this text: "CAM 04" in the top left; "09-28-1997 03:12:44" in the bottom right; "REC" in the top right beside a small red dot.
+
+Colours: monitor dark #1C221E, night-vision green #7F9A84, washed grey #C7CCC6, record red #E94B3C for the dot only.
+
+Light: flat, flickering fluorescent overhead light mixed with infrared night vision.
+
+Finish: low-resolution sensor noise, interlacing lines, compression blocks, slight smearing and a desaturated green-grey cast: a real frame of old CCTV tape.
+
+Format: Square (1:1). Show the video frame itself, full frame, not a monitor.
+
+Text: spell the overlay exactly as written; add no other words, logos or watermarks.
+
+Avoid: cinematic shallow depth of field, vivid colour, flattering lighting, sharp detail.
+```
+
+**If it misses:** Make it look more like old CCTV tape: more sensor noise, interlacing and compression blocks, and a flatter green-grey tone. Keep the overlay text exactly as it is.

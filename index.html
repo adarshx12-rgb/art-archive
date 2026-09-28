@@ -3,18 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#F4F2ED" />
+    <meta name="theme-color" content="#151514" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script>
       // Set the theme before first paint to avoid a flash. Mirrors src/state/theme.tsx.
       (function () {
         var t = null;
         try { t = localStorage.getItem("formfield:theme"); } catch (e) {}
-        if (t !== "light" && t !== "dark") {
-          t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
+        if (t !== "light") t = "dark";
         document.documentElement.dataset.theme = t;
-        if (t === "dark") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#151514");
+        if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#F4F2ED");
       })();
     </script>
     <title>FORM / FIELD</title>

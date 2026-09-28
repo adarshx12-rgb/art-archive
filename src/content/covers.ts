@@ -8,6 +8,8 @@ import manifest from "./covers.generated.json";
  */
 export interface Cover {
   src: string;
+  /** The PNG in public/covers it was made from, e.g. "gothic2.png". */
+  file: string;
   width: number;
   height: number;
 }

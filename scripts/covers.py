@@ -4,8 +4,9 @@
 
 Files are named after the style slug, optionally with a number:
 `gothic.png`, or `gothic1.png`, `gothic2.png`, `gothic3.png`. Image 2 is the
-main cover (or the unnumbered file, or the lowest number); the rest are
-shown as similar covers on the style page. Needs Pillow.
+main cover (or the unnumbered file, or the lowest number) unless MAIN below
+says otherwise; the rest are shown as similar covers on the style page.
+Needs Pillow.
 """
 import json
 import re
@@ -28,9 +29,15 @@ ALIASES = {
 }
 
 
-def rank(n):
-    """Sort key: image 2 first, then unnumbered, then the rest in order."""
-    return (0, 0) if n == 2 else (1, 0) if n is None else (2, n)
+# Styles whose main cover is not image 2: slug -> image number.
+MAIN = {
+    "maximalism": 1,
+}
+
+
+def rank(n, main=2):
+    """Sort key: the main image first, then unnumbered, then the rest in order."""
+    return (0, 0) if n == main else (1, 0) if n is None else (2, n)
 
 
 groups = {}
@@ -47,12 +54,12 @@ for old in COVERS.glob("*.webp"):
 manifest = {}
 for slug, files in sorted(groups.items()):
     entries = []
-    for i, (num, png) in enumerate(sorted(files, key=lambda f: rank(f[0]))):
+    for i, (num, png) in enumerate(sorted(files, key=lambda f: rank(f[0], MAIN.get(slug, 2)))):
         out = COVERS / (f"{slug}.webp" if i == 0 else f"{slug}-{num or i + 1}.webp")
         im = Image.open(png).convert("RGB")
         im.thumbnail(MAX, Image.LANCZOS)
         im.save(out, "WEBP", quality=80, method=6)
-        entries.append({"src": f"/covers/{out.name}", "width": im.width, "height": im.height})
+        entries.append({"src": f"/covers/{out.name}", "file": png.name, "width": im.width, "height": im.height})
         print(f"{png.name:28} -> {out.name} {im.size} {out.stat().st_size // 1024} KB")
     manifest[slug] = entries
 

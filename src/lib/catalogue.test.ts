@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { palettes } from "../content/palettes";
-import { coverPrompts } from "../content/coverPrompts";
+import { coverPrompts, promptForImage } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
+import { fontSuggestions } from "../content/fonts";
 import { references } from "../content/references";
 import { styles } from "../content/styles";
 import { renderers } from "../art/studies";
@@ -37,7 +38,7 @@ describe("content integrity", () => {
       expect(slugs.has(slug), `cover slug ${slug}`).toBe(true);
       for (const c of [cover, ...similarCovers(slug)]) expect(files.has(c.src), c.src).toBe(true);
     }
-    expect(Object.keys(covers).length).toBeGreaterThanOrEqual(26);
+    expect(Object.keys(covers).length).toBeGreaterThanOrEqual(30);
     // Image 2 is the main cover; the others are similar covers.
     expect(covers["italo-disco"]?.src).toBe("/covers/italo-disco.webp");
     expect(similarCovers("italo-disco").map((c) => c.src)).toEqual(["/covers/italo-disco-1.webp"]);
@@ -53,6 +54,26 @@ describe("content integrity", () => {
       expect(c.artwork && c.format, c.slug).toBeTruthy();
     }
     expect(coverPrompts.swiss?.prompt).toMatch(/^An original 1962 Swiss concert poster/);
+  });
+
+  it("links every cover image to the prompt that made it", () => {
+    for (const [slug, main] of Object.entries(covers)) {
+      // The live prompt in cover-prompts.md is the one behind the main cover.
+      expect(coverPrompts[slug]?.cover, `live prompt for ${slug}`).toBe(main.file);
+      for (const c of similarCovers(slug)) expect(promptForImage(c.file)?.slug, c.file).toBe(slug);
+    }
+    expect(promptForImage("gothic2.png")?.artwork).toMatch(/novel binding/);
+  });
+
+  it("suggests free and paid fonts for every style with a cover", () => {
+    const slugs = new Set(styles.map((s) => s.slug));
+    for (const slug of Object.keys(covers)) {
+      const fonts = fontSuggestions[slug] ?? [];
+      expect(fonts.some((f) => f.licence === "free"), `free fonts for ${slug}`).toBe(true);
+      expect(fonts.some((f) => f.licence === "paid"), `paid fonts for ${slug}`).toBe(true);
+      expect(new Set(fonts.map((f) => f.family)).size, `duplicate font in ${slug}`).toBe(fonts.length);
+    }
+    for (const slug of Object.keys(fontSuggestions)) expect(slugs.has(slug), slug).toBe(true);
   });
 
   it("style content is genuinely distinct between entries", () => {

@@ -40,7 +40,7 @@ const SceneOut = z.object({
       z.object({
         id: z.string().describe("The id of an existing subject being kept or changed, or an empty string for a new one."),
         kind: z.enum(GLYPHS).describe("The closest drawable shape. Use 'thing' for anything not in the list."),
-        label: z.string().describe("What it is, in the user's words, with its descriptive details, e.g. 'old fisherman in a yellow coat'."),
+        label: z.string().describe("What it is, using only the user's own words and details, e.g. 'old fisherman in a yellow coat'. Never add details the user didn't give."),
         count: z.number().int().describe("How many, drawn side by side (1-6)."),
         x: z.number().describe("Metres; negative is left, positive is right."),
         y: z.number().describe("Metres above the ground; 0 for anything standing on the ground."),
@@ -74,6 +74,7 @@ The set:
 - turn: 0 faces the camera, 90 faces screen-right, -90 faces screen-left, 180 faces away. Make people face each other, the camera or what they're doing, as the description implies. Animals and vehicles usually side-on (90 or -90).
 - Poses: stand, walk, run, sit, dance, lie. Pick from what the subject is doing.
 - kind is only the drawn shape. Put the real detail in label using the user's wording ("elderly fisherman in a yellow raincoat", not "person"). Use count for groups ("three crows" is one subject with count 3).
+- Labels contain only what the user said about that subject. Don't add moods, expressions, clothing, colours, ages or actions they didn't mention ("two children running", not "two laughing children running"). Where the subject is and which way it faces belong in the numbers, not the label.
 
 Camera and light: set shot, angle, lens, placement and lighting only when the user asks for or clearly implies them (e.g. "close-up", "from below", "at night", "golden hour"). Otherwise keep the current values you are given; "auto" and "style" mean "leave it to the style".
 

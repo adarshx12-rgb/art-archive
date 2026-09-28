@@ -29,7 +29,7 @@ const SYSTEM = `You design small colour palettes for image prompts. Return exact
 - 2 colours: background, primary
 - 3 colours: background, primary, accent
 - 4 colours: background, primary, secondary, accent
-The background covers most of the image; the primary must read clearly against it; the accent is used sparingly. Suit the requested mood and the given style, avoid near-duplicates, and give each colour a plain, specific name a person would say ("oxblood", "sea-glass green").`;
+The background covers most of the image; the primary must read clearly against it; the accent is used sparingly. Design the colours for the user's request first: its mood, time of day, weather, materials and temperature. The style's own swatches are context about how that style handles colour, not an answer; don't return them unless the request asks for the style's own colours. Avoid near-duplicates, and give each colour a plain, specific name a person would say ("oxblood", "sea-glass green").`;
 
 export async function suggestPalette(env: Env, body: z.infer<typeof PaletteRequest>, override?: string | null) {
   const style = getStyle(body.style);

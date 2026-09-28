@@ -73,9 +73,10 @@ describe("looking around the 3D view", () => {
 describe("the 2D board", () => {
   const flat = shotCamera({ ...defaultState(), view: "2d", orbit: { yaw: 90, tilt: 40, panX: 3, panY: 0 } });
 
-  it("ignores the orbit and doesn't shrink things with distance", () => {
+  it("ignores the orbit and keeps the 3D view's composition", () => {
     expect(projectActor(flat, person()).x).toBeCloseTo(0.5, 5);
-    expect(projectActor(flat, person({ position: [0, 0, -20] })).size).toBeCloseTo(projectActor(flat, person()).size, 5);
+    const straight = shotCamera(defaultState());
+    expect(projectActor(flat, person()).size).toBeCloseTo(projectActor(straight, person()).size, 5);
     expect(horizonAt(flat)).toBeNull();
   });
 

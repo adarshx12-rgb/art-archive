@@ -8,12 +8,13 @@ import { isSky, REAL_HEIGHT, type Actor, type Vec3 } from "./model";
  * (looking at the world origin), not to the subjects, so moving a subject
  * moves it through the frame, like blocking actors on a real set.
  *
- * In the 2D view the camera looks straight on without perspective: size
- * doesn't change with distance, and subjects only move within the picture.
+ * The 2D board uses the same lens, straight on and without looking around,
+ * so the picture keeps its composition; there, subjects only move within
+ * the picture and never nearer or further.
  */
 export interface ShotCamera {
-  /** Flat, straight-on view (the 2D board). */
-  ortho: boolean;
+  /** The 2D board: straight on, no looking around. */
+  flat: boolean;
   /** Metres the frame covers vertically at the subject. */
   cover: number;
   /** Degrees above (+) or below (-) level the camera looks down from. */
@@ -70,12 +71,12 @@ export function shotCamera(state: CameraState): ShotCamera {
   const { cover, aim } = SHOT[state.shot === "auto" ? "full" : state.shot] ?? SHOT.full!;
   const dist = cover / (2 * Math.tan(rad(fov) / 2));
   const angle = state.angle === "auto" ? "eye" : state.angle;
-  const ortho = state.view === "2d";
-  const orbit = ortho ? { yaw: 0, tilt: 0, panX: 0, panY: 0 } : state.orbit;
+  const flat = state.view === "2d";
+  const orbit = flat ? { yaw: 0, tilt: 0, panX: 0, panY: 0 } : state.orbit;
 
   // Rule of thirds: aim right of the subject so it sits on the left third line.
   const aimX = state.composition === "thirds" ? (cover * aspect) / 6 : 0;
-  const pitch = ortho ? 0 : Math.min(Math.max((PITCH[angle] ?? 0) + orbit.tilt, -35), 89.5);
+  const pitch = flat ? 0 : Math.min(Math.max((PITCH[angle] ?? 0) + orbit.tilt, -35), 89.5);
   const yaw = rad(orbit.yaw);
   // Panning slides the camera sideways (relative to where it faces) and up/down.
   const sideways: Vec3 = [Math.cos(yaw), 0, -Math.sin(yaw)];
@@ -83,7 +84,7 @@ export function shotCamera(state: CameraState): ShotCamera {
   const back: Vec3 = [Math.sin(yaw) * Math.cos(rad(pitch)), Math.sin(rad(pitch)), Math.cos(yaw) * Math.cos(rad(pitch))];
   const eye = add(target, mul(back, dist));
   if (eye[1] < 0.05) eye[1] = 0.05; // never below the ground
-  const roll = !ortho && angle === "dutch" ? 12 : 0;
+  const roll = !flat && angle === "dutch" ? 12 : 0;
 
   const forward = norm(sub(target, eye));
   let right = norm(cross(forward, [0, 1, 0]));
@@ -95,7 +96,7 @@ export function shotCamera(state: CameraState): ShotCamera {
     up = add(mul(up, c), mul(right, -s));
     right = r2;
   }
-  return { ortho, cover, pitch, eye, target, roll, fov, aspect, focal, right, up, forward };
+  return { flat, cover, pitch, eye, target, roll, fov, aspect, focal, right, up, forward };
 }
 
 /** The Angle wording that matches the view, after any turning and tilting in the preview. */
@@ -108,7 +109,7 @@ export function effectiveAngle(state: CameraState): BuilderState["angle"] {
 
 /** Where the horizon crosses the frame (0 = top, 1 = bottom), or null when it's out of view. */
 export function horizonAt(cam: ShotCamera): number | null {
-  if (cam.ortho) return null;
+  if (cam.flat) return null;
   const level = norm([cam.forward[0], 0, cam.forward[2]]);
   if (Math.hypot(cam.forward[0], cam.forward[2]) < 1e-3) return null;
   return project(cam, add(cam.eye, mul(level, 1e5))).y;
@@ -118,7 +119,6 @@ export function horizonAt(cam: ShotCamera): number | null {
 export function project(cam: ShotCamera, p: Vec3): { x: number; y: number; depth: number } {
   const v = sub(p, cam.eye);
   const depth = dot(v, cam.forward);
-  if (cam.ortho) return { x: 0.5 + dot(v, cam.right) / (cam.cover * cam.aspect), y: 0.5 - dot(v, cam.up) / cam.cover, depth };
   const t = Math.tan(rad(cam.fov) / 2);
   const d = Math.max(depth, 1e-3);
   return { x: 0.5 + dot(v, cam.right) / (d * t * cam.aspect) / 2, y: 0.5 - dot(v, cam.up) / (d * t) / 2, depth };
@@ -135,9 +135,9 @@ function rayAt(cam: ShotCamera, x: number, y: number): Vec3 {
  * `depth` along the lens when the plane is behind the camera or edge-on.
  */
 export function unproject(cam: ShotCamera, x: number, y: number, height: number, depth: number): Vec3 {
-  // Flat view: the point in the picture plane at the same depth.
-  if (cam.ortho) return add(cam.eye, add(add(mul(cam.right, (x - 0.5) * cam.cover * cam.aspect), mul(cam.up, (0.5 - y) * cam.cover)), mul(cam.forward, depth)));
   const dir = rayAt(cam, x, y);
+  // The 2D board: stay at the same distance, so things never move nearer or further.
+  if (cam.flat) return add(cam.eye, mul(dir, depth / Math.max(dot(dir, cam.forward), 1e-3)));
   if (Math.abs(dir[1]) > 1e-4) {
     const t = (height - cam.eye[1]) / dir[1];
     if (t > 0.05 && t < 5000) return add(cam.eye, mul(dir, t));
@@ -165,7 +165,7 @@ export function projectActor(cam: ShotCamera, a: Actor): Projected {
   const h = standingHeight(a);
   const centre = project(cam, [a.position[0], a.position[1] + h / 2, a.position[2]]);
   const t = Math.tan(rad(cam.fov) / 2);
-  const size = cam.ortho ? (REAL_HEIGHT[a.glyph] * a.scale) / cam.cover : (REAL_HEIGHT[a.glyph] * a.scale) / (2 * Math.max(centre.depth, 0.05) * t);
+  const size = (REAL_HEIGHT[a.glyph] * a.scale) / (2 * Math.max(centre.depth, 0.05) * t);
 
   // Turn 0 faces +z, i.e. towards the default camera.
   const yaw = rad(a.rotation[1]);
@@ -198,7 +198,7 @@ export function projectActor(cam: ShotCamera, a: Actor): Projected {
 export function projectScene(cam: ShotCamera, actors: Actor[]): Projected[] {
   return actors
     .map((a) => projectActor(cam, a))
-    .filter((p) => cam.ortho || p.depth > 0.05)
+    .filter((p) => p.depth > 0.05)
     .sort((a, b) => b.depth - a.depth);
 }
 

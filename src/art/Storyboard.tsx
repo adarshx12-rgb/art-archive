@@ -666,7 +666,7 @@ export interface StoryboardProps {
   onLayerDelete?: (id: string) => void;
   /** Subjects to draw, already projected from the 3D scene, furthest first. */
   layers?: Layer[];
-  /** The camera the scene is seen through; sets the horizon and ground grid. A flat (ortho) camera draws the 2D board. */
+  /** The camera the scene is seen through; sets the horizon and ground grid. A flat camera draws the 2D board. */
   camera?: ShotCamera;
   /** Dragging empty space turns ("orbit") or slides ("pan") the view; dx/dy are fractions of the frame. */
   onView?: (kind: "orbit" | "pan", dx: number, dy: number) => void;
@@ -720,7 +720,7 @@ export function Storyboard({
   const drag = useRef<Drag | null>(null);
   const viewDrag = useRef<{ kind: "orbit" | "pan"; x: number; y: number } | null>(null);
   /** The 2D board: a flat grid with only the placed subjects. */
-  const flat = camera?.ortho ?? false;
+  const flat = camera?.flat ?? false;
   const [aw, ah] = state.aspect.split(":").map(Number) as [number, number];
   const H = Math.round((W * ah) / aw);
   const parsed = parseSubject(state.subject);
@@ -936,7 +936,9 @@ export function Storyboard({
   const font = { fontFamily: "var(--font-mono)", fontSize: fs };
   // Nudge labels up until they clear the ones already placed (mono glyphs are ~0.6em wide).
   const placed: { x: number; y: number; text: string }[] = [];
-  const layerLabels = layers.map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
+  // Subjects turned or panned out of view keep no label at the frame edge.
+  const inView = (l: Layer) => l.x > -0.05 && l.x < 1.05 && l.y > -0.3 && l.y < 1.3;
+  const layerLabels = layers.filter(inView).map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
   [...layerLabels, ...labels.values()].forEach((l) => {
     l.x = Math.min(Math.max(l.x, 80), W - 80);
     const clash = () => placed.some((p) => Math.abs(p.x - l.x) < 0.3 * fs * (p.text.length + l.text.length) + fs * 0.5 && Math.abs(p.y - l.y) < fs * 1.2);
@@ -1040,7 +1042,7 @@ export function Storyboard({
       onPointerCancel={editable || lookable ? end : undefined}
       onContextMenu={lookable ? (e) => e.preventDefault() : undefined}
       onKeyDown={editable ? onKey : undefined}
-      style={editable || lookable ? { touchAction: "none", cursor: lookable ? (viewTool === "pan" ? "move" : "grab") : undefined } : undefined} className={`block h-auto w-full ${className}`} role="img" aria-label={`Rough sketch: ${[...layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
+      style={editable || lookable ? { touchAction: "none", cursor: lookable ? (viewTool === "pan" ? "move" : "grab") : undefined } : undefined} className={`block h-auto w-full select-none ${className}`} role="img" aria-label={`Rough sketch: ${[...layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
       <defs>
         <radialGradient id="sb-glow">
           <stop offset="0" stopColor="#FFD27A" stopOpacity="0.75" />
@@ -1066,10 +1068,10 @@ export function Storyboard({
             // 2D board: graph paper, nothing in perspective.
             <g stroke={c.ink}>
               {Array.from({ length: Math.ceil(W / 50) + 1 }, (_, i) => (
-                <line key={`gx${i}`} x1={i * 50} y1={0} x2={i * 50} y2={H} strokeOpacity={i % 4 === 0 ? 0.2 : 0.08} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+                <line key={`gx${i}`} x1={i * 50} y1={0} x2={i * 50} y2={H} strokeOpacity={i % 4 === 0 ? 0.3 : 0.13} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
               ))}
               {Array.from({ length: Math.ceil(H / 50) + 1 }, (_, i) => (
-                <line key={`gy${i}`} x1={0} y1={i * 50} x2={W} y2={i * 50} strokeOpacity={i % 4 === 0 ? 0.2 : 0.08} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+                <line key={`gy${i}`} x1={0} y1={i * 50} x2={W} y2={i * 50} strokeOpacity={i % 4 === 0 ? 0.3 : 0.13} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
               ))}
             </g>
           ) : camera ? (

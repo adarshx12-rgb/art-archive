@@ -117,6 +117,7 @@ await step("builder", async () => {
   check("the 3D scene is in the share link", (new URL(page.url()).searchParams.get("sc") ?? "").startsWith("person~a lighthouse keeper reading~"));
   // Look around: drag empty sky in the 3D view.
   const sketch = page.locator("main svg[role=img]");
+  await sketch.scrollIntoViewIfNeeded();
   const box = await sketch.boundingBox();
   await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.1);
   await page.mouse.down();
@@ -179,7 +180,7 @@ await step("copy/download/share", async () => {
   await p2.goto(link, { waitUntil: "networkidle" });
   check("share link restores identical prompt", (await p2.locator("#prompt").inputValue()) === before, link);
   await p2.close();
-  await page.getByRole("button", { name: "Reset" }).click();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
   await page.getByRole("button", { name: "Reset builder" }).click();
   await page.waitForTimeout(600); // the address bar updates after a short pause
   check("reset returns defaults", (await page.locator("#subject").inputValue()) === "" && new URL(page.url()).searchParams.get("t") === null);

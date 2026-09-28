@@ -1070,3 +1070,34 @@ Avoid: austere minimalism, monochrome, neat grids, a single typeface, copying an
 
 **If it misses:** Make the title letters clash more: every letter in a different typeface, size and colour, some tilted and overlapping, and keep the collage at the edges so the title stays readable. Keep the lettering exactly as it is.
 
+
+## 39. Future Funk
+
+- Slug: `future-funk`
+- Artwork: Future funk single cover (Late-80s cyberpunk anime cel painting)
+- Format: square 1:1
+- Cover: not yet
+- Save as: `public/covers/future-funk.png`
+
+```text
+The cover art for an invented future funk single, painted as a single cel from a late-1980s Japanese cyberpunk anime film: fast, neon-soaked and retro-futuristic, with a disco and vaporwave twist.
+
+Composition: an original young rider in a white-and-pink racing suit and a mirrored visor helmet leans hard into a turn on a sleek, futuristic motorcycle with a long, low, glossy pastel-blue body and glowing wheel rims, racing toward the viewer at a dramatic low angle. Long streaks of light trail behind the bike, and bold anime speed lines radiate out from the rider. Around them rises a night megacity seen from an elevated highway: towering skyscrapers stacked with glowing katakana billboards, a huge mirror-ball dome scattering light over the rooftops, holographic sparkles and a magenta perspective grid glowing on the road surface. A giant sunset-pink moon hangs low between the towers. Dynamic and futuristic, with the rider and bike as the clear focal point.
+
+Typography: bold, italic, chrome-edged 80s lettering with a neon glow for the English title, and glowing neon katakana set vertically on a billboard. Set exactly this text: "NEON RUSH" across the bottom; "ネオン" in vertical neon katakana on the right.
+
+Colours: deep night navy and violet sky, with bubblegum #FF6FB5 and hot magenta neon, summer sky blue #59C3FF and cyan light trails, lemon #FFD447 highlights and blush #FFE9F3 glows.
+
+Light: neon signs and light trails as the main light sources, hard rim light along the bike and helmet, bright specular glints on the glossy bodywork, and soft bloom around every light.
+
+Finish: hand-painted anime cel with crisp ink outlines and flat cel shading, painted background art with fine detail, airbrushed glows, streaked motion blur on the light trails, faint film grain and slight VHS softness.
+
+Format: square (1:1). Show the flat cover artwork itself, edge to edge, not a vinyl or phone mockup.
+
+Text: spell the lettering exactly as written, including the katakana; add no other words, Japanese or English, logos or signatures.
+
+Avoid: copying any existing anime film, character, motorcycle or scene; a red bike or red jacket; the likeness of a real person; daylight; dull colours; modern 3D rendering.
+```
+
+**If it misses:** Make it feel faster and more futuristic: stronger speed lines and light trails, a lower camera angle on the bike, denser neon towers, and keep the flat 80s cel look. Correct the lettering to read exactly "NEON RUSH" and "ネオン".
+

@@ -95,6 +95,14 @@
       "height": 1536
     }
   ],
+  "deconstructivism": [
+    {
+      "src": "/covers/deconstructivism.webp",
+      "file": "deconstructivism.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "gen-x-soft-club": [
     {
       "src": "/covers/gen-x-soft-club.webp",
@@ -127,6 +135,14 @@
     {
       "src": "/covers/gothic-1.webp",
       "file": "gothic1.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "grunge": [
+    {
+      "src": "/covers/grunge.webp",
+      "file": "grunge.png",
       "width": 1024,
       "height": 1536
     }
@@ -175,6 +191,14 @@
       "height": 1536
     }
   ],
+  "new-wave": [
+    {
+      "src": "/covers/new-wave.webp",
+      "file": "new-wave.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "pop-art": [
     {
       "src": "/covers/pop-art.webp",
@@ -183,10 +207,26 @@
       "height": 1080
     }
   ],
+  "post-modernism": [
+    {
+      "src": "/covers/post-modernism.webp",
+      "file": "post-modernism.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "psychedelic": [
     {
       "src": "/covers/psychedelic.webp",
       "file": "psychedelic.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "punk": [
+    {
+      "src": "/covers/punk.webp",
+      "file": "punk.png",
       "width": 1024,
       "height": 1536
     }

@@ -895,7 +895,7 @@ Avoid: natural daylight, paper texture, earth tones, modern 3D rendering, the li
 - Slug: `grunge`
 - Artwork: 1993 underground gig flyer (Photocopy, paste-up and marker)
 - Format: tall 2:3
-- Cover: not yet
+- Cover: `public/covers/grunge.png`
 - Save as: `public/covers/grunge.png`
 
 ```text
@@ -925,7 +925,7 @@ Avoid: clean glossy surfaces, bright pastels, perfect alignment, neat grids, the
 - Slug: `punk`
 - Artwork: 1977 punk fanzine cover (Xerox, cut-and-paste and marker)
 - Format: tall 2:3
-- Cover: not yet
+- Cover: `public/covers/punk.png`
 - Save as: `public/covers/punk.png`
 
 ```text
@@ -985,7 +985,7 @@ Avoid: clutter, extra shapes, gradients, textures, bright colours, centred symme
 - Slug: `deconstructivism`
 - Artwork: 1991 design lecture poster (Offset print with overprinted layers)
 - Format: tall 2:3
-- Cover: not yet
+- Cover: `public/covers/deconstructivism.png`
 - Save as: `public/covers/deconstructivism.png`
 
 ```text
@@ -1015,7 +1015,7 @@ Avoid: calm symmetry, soft rounded forms, pastels, random mess with no underlyin
 - Slug: `new-wave`
 - Artwork: 1981 new wave magazine cover (Photo collage with airbrush and offset print)
 - Format: tall 2:3
-- Cover: not yet
+- Cover: `public/covers/new-wave.png`
 - Save as: `public/covers/new-wave.png`
 
 ```text
@@ -1045,7 +1045,7 @@ Avoid: the likeness of a real person, copying any existing magazine cover, muted
 - Slug: `post-modernism`
 - Artwork: 1986 postmodern design exhibition poster (Collage, screen print and cut-out type)
 - Format: tall 2:3
-- Cover: not yet
+- Cover: `public/covers/post-modernism.png`
 - Save as: `public/covers/post-modernism.png`
 
 ```text

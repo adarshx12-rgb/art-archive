@@ -7,8 +7,6 @@ export default defineConfig(({ mode }) => ({
   // The Cloudflare plugin runs the /api Worker alongside the site in dev and preview (not in unit tests).
   plugins: [react(), tailwindcss(), ...(mode === "test" ? [] : [cloudflare()])],
   build: {
-    // three.js is one large chunk, loaded only when the 3D view opens.
-    chunkSizeWarningLimit: 700,
     rolldownOptions: {
       output: {
         // Keep framework code in its own long-cacheable chunk.

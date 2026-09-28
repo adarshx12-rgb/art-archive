@@ -889,3 +889,184 @@ Avoid: natural daylight, paper texture, earth tones, modern 3D rendering, the li
 ```
 
 **If it misses:** Make it look hand-airbrushed: smoother chrome gradients, crisper laser edges and star glints, and faint board texture. Keep the lettering exactly as it is.
+
+## 33. Grunge
+
+- Slug: `grunge`
+- Artwork: 1993 underground gig flyer (Photocopy, paste-up and marker)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/grunge.png`
+
+```text
+An original 1993 flyer for an underground grunge gig, made by hand with a photocopier, scissors, glue and tape, then photographed flat as a found object.
+
+Composition: a grainy, high-contrast photocopied photograph of a band playing in a cramped basement, shot with harsh flash, fills the middle of the sheet at a slight tilt, its edges torn. Around and over it, pieces are pasted and taped at crooked angles: a strip of newspaper, a scrap of lined notebook paper, a torn piece of flannel-patterned paper, a band name made from distressed letters, and a hand-scrawled date in black marker. Layers overlap and some are cut off by the sheet's edges. Masking tape, a staple, a coffee ring and fold creases add wear. It looks chaotic and improvised, but the band photo and the band name stay the clear focal points.
+
+Typography: a mix of distressed, broken typewriter letters, rough stencil capitals with photocopy breakup, and fast handwritten marker. Set exactly this text: "WORN VELVET" as the band name in large distressed letters; "live at the basement" in typewriter letters; "fri 9.4.93" in handwritten marker.
+
+Colours: soot black #2B2A26 toner, army olive #6B6A3F, rust #A8542E and dirty cream #D9CDB0 paper, all muted, dim and slightly dirty.
+
+Light: dim, underexposed light with crushed blacks, like a flyer photographed under a basement bulb.
+
+Finish: heavy photocopy grain and toner speckle, scratches, torn fibrous edges, crumpled paper, stains, uneven glue and tape that has yellowed. Raw, imperfect and authentic, the opposite of clean corporate design.
+
+Format: tall portrait (2:3). Show the whole flyer, flat and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, real band names, logos or signatures.
+
+Avoid: clean glossy surfaces, bright pastels, perfect alignment, neat grids, the likeness of a real person or band.
+```
+
+**If it misses:** Make it rougher and dirtier: heavier photocopy grain, torn edges, crooked tape and crushed blacks, and keep the lettering exactly as it is.
+
+## 34. Punk
+
+- Slug: `punk`
+- Artwork: 1977 punk fanzine cover (Xerox, cut-and-paste and marker)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/punk.png`
+
+```text
+The original cover of a 1977 punk fanzine, made in one night with scissors, glue, a typewriter and an office photocopier, then photographed flat.
+
+Composition: a harsh, high-contrast xeroxed photograph of a young crowd at a sweaty gig, blown out by flash, is cut roughly and pasted at a sharp tilt across the middle of the page. Across the top, the zine's name is spelled out in ransom-note letters cut from different newspapers and magazines, each a different size, typeface and angle. A single strip of fluorescent pink is slapped diagonally across one corner, and a fluorescent yellow sticker with a hand-drawn arrow points at the headline. Typed captions sit on crooked paper strips held by tape and a real safety pin. Scrawled marker slogans run up one edge. Everything is rough, fast and off-kilter, but the title and the photo hit first.
+
+Typography: ransom-note letters cut from printed media for the title, bashed-out typewriter text on the strips, and angry handwritten marker. Set exactly this text: "RIOT TAPE" as the ransom-note title; "issue 3 · 1977" typed on a paper strip; "no masters no rules" in handwritten marker.
+
+Colours: toner black #0F0F0F on xerox white #F0EEE7, with fluoro pink #FF2E88 and fluoro yellow #F4E12B as the only colour accents.
+
+Light: harsh, flat light like a photocopier scan, with blown-out highlights and deep blacks.
+
+Finish: crunchy high-contrast photocopy with toner specks and streaks, scissor-cut and torn edges, visible glue lumps, shiny tape, creases and smudged ink. Attitude and immediacy over polish.
+
+Format: tall portrait (2:3). Show the whole cover, flat and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, real band names, logos, political figures or signatures.
+
+Avoid: polished gradients, elegant serif type, soft pastels, neat alignment, the likeness of a real person.
+```
+
+**If it misses:** Make it rawer: harsher photocopy contrast, more crooked cut-out letters and messier tape, and keep the lettering exactly as it is.
+
+## 35. Minimalism
+
+- Slug: `minimalism`
+- Artwork: 1968 minimal art exhibition poster (Screen print)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/minimalism.png`
+
+```text
+An original 1968 poster for an exhibition of minimal art, screen-printed in two quiet inks on heavy chalk-white paper.
+
+Composition: almost the whole sheet is empty white space. Placed precisely off-centre, slightly above the middle and to the right, sits one solid graphite rectangle, tall and narrow, with a small stone-grey square resting against its lower left corner. Nothing else competes with them. A small, carefully aligned block of text sits in the lower left corner, lined up with an invisible grid and the edge of the rectangle. The balance between the two forms and the empty paper is exact and calm, with every element essential.
+
+Typography: a precise, light neo-grotesque sans-serif, all lowercase, small, with generous letter-spacing and one clear hierarchy. Set exactly this text: "reduction" slightly larger; "works on paper · 1968" small beneath it.
+
+Colours: chalk white #EEEBE5 paper as the dominant field, graphite #2B2B2A for the rectangle and text, stone #C8C2B8 for the small square, and warm grey #8E8A82 only if a second text weight needs it.
+
+Light: soft, even, diffuse light across the sheet, with no shadows.
+
+Finish: flat, opaque screen-print ink with perfectly crisp edges, the faint tooth of heavy uncoated paper, and nothing decorative.
+
+Format: tall portrait (2:3). Show it as a flat archival scan of the complete poster, evenly lit and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, logos or signatures.
+
+Avoid: clutter, extra shapes, gradients, textures, bright colours, centred symmetry.
+```
+
+**If it misses:** Remove everything except the graphite rectangle, the small grey square and the text block, and add more empty white space around them. Keep the lettering exactly as it is.
+
+## 36. Deconstructivism
+
+- Slug: `deconstructivism`
+- Artwork: 1991 design lecture poster (Offset print with overprinted layers)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/deconstructivism.png`
+
+```text
+An original 1991 poster for an architecture and design lecture series, in the deconstructivist style, offset-printed on uncoated paper with overlapping transparent ink layers.
+
+Composition: controlled chaos built on a broken grid. Two grids are laid over each other, one straight and one rotated about 15 degrees, and every element snaps to one or the other so they collide. Shards of a black-and-white axonometric architectural drawing (tilted planes, folded steel cladding, splintered beams) cut across the sheet from the upper left. The title is split into fragments: its letters are sliced, shifted along the skewed grid and partly overprinted, some cropped by the edge of the sheet, yet still just readable. Small columns of text run at conflicting angles, one vertical and one slanted, overlapping a fine hatched field. A single sharp oxide-red wedge slices diagonally through the centre. Dynamic and unstable, but every collision looks deliberate.
+
+Typography: a bold grotesque for the fragmented title and a small, light sans-serif for the details, set on the two clashing grids. Set exactly this text: "UNBUILT" as the fragmented title; "lectures on architecture and design" small; "fall 1991" small.
+
+Colours: pale zinc #E6E4DF paper, carbon #1E2124 and steel grey #8A8F94 inks, with oxide red #C84B31 used only for the wedge.
+
+Light: flat, even light, like a scan of a printed poster.
+
+Finish: crisp offset ink with transparent overprints where layers cross, fine hairline drafting lines, a little registration drift and faint paper grain.
+
+Format: tall portrait (2:3). Show it as a flat archival scan of the complete poster, evenly lit and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written, even where the title is fragmented; add no other words, logos or signatures.
+
+Avoid: calm symmetry, soft rounded forms, pastels, random mess with no underlying grid, gradients.
+```
+
+**If it misses:** Make the collisions more deliberate: two clear clashing grids, sharper sliced letters on the title and one clean oxide-red wedge. Keep the lettering exactly as it is.
+
+## 37. New Wave
+
+- Slug: `new-wave`
+- Artwork: 1981 new wave magazine cover (Photo collage with airbrush and offset print)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/new-wave.png`
+
+```text
+The original cover of an invented 1981 new wave art and music magazine: a bright, playful photo collage with airbrushed shapes and offset printing, experimental and typographic.
+
+Composition: a big, bold masthead runs across the top in yellow block letters on a navy band. At the centre, a pastel-tinted photo portrait of an invented young man with feathered hair sits inside a stack of rotated squares and diamonds in red, rose pink and orange, like a window turned on its corner, with a solid black bar across his eyes. Floating around him at playful angles are cut-out objects: a silver fish, a painted theatre mask, a paper airplane, a small origami bird and a starburst. The background fades from pale yellow to pink, broken up by geometric pieces: a grid of small coloured squares, dotted patterns, thin stepped lines, zigzags and colour bars along the bottom edge. Small vertical and angled lines of text break the grid. Layered, energetic and spontaneous, with the portrait as the clear focal point.
+
+Typography: a deliberate mix of type styles: chunky block capitals for the masthead, a light extended sans-serif set vertically, small condensed capitals and a few letters in outline. Set exactly this text: "TIDE" as the masthead; "new music · new art · new wave" small and vertical along the left edge; "issue 12" small in the lower right.
+
+Colours: sleeve white #EDEBE6, night navy #111827, neon rose #FF4F9A and cool cyan #62D2E8, with bright sunny yellow, tangerine orange and red, and soft pastel pink and yellow in the background.
+
+Light: bright and flat, with airbrushed gradients in the background and a soft glow around the central shapes.
+
+Finish: offset print with crisp colour, airbrushed pastel gradients, coarse dot screens, slightly grainy photo cut-outs with hand-cut edges and faint paper texture, assembled by hand before computers, bridging modernist grids and postmodern play.
+
+Format: tall portrait (2:3). Show the flat magazine cover artwork itself, edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, barcodes, real magazine names, logos or signatures.
+
+Avoid: the likeness of a real person, copying any existing magazine cover, muted earth tones, neat centred symmetry, modern digital gradients.
+```
+
+**If it misses:** Make it more layered and playful: stronger rotated squares around the portrait, more floating cut-out objects and geometric patterns, and brighter pastel colours. Keep the lettering exactly as it is.
+
+## 38. Post-Modernism
+
+- Slug: `post-modernism`
+- Artwork: 1986 postmodern design exhibition poster (Collage, screen print and cut-out type)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/post-modernism.png`
+
+```text
+An original 1986 poster for a design exhibition in the postmodern style: loud, eclectic and ironic, made from cut-out type and a dense collage, then screen-printed.
+
+Composition: a black background. The top third is a wild collage border of torn magazine scraps, splashes of paint, stickers, stripes, dots, checkerboards, squiggles, halftone photo fragments and small classical ornaments, all in clashing bright colours, spilling in from the top and side edges. Across the middle, the title is built from huge, mismatched cut-out letters: every letter is a different typeface, size, weight and colour, some tilted, some overlapping, some cut off, like a ransom note made with joy instead of anger. Below it, the style name is broken into chunky fragments that stack and collide on a grid that has clearly been broken. Small blocks of information in bright coloured type sit at the bottom corners. Complex and contradictory, but the title reads first.
+
+Typography: a deliberate clash of historical and modern styles: a slab serif, a Victorian decorative letter, a bold grotesque, an outlined letter, a script letter and a stencil letter, mixed within the same words. Set exactly this text: "ANYTHING GOES?" as the huge title; "POST MODERNISM" in chunky broken fragments below it; "an exhibition of design" small in the lower left; "march 1986" small in the lower right.
+
+Colours: black background, with salmon pink #F2D7CF, mint #9FC7C0, ultramarine #3C4C8C and sand yellow #E7C35A, plus hot red, orange, bright green and white for the clashing letters and collage.
+
+Light: flat, bright colour, like a scan of a printed poster.
+
+Finish: crisp screen-print ink on the letters, real cut-paper edges and small shadows in the collage, visible halftone dots, paint texture and faint paper grain.
+
+Format: tall portrait (2:3). Show it as a flat archival scan of the complete poster, evenly lit and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, website addresses, prices, logos or signatures.
+
+Avoid: austere minimalism, monochrome, neat grids, a single typeface, copying any existing poster.
+```
+
+**If it misses:** Make the title letters clash more: every letter in a different typeface, size and colour, some tilted and overlapping, and keep the collage at the edges so the title stays readable. Keep the lettering exactly as it is.
+

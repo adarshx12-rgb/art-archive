@@ -1,11 +1,8 @@
 import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
-import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
-import type { GizmoMode } from "../art/Scene3D";
 
-// three.js only loads when someone opens the 3D view.
-const Scene3D = lazy(() => import("../art/Scene3D"));
 import { CopyButton } from "../components/actions";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PresetBar } from "../components/PresetBar";
@@ -317,9 +314,8 @@ export function Builder() {
 
   // Subjects in the 3D scene
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [view, setView] = useState<"2d" | "3d">("2d");
-  const [gizmo, setGizmo] = useState<GizmoMode>("translate");
-  const [snapToShot, setSnapToShot] = useState(0);
+  /** What a plain drag on the 3D view's background does. */
+  const [viewTool, setViewTool] = useState<"orbit" | "pan">("orbit");
   const setActors = (fn: (actors: Actor[]) => Actor[]) => setState((s) => ({ ...s, actors: fn(s.actors) }));
   /** New subjects land in a free spot of the current frame. */
   const framed = (a: Actor) => placeInFrame(shotCamera(state), a, state.actors.length);
@@ -375,6 +371,15 @@ export function Builder() {
   // The flat sketch is the scene seen through the shot camera.
   const camera = shotCamera(state);
   const projected = projectScene(camera, state.actors);
+  const orbited = Boolean(state.orbit.yaw || state.orbit.tilt || state.orbit.panX || state.orbit.panY);
+  /** Dragging the 3D view: turn around the set, or slide the camera. */
+  const lookAround = (kind: "orbit" | "pan", dx: number, dy: number) =>
+    setState((s) => {
+      const o = s.orbit;
+      if (kind === "orbit") return { ...s, orbit: { ...o, yaw: Math.round((o.yaw - dx * 180) * 10) / 10, tilt: Math.round(Math.min(Math.max(o.tilt + dy * 90, -60), 90) * 10) / 10 } };
+      const cam = shotCamera(s);
+      return { ...s, orbit: { ...o, panX: Math.round((o.panX - dx * cam.cover * cam.aspect) * 100) / 100, panY: Math.round(Math.max(o.panY + dy * cam.cover, -5) * 100) / 100 } };
+    });
   const priority = byPriority(projected);
   /** An edit on the flat sketch, applied to the 3D subject. */
   const editFromSketch = (id: string, patch: Partial<Layer>) => {
@@ -648,74 +653,65 @@ export function Builder() {
           <div className="mx-auto max-w-5xl">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="seg" role="radiogroup" aria-label="Preview">
-                {(["2d", "3d"] as const).map((v) => (
+                {(
+                  [
+                    ["3d", "3D view"],
+                    ["2d", "2D board"],
+                  ] as const
+                ).map(([v, label]) => (
                   <label key={v}>
-                    <input type="radio" name="view" checked={view === v} onChange={() => setView(v)} />
-                    {view === v && <span aria-hidden>✓</span>}
-                    {v === "2d" ? "2D sketch" : "3D scene"}
+                    <input type="radio" name="view" checked={state.view === v} onChange={() => set("view", v)} />
+                    {state.view === v && <span aria-hidden>✓</span>}
+                    {label}
                   </label>
                 ))}
               </div>
-              {view === "3d" && (
+              {state.view === "3d" && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <div className="seg" role="radiogroup" aria-label="Gizmo">
+                  <div className="seg" role="radiogroup" aria-label="Drag to">
                     {(
                       [
-                        ["translate", "Move (W)"],
-                        ["rotate", "Rotate (E)"],
-                        ["scale", "Scale (R)"],
+                        ["orbit", "Rotate"],
+                        ["pan", "Pan"],
                       ] as const
-                    ).map(([m, label]) => (
-                      <label key={m}>
-                        <input type="radio" name="gizmo" checked={gizmo === m} onChange={() => setGizmo(m)} />
+                    ).map(([t, label]) => (
+                      <label key={t}>
+                        <input type="radio" name="viewTool" checked={viewTool === t} onChange={() => setViewTool(t)} />
+                        {viewTool === t && <span aria-hidden>✓</span>}
                         {label}
                       </label>
                     ))}
                   </div>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSnapToShot((n) => n + 1)}>
-                    Look through shot camera
+                  <button type="button" className="btn btn-ghost btn-sm" disabled={!orbited} onClick={() => set("orbit", { yaw: 0, tilt: 0, panX: 0, panY: 0 })}>
+                    <RotateCcw size={14} aria-hidden />
+                    Reset view
                   </button>
                 </div>
               )}
             </div>
-            {view === "2d" ? (
-              <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
-                <div className="overflow-hidden rounded-xl border border-rule">
-                  <Storyboard
-                    state={state}
-                    layers={projected}
-                    colours={palette.colours}
-                    keepColours={keepColours}
-                    keepComposition={keepComposition}
-                    selectedId={selectedId}
-                    onSelect={setSelectedId}
-                    onLayerChange={editFromSketch}
-                    onLayerDelete={deleteActor}
-                  />
-                </div>
+            <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+              <div className="overflow-hidden rounded-xl border border-rule">
+                <Storyboard
+                  state={state}
+                  layers={projected}
+                  camera={camera}
+                  colours={palette.colours}
+                  keepColours={keepColours}
+                  keepComposition={keepComposition}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onLayerChange={editFromSketch}
+                  onLayerDelete={deleteActor}
+                  onView={lookAround}
+                  viewTool={viewTool}
+                />
               </div>
-            ) : (
-              <div className="h-[58dvh] min-h-80 overflow-hidden rounded-xl border border-rule">
-                <Suspense fallback={<p className="grid h-full place-items-center text-muted">Loading 3D view…</p>}>
-                  <Scene3D
-                    state={state}
-                    colours={palette.colours}
-                    keepColours={keepColours}
-                    selectedId={selectedId}
-                    onSelect={setSelectedId}
-                    onActorChange={updateActor}
-                    mode={gizmo}
-                    onMode={setGizmo}
-                    lookThroughShot={snapToShot}
-                  />
-                </Suspense>
-              </div>
-            )}
+            </div>
             <p className="meta mt-2 text-center text-muted">
-              {view === "2d"
-                ? "The scene through the shot camera, as a rough sketch. It isn’t the final image. "
-                : "Drag to orbit, right-drag to pan, scroll to zoom. The outline is the shot camera. "}
-              {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : view === "2d" ? "Click a subject to move, scale or rotate it." : "Click a subject, then use the handles."}
+              {state.view === "3d"
+                ? "Drag the background to look around; Shift-drag or Pan to slide the view. What you see is the shot. "
+                : "A flat board: subjects move, resize and tilt only within the picture. "}
+              {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : "Click a subject to move, scale or rotate it."}
             </p>
 
             {aiNote && (
@@ -744,6 +740,7 @@ export function Builder() {
             {selectedActor && (
               <div className="mt-4">
                 <TransformPanel
+                  flat={state.view === "2d"}
                   actor={selectedActor}
                   onChange={(patch) => updateActor(selectedActor.id, patch)}
                   onDelete={() => deleteActor(selectedActor.id)}

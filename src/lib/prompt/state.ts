@@ -68,6 +68,10 @@ export interface BuilderState {
   movement: MovementId;
   /** Subjects placed in the 3D scene. */
   actors: Actor[];
+  /** 3D: the sketch you can look around. 2D: a flat grid board. */
+  view: "3d" | "2d";
+  /** Where the 3D view has been turned (degrees), tilted (degrees) and panned (metres). */
+  orbit: { yaw: number; tilt: number; panX: number; panY: number };
 }
 
 export const SUBJECT_MAX = 400;
@@ -98,6 +102,8 @@ export function defaultState(): BuilderState {
     camera: "push-in",
     movement: "subtle",
     actors: [],
+    view: "3d",
+    orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
   };
 }
 
@@ -135,6 +141,8 @@ const KEYS = {
   camera: "cam",
   movement: "mv",
   actors: "sc",
+  view: "vw",
+  orbit: "ob",
   /** Older links: flat 2D layers, converted to the 3D scene on load. */
   layers: "ly",
 } as const;
@@ -166,6 +174,9 @@ export function encodeState(state: BuilderState): URLSearchParams {
   put(KEYS.lighting, state.lighting, d.lighting);
   if (state.task === "restyle") put(KEYS.preserve, state.preserve.join("-"), d.preserve.join("-"));
   if (state.actors.length) q.set(KEYS.actors, encodeActors(state.actors));
+  if (state.view === "2d") q.set(KEYS.view, "2d");
+  const o = state.orbit;
+  if (o.yaw || o.tilt || o.panX || o.panY) q.set(KEYS.orbit, [o.yaw, o.tilt, o.panX, o.panY].map((n) => Math.round(n * 100) / 100).join("~"));
   if (state.output === "video") {
     put(KEYS.duration, String(state.duration), String(d.duration));
     put(KEYS.camera, state.camera, d.camera);
@@ -275,6 +286,16 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   if (duration) state.duration = Number(duration) as Duration;
   state.camera = pick<CameraId>(KEYS.camera, ids(cameraOptions), "Camera movement") ?? state.camera;
   state.movement = pick<MovementId>(KEYS.movement, ids(movementOptions), "Subject movement") ?? state.movement;
+
+  if (params.get(KEYS.view) === "2d") state.view = "2d";
+  const orbit = params.get(KEYS.orbit);
+  if (orbit !== null) {
+    const n = orbit.split("~").map(Number);
+    if (n.length === 4 && n.every(Number.isFinite)) {
+      const c = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+      state.orbit = { yaw: c(n[0]!, -3600, 3600), tilt: c(n[1]!, -60, 90), panX: c(n[2]!, -200, 200), panY: c(n[3]!, -50, 200) };
+    } else issues.push("The saved camera view couldn’t be restored.");
+  }
 
   const actors = params.get(KEYS.actors);
   const layers = params.get(KEYS.layers);

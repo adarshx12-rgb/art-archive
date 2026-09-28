@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultState, decodeState } from "../prompt/state";
-import { projectActor, projectScene, shotCamera, unproject } from "./camera";
+import { effectiveAngle, horizonAt, projectActor, projectScene, shotCamera, unproject } from "./camera";
 import { applyLayerEdit } from "./convert";
 import { describeScene } from "./describe";
 import { actorFromText, decodeActors, encodeActors, newActor, type Actor } from "./model";
@@ -45,6 +45,47 @@ describe("shot camera", () => {
     const near = person({ id: "near", position: [0, 0, 1] });
     const far = person({ id: "far", position: [0, 0, -10] });
     expect(projectScene(cam(), [near, far]).map((p) => p.id)).toEqual(["far", "near"]);
+  });
+});
+
+describe("looking around the 3D view", () => {
+  const view = (orbit: Partial<ReturnType<typeof defaultState>["orbit"]>, patch = {}) =>
+    shotCamera({ ...defaultState(), ...patch, orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0, ...orbit } });
+
+  it("turning around the set shows a subject that faces forward in profile", () => {
+    expect(projectActor(view({ yaw: 90 }), person()).facing).toBe("left");
+    expect(projectActor(view({ yaw: 180 }), person()).facing).toBe("back");
+  });
+
+  it("tilting moves the horizon and changes the angle the prompt describes", () => {
+    const level = horizonAt(view({}))!;
+    expect(horizonAt(view({ tilt: 30 }))!).toBeLessThan(level);
+    expect(effectiveAngle({ ...defaultState(), orbit: { yaw: 0, tilt: 40, panX: 0, panY: 0 } })).toBe("high");
+    expect(effectiveAngle({ ...defaultState(), orbit: { yaw: 0, tilt: -20, panX: 0, panY: 0 } })).toBe("low");
+    expect(effectiveAngle(defaultState())).toBe("auto");
+  });
+
+  it("panning slides subjects across the frame", () => {
+    expect(projectActor(view({ panX: 0.5 }), person()).x).toBeLessThan(0.45);
+  });
+});
+
+describe("the 2D board", () => {
+  const flat = shotCamera({ ...defaultState(), view: "2d", orbit: { yaw: 90, tilt: 40, panX: 3, panY: 0 } });
+
+  it("ignores the orbit and doesn't shrink things with distance", () => {
+    expect(projectActor(flat, person()).x).toBeCloseTo(0.5, 5);
+    expect(projectActor(flat, person({ position: [0, 0, -20] })).size).toBeCloseTo(projectActor(flat, person()).size, 5);
+    expect(horizonAt(flat)).toBeNull();
+  });
+
+  it("moves subjects within the picture only, never in depth", () => {
+    const a = person({ position: [0, 0, -3] });
+    const moved = applyLayerEdit(flat, a, { x: 0.3, y: 0.3 });
+    expect(moved.position[2]).toBe(-3);
+    const p = projectActor(flat, moved);
+    expect(p.x).toBeCloseTo(0.3, 3);
+    expect(p.y).toBeCloseTo(0.3, 3);
   });
 });
 

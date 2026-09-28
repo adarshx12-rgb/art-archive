@@ -202,6 +202,8 @@ describe("builder URL state", () => {
       genre: "thriller",
       era: "1970s",
       aspect: "9:16",
+      view: "2d",
+      orbit: { yaw: 45.5, tilt: -10, panX: 1.25, panY: 0.5 },
       lighting: "night",
       preserve: ["identity", "timing"],
       duration: 15,

@@ -123,12 +123,14 @@ export interface TransformPanelProps {
   onChange: (patch: Partial<Actor>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  /** The 2D board: only moves, resizing and tilting within the picture. */
+  flat?: boolean;
 }
 
 const FIGURES = new Set(["person", "child", "robot"]);
 
-/** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls", in 3D. */
-export function TransformPanel({ actor, onChange, onDelete, onDuplicate }: TransformPanelProps) {
+/** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls". */
+export function TransformPanel({ actor, onChange, onDelete, onDuplicate, flat = false }: TransformPanelProps) {
   const [px, py, pz] = actor.position;
   const [rx, ry, rz] = actor.rotation;
   const setPos = (i: 0 | 1 | 2, v: number) => onChange({ position: actor.position.map((p, j) => (j === i ? Math.round(v * 100) / 100 : p)) as Vec3 });
@@ -140,10 +142,18 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate }: Trans
           <span className="meta text-muted">Transform</span> <span className="font-semibold">{actor.label}</span>
         </p>
         <div className="flex flex-wrap gap-1">
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({ rotation: [rx, ry + 180, rz] })} title="Turn around (rotate 180° on Y)">
-            <FlipHorizontal2 size={14} aria-hidden />
-            Turn
-          </button>
+          {flat ? (
+            // Mirror left/right (a subject facing the camera stays facing it).
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({ rotation: [rx, -ry, rz] })} title="Flip left/right">
+              <FlipHorizontal2 size={14} aria-hidden />
+              Flip
+            </button>
+          ) : (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({ rotation: [rx, ry + 180, rz] })} title="Turn around (rotate 180° on Y)">
+              <FlipHorizontal2 size={14} aria-hidden />
+              Turn
+            </button>
+          )}
           <button type="button" className="btn btn-ghost btn-sm" onClick={onDuplicate} title="Duplicate">
             <Copy size={14} aria-hidden />
             <span className="sr-only">Duplicate</span>
@@ -155,16 +165,22 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate }: Trans
         </div>
       </div>
       <div className="pt-1">
-        <Row name="Position" onReset={() => onChange({ position: [0, actor.position[1] > 30 ? actor.position[1] : 0, 0] })}>
+        <Row name="Position" onReset={() => onChange({ position: flat ? [0, 0, pz] : [0, actor.position[1] > 30 ? actor.position[1] : 0, 0] })}>
           <Scrub label="Position X" value={px} onChange={(v) => setPos(0, v)} step={0.05} precision={2} suffix="m" />
           <Scrub label="Position Y" value={py} onChange={(v) => setPos(1, v)} step={0.05} precision={2} suffix="m" />
-          <Scrub label="Position Z" value={pz} onChange={(v) => setPos(2, v)} step={0.05} precision={2} suffix="m" />
+          {!flat && <Scrub label="Position Z" value={pz} onChange={(v) => setPos(2, v)} step={0.05} precision={2} suffix="m" />}
         </Row>
-        <Row name="Rotation" onReset={() => onChange({ rotation: [0, 0, 0] })}>
-          <Scrub label="Rotation X" value={rx} onChange={(v) => setRot(0, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
-          <Scrub label="Rotation Y" value={ry} onChange={(v) => setRot(1, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
-          <Scrub label="Rotation Z" value={rz} onChange={(v) => setRot(2, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
-        </Row>
+        {flat ? (
+          <Row name="Rotation" onReset={() => onChange({ rotation: [rx, ry, 0] })}>
+            <Scrub label="Rotation" value={rz} onChange={(v) => setRot(2, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+          </Row>
+        ) : (
+          <Row name="Rotation" onReset={() => onChange({ rotation: [0, 0, 0] })}>
+            <Scrub label="Rotation X" value={rx} onChange={(v) => setRot(0, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+            <Scrub label="Rotation Y" value={ry} onChange={(v) => setRot(1, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+            <Scrub label="Rotation Z" value={rz} onChange={(v) => setRot(2, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
+          </Row>
+        )}
         <Row name="Scale" onReset={() => onChange({ scale: 1 })}>
           <Scrub label="Scale" value={actor.scale * 100} onChange={(v) => onChange({ scale: Math.min(Math.max(v / 100, 0.05), 20) })} suffix="%" />
         </Row>
@@ -181,7 +197,9 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate }: Trans
         )}
       </div>
       <p className="meta mt-2 text-muted">
-        X is left–right, Y is up, Z is towards the camera (metres). Rotation Y turns the subject; 0° faces the camera. Drag a value or click to type.
+        {flat
+          ? "X is left–right, Y is up (metres). Rotation tilts the subject within the picture. Drag a value or click to type."
+          : "X is left–right, Y is up, Z is towards the camera (metres). Rotation Y turns the subject; 0° faces the camera. Drag a value or click to type."}
       </p>
     </section>
   );

@@ -3,6 +3,8 @@ import { inkOn } from "../lib/color";
 import type { ResolvedColour } from "../lib/prompt/compose";
 import { angleOptions, eraOptions, findOption, genreOptions, lensOptions, shotOptions } from "../lib/prompt/options";
 import type { BuilderState } from "../lib/prompt/state";
+import { horizonAt, project, type ShotCamera } from "../lib/scene/camera";
+import type { Vec3 } from "../lib/scene/model";
 import { clamp, LAYER_ASPECT, LAYER_HEIGHT, type Layer } from "../lib/sketch/layers";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../lib/sketch/parse";
 import { rng } from "./util";
@@ -664,9 +666,40 @@ export interface StoryboardProps {
   onLayerDelete?: (id: string) => void;
   /** Subjects to draw, already projected from the 3D scene, furthest first. */
   layers?: Layer[];
+  /** The camera the scene is seen through; sets the horizon and ground grid. A flat (ortho) camera draws the 2D board. */
+  camera?: ShotCamera;
+  /** Dragging empty space turns ("orbit") or slides ("pan") the view; dx/dy are fractions of the frame. */
+  onView?: (kind: "orbit" | "pan", dx: number, dy: number) => void;
+  /** What a plain drag does; Shift or the right button always pans. */
+  viewTool?: "orbit" | "pan";
 }
 
 type Drag = { mode: "move" | "scale" | "rotate"; id: string; start: { x: number; y: number }; layer: Layer };
+
+/** The ground grid (y = 0) as seen through the camera, as one SVG path. Lines behind the camera are skipped. */
+function groundGrid(cam: ShotCamera, W: number, H: number): string {
+  const cx = Math.round(cam.target[0] / 2) * 2;
+  const cz = Math.round(cam.target[2] / 2) * 2;
+  let d = "";
+  const line = (a: Vec3, b: Vec3) => {
+    let pen = false;
+    for (let i = 0; i <= 40; i++) {
+      const t = i / 40;
+      const p = project(cam, [a[0] + (b[0] - a[0]) * t, 0, a[2] + (b[2] - a[2]) * t]);
+      const X = p.x * W;
+      const Y = p.y * H;
+      if (p.depth < 0.3 || Math.abs(X) > 6 * W || Math.abs(Y) > 6 * H) {
+        pen = false;
+        continue;
+      }
+      d += `${pen ? "L" : "M"}${X.toFixed(1)} ${Y.toFixed(1)}`;
+      pen = true;
+    }
+  };
+  for (let x = -30; x <= 30; x += 2) line([cx + x, 0, cz - 80], [cx + x, 0, cz + 30]);
+  for (let z = -80; z <= 30; z += 2) line([cx - 30, 0, cz + z], [cx + 30, 0, cz + z]);
+  return d;
+}
 
 export function Storyboard({
   state,
@@ -679,9 +712,15 @@ export function Storyboard({
   onLayerChange,
   onLayerDelete,
   layers = [],
+  camera,
+  onView,
+  viewTool = "orbit",
 }: StoryboardProps) {
   const layersRef = useRef<SVGGElement>(null);
   const drag = useRef<Drag | null>(null);
+  const viewDrag = useRef<{ kind: "orbit" | "pan"; x: number; y: number } | null>(null);
+  /** The 2D board: a flat grid with only the placed subjects. */
+  const flat = camera?.ortho ?? false;
   const [aw, ah] = state.aspect.split(":").map(Number) as [number, number];
   const H = Math.round((W * ah) / aw);
   const parsed = parseSubject(state.subject);
@@ -696,8 +735,9 @@ export function Storyboard({
 
   // Camera
   const angle = state.angle === "auto" ? "eye" : state.angle;
-  const overhead = angle === "overhead";
-  const horizon = HORIZON[angle]! * H;
+  const overhead = camera ? camera.pitch >= 70 : angle === "overhead";
+  const camHorizon = camera ? horizonAt(camera) : undefined;
+  const horizon = camera ? (camHorizon === null || camHorizon === undefined ? -H : clamp(camHorizon * H, -H, 2 * H)) : HORIZON[angle]! * H;
   const spread = LENS_SPREAD[state.lens] ?? 1;
   const hasActors = scene.items.some((i) => ACTORS.has(i.glyph));
   const shot = state.shot === "auto" ? (hasActors ? "full" : "wide") : state.shot;
@@ -926,7 +966,21 @@ export function Storyboard({
     onSelect?.(l.id);
     drag.current = { mode, id: l.id, start: toLocal(e), layer: l };
   };
+  const lookable = Boolean(onView) && !flat;
+  const startView = (e: PointerEvent) => {
+    if (!lookable || e.button === 1) return;
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    viewDrag.current = { kind: e.shiftKey || e.button === 2 || viewTool === "pan" ? "pan" : "orbit", x: e.clientX, y: e.clientY };
+  };
   const onMove = (e: PointerEvent) => {
+    const v = viewDrag.current;
+    if (v && onView) {
+      const rect = (e.currentTarget as Element).getBoundingClientRect();
+      onView(v.kind, (e.clientX - v.x) / rect.width, (e.clientY - v.y) / rect.height);
+      v.x = e.clientX;
+      v.y = e.clientY;
+      return;
+    }
     const d = drag.current;
     if (!d || !onLayerChange) return;
     const p = toLocal(e);
@@ -946,6 +1000,7 @@ export function Storyboard({
   };
   const end = () => {
     drag.current = null;
+    viewDrag.current = null;
   };
   const onKey = (e: KeyboardEvent) => {
     const l = layers.find((x) => x.id === selectedId);
@@ -972,12 +1027,20 @@ export function Storyboard({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       tabIndex={editable ? 0 : undefined}
-      onPointerDown={editable ? () => onSelect?.(null) : undefined}
-      onPointerMove={editable ? onMove : undefined}
-      onPointerUp={editable ? end : undefined}
-      onPointerCancel={editable ? end : undefined}
+      onPointerDown={
+        editable || lookable
+          ? (e) => {
+              onSelect?.(null);
+              startView(e);
+            }
+          : undefined
+      }
+      onPointerMove={editable || lookable ? onMove : undefined}
+      onPointerUp={editable || lookable ? end : undefined}
+      onPointerCancel={editable || lookable ? end : undefined}
+      onContextMenu={lookable ? (e) => e.preventDefault() : undefined}
       onKeyDown={editable ? onKey : undefined}
-      style={editable ? { touchAction: "none" } : undefined} className={`block h-auto w-full ${className}`} role="img" aria-label={`Rough sketch: ${[...layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
+      style={editable || lookable ? { touchAction: "none", cursor: lookable ? (viewTool === "pan" ? "move" : "grab") : undefined } : undefined} className={`block h-auto w-full ${className}`} role="img" aria-label={`Rough sketch: ${[...layers.map((l) => l.label), ...scene.items.map((i) => i.label)].join(", ") || "no recognised subjects yet"}`}>
       <defs>
         <radialGradient id="sb-glow">
           <stop offset="0" stopColor="#FFD27A" stopOpacity="0.75" />
@@ -996,11 +1059,31 @@ export function Storyboard({
         </clipPath>
       </defs>
       <g clipPath="url(#sb-frame)">
-        <g transform={angle === "dutch" ? `rotate(-9 ${W / 2} ${H / 2}) translate(${W / 2} ${H / 2}) scale(1.14) translate(${-W / 2} ${-H / 2})` : undefined}>
+        <g transform={!camera && angle === "dutch" ? `rotate(-9 ${W / 2} ${H / 2}) translate(${W / 2} ${H / 2}) scale(1.14) translate(${-W / 2} ${-H / 2})` : undefined}>
           {/* Sky / wall and ground / floor */}
           <rect x={-W} y={-H} width={W * 3} height={H * 3} fill={pal.bg} />
-          {skyNodes}
-          {overhead ? (
+          {flat ? (
+            // 2D board: graph paper, nothing in perspective.
+            <g stroke={c.ink}>
+              {Array.from({ length: Math.ceil(W / 50) + 1 }, (_, i) => (
+                <line key={`gx${i}`} x1={i * 50} y1={0} x2={i * 50} y2={H} strokeOpacity={i % 4 === 0 ? 0.2 : 0.08} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+              ))}
+              {Array.from({ length: Math.ceil(H / 50) + 1 }, (_, i) => (
+                <line key={`gy${i}`} x1={0} y1={i * 50} x2={W} y2={i * 50} strokeOpacity={i % 4 === 0 ? 0.2 : 0.08} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+              ))}
+            </g>
+          ) : camera ? (
+            // 3D: the real horizon and a perspective ground grid, both from the camera.
+            <>
+              {skyNodes}
+              <rect x={-W} y={Math.max(horizon, -H)} width={W * 3} height={H * 3} fill={pal.bg} />
+              <rect x={-W} y={Math.max(horizon, -H)} width={W * 3} height={H * 3} fill={scene.interior ? pal.secondary : pal.primary} fillOpacity={0.35} />
+              <path d={groundGrid(camera, W, H)} fill="none" stroke={c.ink} strokeOpacity={0.18} strokeWidth={2} />
+              {camHorizon !== null && camHorizon !== undefined && camHorizon > -0.1 && camHorizon < 1.1 && (
+                <line x1={-W} y1={horizon} x2={W * 2} y2={horizon} stroke={c.ink} strokeOpacity={0.5} strokeWidth={3} />
+              )}
+            </>
+          ) : overhead ? (
             <g stroke={c.ink} strokeOpacity={0.18} strokeWidth={2}>
               <rect width={W} height={H} fill={groundFill} fillOpacity={0.35} stroke="none" />
               {Array.from({ length: 12 }, (_, i) => (
@@ -1012,6 +1095,7 @@ export function Storyboard({
             </g>
           ) : (
             <>
+              {skyNodes}
               <rect x={-W} y={horizon} width={W * 3} height={H * 2} fill={pal.bg} />
               <rect x={-W} y={horizon} width={W * 3} height={H * 2} fill={groundFill} fillOpacity={0.35} />
               {scene.water && !scene.interior && (
@@ -1031,10 +1115,14 @@ export function Storyboard({
             </>
           )}
 
-          <g opacity={bokeh ? 0.5 : 1}>{backNodes}</g>
-          {/* Hard flash: a flat shadow behind the figures */}
-          {lighting === "hard-flash" && <g transform="translate(18 10)" opacity={0.3}>{frontNodes}</g>}
-          {frontNodes}
+          {!flat && (
+            <>
+              <g opacity={bokeh ? 0.5 : 1}>{backNodes}</g>
+              {/* Hard flash: a flat shadow behind the figures */}
+              {lighting === "hard-flash" && <g transform="translate(18 10)" opacity={0.3}>{frontNodes}</g>}
+              {frontNodes}
+            </>
+          )}
           <g ref={layersRef}>
             {layers.map((l, i) => {
               const { hh, ww, one } = sizeOf(l);

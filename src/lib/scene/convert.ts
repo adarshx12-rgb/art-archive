@@ -37,10 +37,16 @@ export function applyLayerEdit(cam: ShotCamera, a: Actor, patch: Partial<Layer>)
     const y = patch.y ?? now.y;
     // The drag moves the subject's centre; keep the base at its own height.
     const half = (standingHeight(a) / 2) * (1 / (2 * Math.max(now.depth, 0.05) * Math.tan((cam.fov * Math.PI) / 360)));
-    const p: Vec3 = isSky(a.glyph)
-      ? unproject(cam, x, y, 1e6, now.depth)
-      : unproject(cam, x, Math.min(y + half, 0.999), a.position[1], now.depth);
-    next.position = isSky(a.glyph) ? p : [p[0], a.position[1], p[2]];
+    if (cam.ortho) {
+      // Flat board: move within the picture only; depth stays where it was.
+      const c = unproject(cam, x, y, 0, now.depth);
+      next.position = [c[0], c[1] - standingHeight(a) / 2, a.position[2]];
+    } else {
+      const p: Vec3 = isSky(a.glyph)
+        ? unproject(cam, x, y, 1e6, now.depth)
+        : unproject(cam, x, Math.min(y + half, 0.999), a.position[1], now.depth);
+      next.position = isSky(a.glyph) ? p : [p[0], a.position[1], p[2]];
+    }
   }
   if (patch.scale !== undefined && now.scale > 0) next.scale = clamp((a.scale * patch.scale) / now.scale, 0.05, 20);
   if (patch.rotation !== undefined) next.rotation = [a.rotation[0], a.rotation[1], patch.rotation + cam.roll];

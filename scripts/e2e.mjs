@@ -115,10 +115,21 @@ await step("builder", async () => {
   prompt = await page.locator("#prompt").inputValue();
   check("placed subject adds a layout line", /Layout: a lighthouse keeper reading, [^;]*on its side \(the main subject\)\./.test(prompt), prompt.split(String.fromCharCode(10)).find((l) => l.startsWith("Layout")));
   check("the 3D scene is in the share link", (new URL(page.url()).searchParams.get("sc") ?? "").startsWith("person~a lighthouse keeper reading~"));
-  await page.getByText("3D scene", { exact: true }).click();
-  await page.locator("[role=application] canvas").waitFor({ timeout: 10000 });
-  check("3D view opens", (await page.locator("[role=application] canvas").count()) === 1);
-  await page.getByText("2D sketch", { exact: true }).click();
+  // Look around: drag empty sky in the 3D view.
+  const sketch = page.locator("main svg[role=img]");
+  const box = await sketch.boundingBox();
+  await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.1);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.25, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  check("dragging the 3D view turns it (saved in the link)", (new URL(page.url()).searchParams.get("ob") ?? "") !== "");
+  await page.getByRole("button", { name: "Reset view" }).click();
+  await page.waitForTimeout(400);
+  check("Reset view returns to the shot", new URL(page.url()).searchParams.get("ob") === null);
+  await page.getByText("2D board", { exact: true }).click();
+  check("2D board hides depth controls", (await page.getByLabel("Position Z", { exact: true }).count()) === 0);
+  await page.getByText("3D view", { exact: true }).click();
   await page.getByRole("button", { name: "Remove a lighthouse keeper reading" }).click();
   await page.locator("#subject").fill("a lighthouse keeper reading");
   await page.getByText("Curated", { exact: true }).click();

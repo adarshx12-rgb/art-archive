@@ -19,7 +19,7 @@ import {
   type Intensity,
   type PreserveId,
 } from "./options";
-import { aspectOf, byPriority, projectScene, shotCamera } from "../scene/camera";
+import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
 import { describeScene } from "../scene/describe";
 import { withArticle } from "../sketch/layers";
 import { cleanSubject, type BuilderState } from "./state";
@@ -230,12 +230,13 @@ export function composePrompt(state: BuilderState): ComposeResult {
   }
 
   // 5b. Shot: size, angle and lens ("Camera" is the video movement line)
-  const cameraSet = state.shot !== "auto" || state.angle !== "auto" || state.lens !== "auto";
+  const cameraSet = state.shot !== "auto" || effectiveAngle(state) !== "auto" || state.lens !== "auto";
   if (cameraSet && keepComposition) {
     notes.push("Composition is preserved from the source, so the camera settings are not used.");
   } else if (cameraSet) {
     const shot = findOption(shotOptions, state.shot)?.phrase ?? "";
-    const angle = findOption(angleOptions, state.angle)?.phrase ?? "";
+    // The angle you actually turned the 3D view to, not just the preset.
+    const angle = findOption(angleOptions, effectiveAngle(state))?.phrase ?? "";
     const lens = findOption(lensOptions, state.lens)?.phrase ?? "";
     // e.g. "a medium shot …, from a low angle looking up, on a 35mm lens …"
     const parts = [shot, angle, lens && `${shot || angle ? "on" : "shot on"} ${lens}`].filter(Boolean);
@@ -320,6 +321,8 @@ export function themeState(style: StyleRecord, output: "image" | "video"): Build
     camera: "push-in",
     movement: "subtle",
     actors: [],
+    view: "3d",
+    orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
   };
 }
 

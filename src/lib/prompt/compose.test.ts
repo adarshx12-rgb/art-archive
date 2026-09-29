@@ -62,6 +62,22 @@ describe("composePrompt", () => {
     expect(prompt).toContain("acid green (#C4FF2E) as the primary colour, about 25%");
   });
 
+  it("treats a 1-colour palette as the background only", () => {
+    const { prompt } = composePrompt(state({ paletteMode: "custom", count: 1, custom: ["#F1EDE4", "#000000", "#000000", "#000000"] }));
+    expect(prompt).toMatch(/Colour palette: .* \(#F1EDE4\) as the background; the other colours follow the style\./);
+    expect(prompt).not.toContain("Keep the image within this palette");
+    expect(prompt).not.toContain("#000000");
+  });
+
+  it("round-trips a 1-colour palette in a share link", () => {
+    const s = state({ paletteMode: "custom", count: 1, custom: ["#F1EDE4", "#000000", "#000000", "#000000"] });
+    const { state: back, issues } = decodeState(new URLSearchParams(encodeState(s).toString()));
+    expect(issues).toEqual([]);
+    expect(back.count).toBe(1);
+    expect(back.paletteMode).toBe("custom");
+    expect(back.custom[0]).toBe("#F1EDE4");
+  });
+
   it("uses exactly `count` custom colours with described names", () => {
     const s = state({ paletteMode: "custom", count: 2, custom: ["#0A2E5C", "#F5D0C5", "#000000", "#FFFFFF"] });
     const pal = resolvePalette(s, getStyle("steampunk")!);
@@ -153,6 +169,30 @@ describe("composePrompt", () => {
     expect(composePrompt(state({ subject: "a concert poster for a jazz night" })).prompt).toContain("Lettering:");
   });
 
+  it("sets the exact text the user typed", () => {
+    const { prompt } = composePrompt(state({ subject: "a quiet harbour", text: "  Harbour\n  Lights " }));
+    expect(prompt).toMatch(/Lettering: set exactly this text: "Harbour Lights" in .+; spell it exactly as written and add no other words\./);
+    expect(prompt).not.toContain("if text appears");
+    expect(prompt.match(/Lettering:/g)).toHaveLength(1);
+  });
+
+  it("letters text placed on the sketch without making it the subject", () => {
+    const table = newActor("table", "a table", []);
+    const sign = { ...newActor("text", "OPEN LATE", [table]), position: [0, 1.5, 0] as Vec3 };
+    const { prompt } = composePrompt(state({ subject: "", text: "EST. 1920", actors: [table, sign] }));
+    expect(prompt).toContain("An image of a table, in the Steampunk style.");
+    expect(prompt).toMatch(/Layout: .*the text "OPEN LATE"/);
+    expect(prompt).toMatch(/Lettering: set exactly these texts: "OPEN LATE" and "EST\. 1920" in /);
+  });
+
+  it("changes the source lettering to the typed text when restyling", () => {
+    const r = composePrompt(state({ task: "restyle", preserve: ["identity", "text"], text: "SALE" }));
+    expect(r.prompt).toContain('Lettering: change the lettering to read exactly "SALE"');
+    expect(r.prompt).not.toContain("keep existing lettering");
+    expect(r.prompt).not.toMatch(/Preserve: .*existing text/);
+    expect(r.notes.join(" ")).toMatch(/text you typed/);
+  });
+
   it("never writes \"Style style\"", () => {
     for (const slug of ["swiss", "victorian-style", "clay-style"]) {
       for (const task of ["create", "restyle"] as const) {
@@ -191,6 +231,7 @@ describe("builder URL state", () => {
       output: "video",
       task: "restyle",
       subject: "a café at night — with “quotes” & symbols",
+      text: "OPEN “LATE” & ネオン",
       intensity: "strong",
       paletteMode: "custom",
       count: 4,

@@ -50,6 +50,7 @@ export const LAYER_HEIGHT: Record<Glyph, number> = {
   sun: 0.16, moon: 0.14, star: 0.06, planet: 0.14, cloud: 0.1,
   table: 0.18, chair: 0.22, bed: 0.16, lamp: 0.26, book: 0.06, cup: 0.06, candle: 0.1, sword: 0.25, guitar: 0.22, device: 0.06, bottle: 0.08,
   thing: 0.2,
+  text: 0.08,
 };
 
 /** Width relative to height, for the selection box. */
@@ -61,7 +62,11 @@ export const LAYER_ASPECT: Record<Glyph, number> = {
   sun: 1, moon: 0.8, star: 1, planet: 1.8, cloud: 2.2,
   table: 1.4, chair: 0.7, bed: 2.6, lamp: 0.45, book: 1.2, cup: 1, candle: 0.45, sword: 0.35, guitar: 0.75, device: 0.9, bottle: 0.45,
   thing: 1.2,
+  text: 1,
 };
+
+/** Width relative to height; text is as wide as its words (mono letters are about 0.6 em). */
+export const layerAspect = (glyph: Glyph, label: string) => (glyph === "text" ? Math.max(1, 0.62 * label.length) : LAYER_ASPECT[glyph]);
 
 const SKY = new Set<Glyph>(["sun", "moon", "star", "planet", "cloud", "bird", "plane"]);
 const BACK = new Set<Glyph>(["house", "tower", "lighthouse", "castle", "city", "window", "door", "tree", "palm", "mountain", "hill"]);

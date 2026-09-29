@@ -44,6 +44,7 @@ export const REAL_HEIGHT: Record<Glyph, number> = {
   sun: 60, moon: 50, star: 8, planet: 60, cloud: 20,
   table: 0.75, chair: 1, bed: 0.6, lamp: 1.6, book: 0.25, cup: 0.12, candle: 0.25, sword: 1, guitar: 1, device: 0.16, bottle: 0.3,
   thing: 1,
+  text: 0.4,
 };
 
 /** Width relative to height (matches the 2D glyphs). */
@@ -57,6 +58,11 @@ export const WIDTH_RATIO: Partial<Record<Glyph, number>> = {
   thing: 1,
 };
 
+/** Width relative to height for one subject; text is as wide as its words. */
+export const widthRatio = (glyph: Glyph, label: string) => (glyph === "text" ? Math.max(1, 0.62 * label.length) : (WIDTH_RATIO[glyph] ?? 1));
+
+export const isText = (g: Glyph) => g === "text";
+
 const SKY = new Set<Glyph>(["sun", "moon", "star", "planet", "cloud"]);
 const FLYING = new Set<Glyph>(["bird", "plane"]);
 const BACKDROP = new Set<Glyph>(["house", "tower", "lighthouse", "castle", "city", "tree", "palm", "mountain", "hill"]);
@@ -66,7 +72,7 @@ const SIDE_ON = new Set<Glyph>(["animal", "big-animal", "fish", "car", "bike", "
 
 export const isSky = (g: Glyph) => SKY.has(g);
 
-const GLYPHS = new Set<Glyph>([...LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)), "thing"]);
+const GLYPHS = new Set<Glyph>([...LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)), "thing", "text"]);
 
 /** Where a new subject lands: people in front of the camera, backdrops behind, sky far away. */
 export function newActor(glyph: Glyph, label: string, existing: Actor[], count = 1, pose: Pose = "stand"): Actor {
@@ -77,6 +83,8 @@ export function newActor(glyph: Glyph, label: string, existing: Actor[], count =
   else if (FLYING.has(glyph)) position = [side * 2 + 1, glyph === "plane" ? 40 : 4, -12];
   else if (BACKDROP.has(glyph)) position = [side * REAL_HEIGHT[glyph] * 0.8, 0, -Math.max(REAL_HEIGHT[glyph] * 3, 20)];
   else if (SMALL.has(glyph)) position = [side * 0.4 + 0.3, 0.75, 0];
+  // Text floats above the subjects, like a title or a sign.
+  else if (glyph === "text") position = [side * 0.5, 2.1, 0];
   else position = [side * 1.2, 0, 0];
   return {
     id: `${glyph}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
@@ -94,6 +102,11 @@ export function newActor(glyph: Glyph, label: string, existing: Actor[], count =
 const PICK_ORDER: Glyph[] = ["person", "child", "robot", "big-animal", "animal", "bird", "fish", "car", "bike", "boat", "train", "plane"];
 function mainItem(items: SketchItem[]): SketchItem | undefined {
   return PICK_ORDER.map((g) => items.find((i) => i.glyph === g)).find(Boolean) ?? items.find((i) => i.layer === "front") ?? items.find((i) => i.layer === "back") ?? items[0];
+}
+
+/** Words to letter into the image, placed on the sketch as they are written. */
+export function textActor(text: string, existing: Actor[]): Actor | null {
+  return cleanLabel(text) ? newActor("text", text, existing) : null;
 }
 
 /** A subject for whatever the user typed: "two old dogs running" draws two running dogs and keeps the wording. */

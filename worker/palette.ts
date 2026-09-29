@@ -9,7 +9,7 @@ import type { Env } from "./env";
 export const PaletteRequest = z.object({
   request: z.string().min(1).max(400),
   style: z.string().max(80),
-  count: z.union([z.literal(2), z.literal(3), z.literal(4)]),
+  count: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
 });
 
 const PaletteOut = z.object({
@@ -26,6 +26,7 @@ const PaletteOut = z.object({
 });
 
 const SYSTEM = `You design small colour palettes for image prompts. Return exactly the number of colours asked for, in role order:
+- 1 colour: background only (the style supplies the rest)
 - 2 colours: background, primary
 - 3 colours: background, primary, accent
 - 4 colours: background, primary, secondary, accent
@@ -47,7 +48,7 @@ export async function suggestPalette(env: Env, body: z.infer<typeof PaletteReque
     .filter((c): c is { hex: Hex; name: string } => Boolean(c.hex));
   if (colours.length !== body.count) throw new AiError("The suggested palette didn’t have the right number of colours. Try again.", 502, false);
   const warnings: string[] = [];
-  const ratio = contrastRatio(colours[0]!.hex, colours[1]!.hex);
+  const ratio = colours[1] ? contrastRatio(colours[0]!.hex, colours[1].hex) : Infinity;
   if (ratio < 3) warnings.push(`The primary colour is hard to read on the background (contrast ${ratio.toFixed(1)}:1).`);
   return {
     name: data.name.slice(0, 40),

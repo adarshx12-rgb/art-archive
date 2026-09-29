@@ -47,6 +47,8 @@ export interface BuilderState {
   output: Output;
   task: Task;
   subject: string;
+  /** Exact words to letter into the image, e.g. a title. Empty for none. */
+  text: string;
   intensity: Intensity;
   paletteMode: PaletteMode;
   count: PaletteSize;
@@ -75,6 +77,8 @@ export interface BuilderState {
 }
 
 export const SUBJECT_MAX = 400;
+/** Matches the longest name a subject on the sketch can have, so placed text is never cut. */
+export const TEXT_MAX = 80;
 
 const firstStyle = styles[0]!;
 
@@ -84,6 +88,7 @@ export function defaultState(): BuilderState {
     output: "image",
     task: "create",
     subject: "",
+    text: "",
     intensity: "balanced",
     paletteMode: "style",
     count: 3,
@@ -108,13 +113,16 @@ export function defaultState(): BuilderState {
 }
 
 /** Trim, collapse whitespace, strip control characters and cap length. */
-export function cleanSubject(input: string): string {
+export function cleanSubject(input: string, max = SUBJECT_MAX): string {
   return input
     .replace(/[\u0000-\u001F\u007F]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, SUBJECT_MAX);
+    .slice(0, max);
 }
+
+/** The same cleaning for the text to letter, with its own cap. */
+export const cleanText = (input: string) => cleanSubject(input, TEXT_MAX);
 
 // ——— URL codec ———
 
@@ -123,6 +131,7 @@ const KEYS = {
   output: "o",
   task: "t",
   subject: "q",
+  text: "tx",
   intensity: "i",
   paletteMode: "pm",
   count: "n",
@@ -158,6 +167,7 @@ export function encodeState(state: BuilderState): URLSearchParams {
   put(KEYS.output, state.output, d.output);
   put(KEYS.task, state.task, d.task);
   if (state.subject) q.set(KEYS.subject, state.subject);
+  if (state.text) q.set(KEYS.text, state.text);
   put(KEYS.intensity, state.intensity, d.intensity);
   put(KEYS.paletteMode, state.paletteMode, d.paletteMode);
   put(KEYS.count, String(state.count), String(d.count));
@@ -222,10 +232,12 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   state.task = pick<Task>(KEYS.task, tasks, "Task") ?? state.task;
   const subject = params.get(KEYS.subject);
   if (subject !== null) state.subject = cleanSubject(subject);
+  const text = params.get(KEYS.text);
+  if (text !== null) state.text = cleanText(text);
   state.intensity = pick<Intensity>(KEYS.intensity, intensities, "Intensity") ?? state.intensity;
   state.paletteMode = pick<PaletteMode>(KEYS.paletteMode, paletteModes, "Palette mode") ?? state.paletteMode;
 
-  const count = pick<"2" | "3" | "4">(KEYS.count, ["2", "3", "4"], "Colour count");
+  const count = pick<"1" | "2" | "3" | "4">(KEYS.count, ["1", "2", "3", "4"], "Colour count");
   if (count) state.count = Number(count) as PaletteSize;
 
   const paletteSlug = params.get(KEYS.palette);
@@ -247,7 +259,7 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   const custom = params.get(KEYS.custom);
   if (custom !== null) {
     const hexes = custom.split(/[-,]/).map((h) => normaliseHex(h));
-    if (hexes.length >= 2 && hexes.length <= 4 && hexes.every(Boolean)) {
+    if (hexes.length >= 1 && hexes.length <= 4 && hexes.every(Boolean)) {
       hexes.forEach((h, i) => (state.custom[i] = h as Hex));
       if (!params.has(KEYS.count)) state.count = hexes.length as PaletteSize;
       if (!params.has(KEYS.paletteMode)) state.paletteMode = "custom";

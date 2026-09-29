@@ -1,5 +1,5 @@
-import { Copy, FlipHorizontal2, RotateCcw, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Copy, FlipHorizontal2, RotateCcw, Trash2, X } from "lucide-react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { POSES, type Actor, type Vec3 } from "../lib/scene/model";
 
 /**
@@ -95,14 +95,20 @@ function Scrub({
   );
 }
 
+/** True in the narrow panel beside the preview: each row puts its values under its name. */
+const Vertical = createContext(false);
+
 function Row({ name, onReset, children }: { name: string; onReset: () => void; children: React.ReactNode }) {
+  const vertical = useContext(Vertical);
   return (
-    <div className="flex min-h-9 items-center gap-2 border-t border-rule py-1.5 first:border-t-0">
-      <button type="button" onClick={onReset} className="text-muted hover:text-ink" title={`Reset ${name.toLowerCase()}`} aria-label={`Reset ${name.toLowerCase()}`}>
-        <RotateCcw size={13} aria-hidden />
-      </button>
-      <span className="w-20 shrink-0 text-sm">{name}</span>
-      <span className="flex flex-wrap items-baseline gap-x-3">{children}</span>
+    <div className={`flex min-h-9 gap-2 border-t border-rule py-1.5 first:border-t-0 ${vertical ? "flex-col gap-1" : "items-center"}`}>
+      <span className="flex items-center gap-2">
+        <button type="button" onClick={onReset} className="text-muted hover:text-ink" title={`Reset ${name.toLowerCase()}`} aria-label={`Reset ${name.toLowerCase()}`}>
+          <RotateCcw size={13} aria-hidden />
+        </button>
+        <span className="w-20 shrink-0 text-sm">{name}</span>
+      </span>
+      <span className={`flex flex-wrap items-baseline gap-x-3 ${vertical ? "pl-5" : ""}`}>{children}</span>
     </div>
   );
 }
@@ -125,22 +131,30 @@ export interface TransformPanelProps {
   onDuplicate: () => void;
   /** The 2D board: only moves, resizing and tilting within the picture. */
   flat?: boolean;
+  /** Closes the panel; the subject stays. */
+  onClose: () => void;
+  /** Narrow and stacked, for the space beside the preview. */
+  vertical?: boolean;
 }
 
 const FIGURES = new Set(["person", "child", "robot"]);
 
 /** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls". */
-export function TransformPanel({ actor, onChange, onDelete, onDuplicate, flat = false }: TransformPanelProps) {
+export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose, flat = false, vertical = false }: TransformPanelProps) {
   const [px, py, pz] = actor.position;
   const [rx, ry, rz] = actor.rotation;
   const setPos = (i: 0 | 1 | 2, v: number) => onChange({ position: actor.position.map((p, j) => (j === i ? Math.round(v * 100) / 100 : p)) as Vec3 });
   const setRot = (i: 0 | 1 | 2, v: number) => onChange({ rotation: actor.rotation.map((p, j) => (j === i ? Math.round(v * 10) / 10 : p)) as Vec3 });
   return (
+    <Vertical.Provider value={vertical}>
     <section aria-label={`Transform: ${actor.label}`} className="rounded-xl border border-rule bg-field/70 p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rule pb-2">
-        <p className="min-w-0 truncate text-sm">
-          <span className="meta text-muted">Transform</span> <span className="font-semibold">{actor.label}</span>
-        </p>
+      <div className={`flex flex-wrap items-center justify-between gap-2 border-b border-rule pb-2 ${vertical ? "flex-col items-stretch" : ""}`}>
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-sm">
+            <span className="meta text-muted">Transform</span> <span className="font-semibold">{actor.label}</span>
+          </p>
+          {vertical && <CloseButton onClose={onClose} />}
+        </div>
         <div className="flex flex-wrap gap-1">
           {flat ? (
             // Mirror left/right (a subject facing the camera stays facing it).
@@ -162,6 +176,7 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, flat = 
             <Trash2 size={14} aria-hidden />
             <span className="sr-only">Delete</span>
           </button>
+          {!vertical && <CloseButton onClose={onClose} />}
         </div>
       </div>
       <div className="pt-1">
@@ -197,10 +212,22 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, flat = 
         )}
       </div>
       <p className="meta mt-2 text-muted">
-        {flat
+        {vertical
+          ? "Drag a value or click to type."
+          : flat
           ? "X is left–right, Y is up (metres). Rotation tilts the subject within the picture. Drag a value or click to type."
           : "X is left–right, Y is up, Z is towards the camera (metres). Rotation Y turns the subject; 0° faces the camera. Drag a value or click to type."}
       </p>
     </section>
+    </Vertical.Provider>
+  );
+}
+
+/** Hides the panel by deselecting; nothing is removed. */
+function CloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button type="button" className="shrink-0 rounded p-1 text-muted hover:text-ink" onClick={onClose} title="Close (the subject stays)" aria-label="Close transform panel">
+      <X size={16} aria-hidden />
+    </button>
   );
 }

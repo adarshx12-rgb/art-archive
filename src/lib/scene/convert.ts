@@ -1,6 +1,6 @@
 import { clamp, LAYER_HEIGHT, type Layer } from "../sketch/layers";
 import { projectActor, standingHeight, unproject, type ShotCamera } from "./camera";
-import { isSky, REAL_HEIGHT, type Actor, type Vec3 } from "./model";
+import { isSky, REAL_HEIGHT, widthRatio, type Actor, type Vec3 } from "./model";
 
 /** Place a 3D actor so that, through `cam`, it lands where a 2D layer was (old share links). */
 export function actorFromLayer(cam: ShotCamera, l: Layer): Actor {
@@ -60,7 +60,8 @@ const SLOTS = [0.5, 0.3, 0.7, 0.18, 0.82, 0.4, 0.6];
 
 /**
  * Slide a new subject sideways so it lands in a free slot of the current
- * frame instead of off-screen. Sky objects go high in the frame.
+ * frame instead of off-screen. Sky objects go high in the frame; text goes
+ * near the top, centred like a title.
  */
 export function placeInFrame(cam: ShotCamera, a: Actor, index: number): Actor {
   const now = projectActor(cam, a);
@@ -68,6 +69,13 @@ export function placeInFrame(cam: ShotCamera, a: Actor, index: number): Actor {
   if (isSky(a.glyph)) {
     const p = unproject(cam, slot, 0.18, 1e6, now.depth);
     return { ...a, position: p };
+  }
+  if (a.glyph === "text") {
+    const placed = { ...a, position: unproject(cam, 0.5, 0.14 + 0.1 * (index % 3), 1e6, now.depth) };
+    // Size it like a title: at most 60% of the frame wide and a tenth of it tall.
+    const p = projectActor(cam, placed);
+    const wide = (p.size * widthRatio(a.glyph, a.label)) / cam.aspect;
+    return { ...placed, scale: clamp(a.scale * Math.min(0.6 / Math.max(wide, 1e-6), 0.1 / Math.max(p.size, 1e-6)), 0.05, 20) };
   }
   // Sideways distance per unit of frame width at this subject's depth.
   const width = 2 * Math.max(now.depth, 0.5) * Math.tan((cam.fov * Math.PI) / 360) * cam.aspect;

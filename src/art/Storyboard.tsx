@@ -5,7 +5,7 @@ import { angleOptions, eraOptions, findOption, genreOptions, lensOptions, shotOp
 import type { BuilderState } from "../lib/prompt/state";
 import { horizonAt, project, type ShotCamera } from "../lib/scene/camera";
 import type { Vec3 } from "../lib/scene/model";
-import { clamp, LAYER_ASPECT, LAYER_HEIGHT, type Layer } from "../lib/sketch/layers";
+import { clamp, LAYER_HEIGHT, layerAspect, type Layer } from "../lib/sketch/layers";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../lib/sketch/parse";
 import { rng } from "./util";
 
@@ -938,7 +938,8 @@ export function Storyboard({
   const placed: { x: number; y: number; text: string }[] = [];
   // Subjects turned or panned out of view keep no label at the frame edge.
   const inView = (l: Layer) => l.x > -0.05 && l.x < 1.05 && l.y > -0.3 && l.y < 1.3;
-  const layerLabels = layers.filter(inView).map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
+  // Placed text is its own label.
+  const layerLabels = layers.filter((l) => inView(l) && l.glyph !== "text").map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
   [...layerLabels, ...labels.values()].forEach((l) => {
     l.x = Math.min(Math.max(l.x, 80), W - 80);
     const clash = () => placed.some((p) => Math.abs(p.x - l.x) < 0.3 * fs * (p.text.length + l.text.length) + fs * 0.5 && Math.abs(p.y - l.y) < fs * 1.2);
@@ -958,7 +959,7 @@ export function Storyboard({
   const copies = (l: Layer) => Math.max(1, l.count ?? 1);
   const sizeOf = (l: Layer) => {
     const hh = LAYER_HEIGHT[l.glyph] * l.scale * H;
-    const one = hh * LAYER_ASPECT[l.glyph];
+    const one = hh * layerAspect(l.glyph, l.label);
     return { hh, one, ww: one * copies(l) + one * 0.15 * (copies(l) - 1) };
   };
   const begin = (e: PointerEvent, mode: Drag["mode"], l: Layer) => {
@@ -1130,16 +1131,35 @@ export function Storyboard({
               const { hh, ww, one } = sizeOf(l);
               const n = copies(l);
               const front = i === layers.length - 1;
+              const isText = l.glyph === "text";
               return (
                 <g
                   key={l.id}
-                  transform={`translate(${l.x * W} ${l.y * H}) rotate(${l.rotation}) scale(${l.flip ? -1 : 1} 1)`}
+                  // Text is never mirrored, whichever way the 3D view turns it.
+                  transform={`translate(${l.x * W} ${l.y * H}) rotate(${l.rotation}) scale(${l.flip && !isText ? -1 : 1} 1)`}
                   onPointerDown={(e) => begin(e, "move", l)}
                   style={editable ? { cursor: "move" } : undefined}
                   aria-label={l.label}
                 >
                   <rect x={-ww / 2} y={-hh / 2} width={ww} height={hh} fill="transparent" />
-                  {Array.from({ length: n }, (_, k) => (
+                  {isText ? (
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontFamily="var(--font-mono)"
+                      fontWeight={700}
+                      fontSize={hh}
+                      textLength={ww * 0.96}
+                      lengthAdjust="spacingAndGlyphs"
+                      fill={c.ink}
+                      stroke={pal.bg}
+                      strokeWidth={Math.max(hh * 0.08, 3)}
+                      paintOrder="stroke"
+                      strokeLinejoin="round"
+                    >
+                      {l.label}
+                    </text>
+                  ) : Array.from({ length: n }, (_, k) => (
                     <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
                       {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing)}
                     </g>

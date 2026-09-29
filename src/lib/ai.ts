@@ -15,7 +15,7 @@ async function post<T>(path: string, body: unknown): Promise<AiResult<T>> {
   try {
     const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
-    if (!res.ok || !data) return { ok: false, error: data?.error ?? (res.status === 404 ? "AI isn’t available on this version of the site." : "Something went wrong. Please try again.") };
+    if (!res.ok || !data) return { ok: false, error: data?.error ?? (res.status === 404 ? "This isn’t available on this version of the site." : "Something went wrong. Please try again.") };
     return { ok: true, data };
   } catch {
     return { ok: false, error: "Couldn’t reach the server. Check your connection and try again." };

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { defaultState, decodeState } from "../prompt/state";
 import { effectiveAngle, horizonAt, projectActor, projectScene, shotCamera, unproject } from "./camera";
-import { applyLayerEdit } from "./convert";
+import { applyLayerEdit, placeInFrame } from "./convert";
 import { describeScene } from "./describe";
-import { actorFromText, decodeActors, encodeActors, newActor, type Actor } from "./model";
+import { actorFromText, decodeActors, encodeActors, newActor, textActor, type Actor, type Vec3 } from "./model";
 
 const cam = (patch = {}) => shotCamera({ ...defaultState(), ...patch });
 const person = (patch: Partial<Actor> = {}): Actor => ({ ...newActor("person", "woman", []), ...patch });
@@ -137,5 +137,57 @@ describe("scene links", () => {
     const a = actorFromText("two dancers dancing on the sand", [])!;
     expect([a.glyph, a.count, a.pose]).toEqual(["person", 2, "dance"]);
     expect(actorFromText("a red car", [])!.rotation[1]).toBe(90);
+  });
+});
+
+describe("adding typed subjects", () => {
+  it("recognises people, animals, vehicles, places, nature, sky and objects", () => {
+    const cases: [string, string][] = [
+      ["an old fisherman", "person"], ["a child", "child"], ["a robot", "robot"],
+      ["a sleeping dog", "animal"], ["a horse", "big-animal"], ["a bird", "bird"], ["a fish", "fish"],
+      ["a red car", "car"], ["a bicycle", "bike"], ["a boat", "boat"], ["a train", "train"], ["a plane", "plane"],
+      ["a house", "house"], ["a tower", "tower"], ["a lighthouse", "lighthouse"], ["a castle", "castle"], ["a city", "city"], ["a door", "door"], ["a window", "window"],
+      ["a tree", "tree"], ["a palm tree", "palm"], ["a flower", "flower"], ["a mountain", "mountain"], ["a hill", "hill"],
+      ["the sun", "sun"], ["the moon", "moon"], ["a planet", "planet"], ["a cloud", "cloud"], ["a star", "star"],
+      ["a wooden table", "table"], ["a chair", "chair"], ["a bed", "bed"], ["a lamp", "lamp"], ["a book", "book"], ["a cup", "cup"],
+      ["a candle", "candle"], ["a sword", "sword"], ["a guitar", "guitar"], ["a phone", "device"], ["a bottle", "bottle"],
+    ];
+    for (const [text, glyph] of cases) expect(actorFromText(text, [])?.glyph, text).toBe(glyph);
+  });
+});
+
+describe("text placed on the sketch", () => {
+  it("makes a text item that keeps its words and survives a share link", () => {
+    const t = textActor("  Hola   amigo ", []);
+    expect(t?.glyph).toBe("text");
+    expect(t?.label).toBe("Hola amigo");
+    expect(textActor("   ", [])).toBeNull();
+    const { actors, bad } = decodeActors(encodeActors([t!]));
+    expect(bad).toBe(false);
+    expect(actors[0]).toMatchObject({ glyph: "text", label: "Hola amigo" });
+  });
+
+  it("is never the main subject and is named as text in the layout", () => {
+    const table = actorFromText("a table", [])!;
+    const text = { ...textActor("OPEN LATE", [table])!, position: [0, 1, 1.5] as Vec3 };
+    const projected = projectScene(cam(), [table, text]);
+    const layout = describeScene(projected, 4 / 5);
+    expect(layout).toMatch(/^a table.*\(the main subject\)/);
+    expect(layout).toContain('the text "OPEN LATE"');
+  });
+
+  it("fits in the frame when placed, short or long, in 3D and on the 2D board", () => {
+    for (const view of ["3d", "2d"] as const) {
+      const c = cam({ view });
+      for (const words of ["HI", "hola amigo", "a much longer line of text for a poster headline"]) {
+        const p = projectActor(c, placeInFrame(c, textActor(words, [])!, 0));
+        const wide = (p.size * Math.max(1, 0.62 * words.length)) / c.aspect;
+        expect(wide, `${view} ${words}`).toBeLessThanOrEqual(0.61);
+        expect(p.size, `${view} ${words}`).toBeLessThanOrEqual(0.101);
+        expect(p.x).toBeCloseTo(0.5, 1);
+        expect(p.y).toBeGreaterThan(0);
+        expect(p.y).toBeLessThan(0.4);
+      }
+    }
   });
 });

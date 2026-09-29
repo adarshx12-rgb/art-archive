@@ -8,7 +8,7 @@ const LICENCES: { id: FontLicence; label: string; hint: string }[] = [
 ];
 
 /** Loads a Google Fonts preview, subset to the characters shown. */
-function useGooglePreview(families: string[], text: string) {
+export function useGooglePreview(families: string[], text: string) {
   const key = families.join("|");
   useEffect(() => {
     const links = families.map((family) => {

@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Link2, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Link2, Plus, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
@@ -25,12 +25,11 @@ import {
   type PreserveId,
   type Task,
 } from "../lib/prompt/options";
-import { decodeState, defaultState, encodeState, SUBJECT_MAX, type BuilderState } from "../lib/prompt/state";
+import { decodeState, defaultState, encodeState, SUBJECT_MAX, TEXT_MAX, type BuilderState } from "../lib/prompt/state";
 import { byPriority, projectScene, shotCamera } from "../lib/scene/camera";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
-import { actorFromText, MAX_ACTORS, newActor, type Actor } from "../lib/scene/model";
+import { actorFromText, MAX_ACTORS, newActor, textActor, type Actor } from "../lib/scene/model";
 import type { Layer } from "../lib/sketch/layers";
-import type { Glyph } from "../lib/sketch/parse";
 import { useMeta } from "../lib/useMeta";
 import { ThemeToggle } from "../state/theme";
 import { useToast } from "../state/toast";
@@ -204,10 +203,31 @@ export function Builder() {
   const [confirm, setConfirm] = useState<null | "regenerate" | "reset">(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const subjectRef = useRef<HTMLTextAreaElement>(null);
+  const letteringRef = useRef<HTMLInputElement>(null);
+  // The transform panel sits in the empty space left of the preview when it fits.
+  const stageRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [side, setSide] = useState<{ width: number; board: number; height: number } | null>(null);
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const board = boardRef.current;
+    if (!stage || !board) return;
+    const measure = () => {
+      const free = (stage.clientWidth - board.offsetWidth) / 2 - 16;
+      setSide(free >= 208 ? { width: Math.min(free, 288), board: board.offsetWidth, height: board.offsetHeight } : null);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(stage);
+    ro.observe(board);
+    return () => ro.disconnect();
+  }, []);
 
   const style = getStyle(state.style) ?? styles[0]!;
   const composed = useMemo(() => composePrompt(state), [state]);
   const palette = resolvePalette(state, style);
+  // A 1-colour palette is the background only; the sketch fills the other roles with the style's colours.
+  const sketchColours = palette.colours.length === 1 ? [palette.colours[0]!, ...resolvePalette({ ...state, paletteMode: "style", count: 4 }, style).colours.slice(1)] : palette.colours;
   const prompt = edited ? text : composed.prompt;
   const staleEdit = edited && basis !== composed.prompt;
 
@@ -260,6 +280,11 @@ export function Builder() {
   const setCount = (n: PaletteSize) =>
     setState((s) => {
       const next = { ...s, count: n };
+      // No curated palette has one colour: keep the current background as a custom one.
+      if (n === 1 && s.paletteMode === "curated") {
+        const bg = resolvePalette(s, getStyle(s.style)!).colours[0]!.hex;
+        return { ...next, paletteMode: "custom", custom: [bg, s.custom[1], s.custom[2], s.custom[3]] };
+      }
       if (s.paletteMode === "curated" && getPalette(s.palette)?.colours.length !== n) {
         next.palette = palettes.find((p) => p.colours.length === n)?.slug ?? null;
       }
@@ -296,6 +321,14 @@ export function Builder() {
       return { ...s, paletteMode: "custom", count: cols.length as PaletteSize, custom };
     });
 
+  /** Use these exact colours (a suggestion that isn't a curated palette). */
+  const setColours = (hexes: Hex[]) =>
+    setState((s) => {
+      const custom = [...s.custom] as BuilderState["custom"];
+      hexes.forEach((h, i) => (custom[i] = h));
+      return { ...s, paletteMode: "custom", count: hexes.length as PaletteSize, custom };
+    });
+
   const setCurated = (slug: string) =>
     setState((s) => ({ ...s, paletteMode: "curated", palette: slug, count: getPalette(slug)!.colours.length as PaletteSize }));
 
@@ -319,12 +352,6 @@ export function Builder() {
   const setActors = (fn: (actors: Actor[]) => Actor[]) => setState((s) => ({ ...s, actors: fn(s.actors) }));
   /** New subjects land in a free spot of the current frame. */
   const framed = (a: Actor) => placeInFrame(shotCamera(state), a, state.actors.length);
-  const addActor = (glyph: Glyph, label: string) => {
-    if (state.actors.length >= MAX_ACTORS) return;
-    const actor = framed(newActor(glyph, label, state.actors));
-    setActors((as) => [...as, actor]);
-    setSelectedId(actor.id);
-  };
   /** Put the typed subject in the scene and clear the box for the next one. */
   const addDraft = () => {
     const raw = actorFromText(state.subject, state.actors);
@@ -334,6 +361,26 @@ export function Builder() {
     setSelectedId(actor.id);
     subjectRef.current?.focus();
   };
+  /** Put the typed text on the sketch, where it can be moved and sized, and clear the box. */
+  const addText = () => {
+    const raw = textActor(state.text, state.actors);
+    if (!raw || state.actors.length >= MAX_ACTORS) return;
+    const actor = framed(raw);
+    setState((s) => ({ ...s, text: "", actors: [...s.actors, actor] }));
+    setSelectedId(actor.id);
+    letteringRef.current?.focus();
+  };
+  const transformPanel = (a: Actor, vertical: boolean) => (
+    <TransformPanel
+      flat={state.view === "2d"}
+      vertical={vertical}
+      actor={a}
+      onChange={(patch) => updateActor(a.id, patch)}
+      onDelete={() => deleteActor(a.id)}
+      onDuplicate={() => duplicateActor(a.id)}
+      onClose={() => setSelectedId(null)}
+    />
+  );
   const updateActor = (id: string, patch: Partial<Actor>) => setActors((as) => as.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const deleteActor = (id: string) => {
     setActors((as) => as.filter((a) => a.id !== id));
@@ -445,7 +492,7 @@ export function Builder() {
       <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
         {/* ——— Controls ——— */}
         <form
-          className="order-2 border-rule px-4 pb-10 sm:px-6 lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:border-r"
+          className="order-2 border-rule px-4 pb-10 sm:px-6 lg:relative lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:border-r"
           onSubmit={(e) => e.preventDefault()}
           aria-label="Prompt settings"
         >
@@ -502,16 +549,44 @@ export function Builder() {
             />
             <SubjectLayers
               draft={state.subject}
-              subjects={[...priority.map((p) => ({ id: p.id, label: p.label })), ...state.actors.filter((a) => !projected.some((p) => p.id === a.id)).map((a) => ({ id: a.id, label: a.label }))]}
+              subjects={[...priority, ...state.actors.filter((a) => !projected.some((p) => p.id === a.id))].map((a) => ({ id: a.id, label: a.label, text: a.glyph === "text" }))}
               selectedId={selectedId}
               onAddDraft={addDraft}
-              onPick={addActor}
               onSelect={setSelectedId}
               onRename={(id, label) => updateActor(id, { label: label.slice(0, 80) })}
               onDelete={deleteActor}
               onAi={() => runScene(state.actors.length ? "edit" : "new", state.subject, true)}
               aiBusy={aiBusy === "scene"}
             />
+          </Group>
+
+          <Group legend={isRestyle ? "New text (optional)" : "Text in the image (optional)"} hint={state.text ? `${state.text.length}/${TEXT_MAX} characters. Spelled exactly as typed; + places it on the sketch.` : "A title, sign or slogan to letter in the style’s type. + places it on the sketch."}>
+            <label htmlFor="text" className="sr-only">
+              Text in the image
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="text"
+                ref={letteringRef}
+                className="field min-w-0 flex-1"
+                maxLength={TEXT_MAX}
+                placeholder={isRestyle ? "e.g. OPEN LATE" : "e.g. NEON RUSH"}
+                autoComplete="off"
+                name="text"
+                value={state.text}
+                onChange={(e) => set("text", e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter places the text on the sketch, like ADD for subjects.
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    addText();
+                  }
+                }}
+              />
+              <button type="button" className="btn btn-primary shrink-0 px-3" disabled={!state.text.trim() || state.actors.length >= MAX_ACTORS} onClick={addText} aria-label="Place the text on the sketch" title="Place the text on the sketch">
+                <Plus size={16} aria-hidden />
+              </button>
+            </div>
           </Group>
 
           <Group legend="Style intensity">
@@ -557,6 +632,7 @@ export function Builder() {
                       value={state.count}
                       onChange={setCount}
                       options={[
+                        { id: 1, label: "1" },
                         { id: 2, label: "2" },
                         { id: 3, label: "3" },
                         { id: 4, label: "4" },
@@ -631,7 +707,7 @@ export function Builder() {
         </form>
 
         {/* ——— Sketch and prompt ——— */}
-        <main className="order-1 min-w-0 px-4 py-6 sm:px-6 lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto">
+        <main className="order-1 min-w-0 px-4 py-6 sm:px-6 lg:relative lg:order-none lg:h-[calc(100dvh-3rem)] lg:overflow-y-auto">
       {issues.length > 0 && (
         <div role="alert" className="mb-6 flex items-start gap-3 border border-alert p-4 text-[0.9375rem]">
           <AlertTriangle size={18} className="mt-0.5 shrink-0 text-alert" aria-hidden />
@@ -689,13 +765,14 @@ export function Builder() {
                 </div>
               )}
             </div>
-            <div className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+            <div ref={stageRef} className="relative">
+            <div ref={boardRef} className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
               <div className="overflow-hidden rounded-xl border border-rule">
                 <Storyboard
                   state={state}
                   layers={projected}
                   camera={camera}
-                  colours={palette.colours}
+                  colours={sketchColours}
                   keepColours={keepColours}
                   keepComposition={keepComposition}
                   selectedId={selectedId}
@@ -706,6 +783,12 @@ export function Builder() {
                   viewTool={viewTool}
                 />
               </div>
+            </div>
+            {selectedActor && side && (
+              <div className="absolute top-0 overflow-y-auto" style={{ right: `calc(50% + ${side.board / 2 + 16}px)`, width: side.width, maxHeight: side.height }}>
+                {transformPanel(selectedActor, true)}
+              </div>
+            )}
             </div>
             <p className="meta mt-2 text-center text-muted">
               {state.view === "3d"
@@ -737,17 +820,7 @@ export function Builder() {
               </div>
             )}
 
-            {selectedActor && (
-              <div className="mt-4">
-                <TransformPanel
-                  flat={state.view === "2d"}
-                  actor={selectedActor}
-                  onChange={(patch) => updateActor(selectedActor.id, patch)}
-                  onDelete={() => deleteActor(selectedActor.id)}
-                  onDuplicate={() => duplicateActor(selectedActor.id)}
-                />
-              </div>
-            )}
+            {selectedActor && !side && <div className="mt-4">{transformPanel(selectedActor, false)}</div>}
 
             <div className="mt-4">
               <PresetBar
@@ -759,6 +832,7 @@ export function Builder() {
                 set={set}
                 onStylePalette={() => setMode("style")}
                 onCurated={setCurated}
+                onColours={setColours}
                 onCustom={editCustom}
                 onAiPalette={async (request) => {
                   const res = await aiPalette(state, request);
@@ -801,7 +875,7 @@ export function Builder() {
                   }}
                 >
                   <Sparkles size={14} aria-hidden />
-                  {aiBusy === "prompt" ? "Writing…" : "Perfect with AI"}
+                  {aiBusy === "prompt" ? "Writing…" : "Perfect prompt"}
                 </button>
                 {edited && (
                   <button type="button" className="btn btn-sm btn-ghost" disabled={aiBusy !== null} onClick={() => runScene("from-prompt", prompt, false)} title="Rebuild the scene so it matches the prompt as you’ve edited it">

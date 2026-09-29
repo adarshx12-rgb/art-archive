@@ -1,6 +1,6 @@
 import type { BuilderState } from "../prompt/state";
 import { LAYER_HEIGHT, type Layer } from "../sketch/layers";
-import { isSky, REAL_HEIGHT, type Actor, type Vec3 } from "./model";
+import { isSky, isText, REAL_HEIGHT, type Actor, type Vec3 } from "./model";
 
 /**
  * The shot camera: where the Camera presets put the lens, turned and
@@ -202,7 +202,9 @@ export function projectScene(cam: ShotCamera, actors: Actor[]): Projected[] {
     .sort((a, b) => b.depth - a.depth);
 }
 
-/** Subjects nearest the camera first: the first non-sky one is the main subject. */
+/** Subjects nearest the camera first: the first one not in the sky and not text is the main subject. */
 export function byPriority(projected: Projected[]): Projected[] {
-  return [...projected].sort((a, b) => Number(isSky(a.glyph)) - Number(isSky(b.glyph)) || a.depth - b.depth);
+  // Sky and placed text never lead: the main subject is the nearest thing on the ground.
+  const late = (p: Projected) => Number(isSky(p.glyph) || isText(p.glyph));
+  return [...projected].sort((a, b) => late(a) - late(b) || a.depth - b.depth);
 }

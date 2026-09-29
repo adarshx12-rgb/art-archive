@@ -1,7 +1,10 @@
-import { Aperture, Clapperboard, ChevronUp, Check, Sparkles } from "lucide-react";
+import { Aperture, Clapperboard, ChevronUp, Check, ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { fontSuggestions } from "../content/fonts";
 import { palettes } from "../content/palettes";
-import type { StyleRecord } from "../content/types";
+import type { Hex, PaletteSize, StyleRecord } from "../content/types";
+import { styleSuggestions, type SuggestedPalette } from "../lib/prompt/suggest";
+import { useGooglePreview } from "./FontSuggestions";
 import type { ResolvedPalette } from "../lib/prompt/compose";
 import {
   angleOptions,
@@ -83,13 +86,15 @@ export interface PresetBarProps {
   /** Use the style's own colours. */
   onStylePalette: () => void;
   onCurated: (slug: string) => void;
+  /** Use exactly these colours, as a custom palette. */
+  onColours: (hexes: Hex[]) => void;
   onCustom: () => void;
   /** Ask the AI for a palette; resolves to a note to show, or an error message. */
   onAiPalette?: (request: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 /** Cinema-style quick settings under the sketch. Each pill opens a panel of choices. */
-export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onCustom, onAiPalette }: PresetBarProps) {
+export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onColours, onCustom, onAiPalette }: PresetBarProps) {
   const [mood, setMood] = useState("");
   const [asking, setAsking] = useState(false);
   const [aiNote, setAiNote] = useState<{ ok: boolean; message: string } | null>(null);
@@ -168,7 +173,18 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
                 <p className="border-l-2 border-ink pl-3 text-sm text-muted">You’re preserving your source’s original colours. Untick “Original colours” to use a palette.</p>
               ) : (
                 <>
-                  <div className="flex flex-wrap gap-2">
+                  <StyleSuggestions
+                    state={state}
+                    style={style}
+                    onPick={(o, size) => {
+                      if (o.own) {
+                        onStylePalette();
+                        set("count", size);
+                      } else if (o.slug) onCurated(o.slug);
+                      else onColours(o.hexes);
+                    }}
+                  />
+                  <div className="flex flex-wrap gap-2 border-t border-rule pt-3">
                     <button type="button" aria-pressed={state.paletteMode === "style"} onClick={onStylePalette} className={`btn btn-sm ${state.paletteMode === "style" ? "btn-primary" : "btn-ghost"}`}>
                       Auto: {style.name} colours
                     </button>
@@ -188,7 +204,7 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
                       }}
                     >
                       <label htmlFor="ai-mood" className="meta mb-1 block text-muted">
-                        Suggest {state.count} colours with AI
+                        Suggest {state.count === 1 ? "a background colour" : `${state.count} colours`}
                       </label>
                       <div className="flex gap-2">
                         <input id="ai-mood" value={mood} maxLength={400} onChange={(e) => setMood(e.target.value)} placeholder="e.g. misty harbour at dawn, calm and cold" className="field min-w-0 flex-1 py-1.5 text-sm" />
@@ -200,7 +216,7 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
                       {aiNote && <p className={`mt-1.5 text-sm ${aiNote.ok ? "text-muted" : "text-alert"}`} role="status">{aiNote.message}</p>}
                     </form>
                   )}
-                  <p className="meta text-muted">Curated palettes</p>
+                  <p className="meta text-muted">All curated palettes</p>
                   <ul className="grid gap-1.5 sm:grid-cols-2">
                     {palettes.map((p) => {
                       const on = state.paletteMode === "curated" && state.palette === p.slug;
@@ -246,5 +262,78 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
       )}
 
     </div>
+  );
+}
+
+/** Is this suggestion what the builder is using now? */
+function isCurrent(o: SuggestedPalette, size: PaletteSize, state: BuilderState): boolean {
+  if (state.count !== size) return false;
+  if (o.own) return state.paletteMode === "style";
+  if (o.slug) return state.paletteMode === "curated" && state.palette === o.slug;
+  return state.paletteMode === "custom" && o.hexes.every((h, i) => state.custom[i]?.toUpperCase() === h.toUpperCase());
+}
+
+/** The top of the colour panel: palettes for the chosen style on the left, its fonts on the right. */
+function StyleSuggestions({ state, style, onPick }: { state: BuilderState; style: StyleRecord; onPick: (o: SuggestedPalette, size: PaletteSize) => void }) {
+  const groups = styleSuggestions(style);
+  const fonts = fontSuggestions[style.slug] ?? [];
+  // Preview each free font in its own face, using only the letters of the names shown.
+  useGooglePreview(
+    fonts.filter((f) => f.licence === "free").map((f) => f.family),
+    [...new Set(fonts.map((f) => f.family).join(""))].join(""),
+  );
+  return (
+    <section aria-label={`Suggested for ${style.name}`} className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="min-w-0">
+        <p className="mb-2 text-sm font-semibold">Palettes for {style.name}</p>
+        <div className="space-y-3">
+          {groups.map((g) => (
+            <div key={g.size}>
+              <p className="meta mb-1 text-muted">{g.size === 1 ? "1 colour · background only" : `${g.size} colours`}</p>
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {g.options.map((o) => {
+                  const on = isCurrent(o, g.size, state);
+                  return (
+                    <li key={o.hexes.join()}>
+                      <button type="button" aria-pressed={on} onClick={() => onPick(o, g.size)} className={`flex w-full items-center gap-2 rounded-lg border p-1.5 text-left text-sm ${on ? "border-ink bg-field" : "border-rule hover:border-rule-strong"}`}>
+                        <span className="flex h-6 w-16 shrink-0 overflow-hidden rounded border border-swatch-edge" aria-hidden>
+                          {o.hexes.map((h, i) => (
+                            <span key={i} className="flex-1" style={{ background: h }} />
+                          ))}
+                        </span>
+                        <span className="truncate">{o.name}</span>
+                        {on && <Check size={13} className="ml-auto shrink-0" aria-hidden />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="min-w-0 lg:border-l lg:border-rule lg:pl-5">
+        <p className="mb-2 text-sm font-semibold">Fonts for {style.name}</p>
+        {fonts.length === 0 ? (
+          <p className="text-sm text-muted">No font suggestions for this style yet.</p>
+        ) : (
+          <ul className="divide-y divide-rule">
+            {fonts.map((f) => (
+              <li key={f.family} className="py-2 first:pt-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <a href={f.url} target="_blank" rel="noreferrer" className="min-w-0 truncate text-lg leading-tight hover:underline" style={f.licence === "free" ? { fontFamily: `"${f.family}", var(--font-sans, sans-serif)` } : undefined}>
+                    {f.family}
+                    <span className="sr-only"> (opens in a new tab)</span>
+                    <ExternalLink size={11} className="ml-1 inline align-baseline opacity-60" aria-hidden />
+                  </a>
+                  <span className={`meta shrink-0 rounded-[2px] px-1.5 py-0.5 ${f.licence === "free" ? "bg-ink text-paper" : "border border-rule-strong"}`}>{f.licence === "free" ? "Free" : "Paid"}</span>
+                </div>
+                <p className="meta mt-0.5 text-muted">{f.role} · {f.why}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }

@@ -82,7 +82,7 @@ export function chain(env: Env, override?: string | null): Target[] {
 
 export async function ask<T extends z.ZodType>(env: Env, opts: AskOptions<T>, override?: string | null): Promise<AskResult<z.infer<T>>> {
   const targets = chain(env, override);
-  if (!targets.length) throw new AiError("AI isn’t set up on this server yet.", 503, false);
+  if (!targets.length) throw new AiError("This isn’t set up on this server yet.", 503, false);
   let last: AiError | null = null;
   let i = opts.from ?? 0;
   while (i < targets.length) {
@@ -170,7 +170,7 @@ async function openRouter<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mo
     throw new AiError("Couldn’t reach the AI service. Try again.", 504);
   }
   const body = (await res.json().catch(() => ({}))) as ChatResponse;
-  if (res.status === 401 || res.status === 403) throw new AiError("AI isn’t set up correctly on this server.", 503);
+  if (res.status === 401 || res.status === 403) throw new AiError("This isn’t set up correctly on this server.", 503);
   if (res.status === 402) throw new AiError("The AI account is out of credit.", 503);
   if (res.status === 429) throw new AiError("The AI is busy right now. Try again in a minute.", 429);
   if (!res.ok || body.error) throw new AiError("The AI service had a problem. Try again.", 502);
@@ -234,7 +234,7 @@ async function anthropic<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mod
   } catch (e) {
     if (e instanceof AiError) throw e;
     if (e instanceof Anthropic.RateLimitError) throw new AiError("The AI is busy right now. Try again in a minute.", 429);
-    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw new AiError("AI isn’t set up correctly on this server.", 503);
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw new AiError("This isn’t set up correctly on this server.", 503);
     if (e instanceof Anthropic.BadRequestError) throw new AiError("That request couldn’t be processed.", 400, false);
     if (e instanceof Anthropic.APIConnectionError) throw new AiError("Couldn’t reach the AI service. Try again.", 504);
     if (e instanceof Anthropic.APIError) throw new AiError("The AI service had a problem. Try again.", 502);

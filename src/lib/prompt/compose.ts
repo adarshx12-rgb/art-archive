@@ -22,15 +22,17 @@ import {
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
 import { describeScene } from "../scene/describe";
 import { withArticle } from "../sketch/layers";
-import { cleanSubject, type BuilderState } from "./state";
+import { cleanSubject, cleanText, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
+  1: ["background"],
   2: ["background", "primary"],
   3: ["background", "primary", "accent"],
   4: ["background", "primary", "secondary", "accent"],
 };
 
 export const DEFAULT_SHARES: Record<PaletteSize, number[]> = {
+  1: [100],
   2: [70, 30],
   3: [60, 30, 10],
   4: [50, 25, 15, 10],
@@ -90,6 +92,11 @@ const ROLE_PHRASE: Record<PaletteRole, string> = {
 };
 
 export function paletteSentence(palette: ResolvedPalette): string {
+  // One colour sets the background only; the style colours everything else.
+  if (palette.colours.length === 1) {
+    const c = palette.colours[0]!;
+    return `${c.name} (${c.hex}) as the background; the other colours follow the style.`;
+  }
   const parts = palette.colours.map(
     (c) => `${c.name} (${c.hex}) ${ROLE_PHRASE[c.role]}, about ${c.share}%`,
   );
@@ -147,7 +154,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const notes: string[] = [];
   // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
   const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
-  const placedNames = joinList([...byPriority(projected).map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
+  const placedNames = joinList([...byPriority(projected).filter((p) => p.glyph !== "text").map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
   const subject = placedNames || "[describe your subject]";
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
@@ -159,6 +166,9 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const keepComposition = preserve.has("composition");
   const keepColours = preserve.has("colours");
   const keepTiming = isVideo && preserve.has("timing");
+  // Text placed on the sketch, then any still in the box. It replaces the source's lettering, so "keep existing text" no longer applies.
+  const texts = [...new Set([...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), cleanText(state.text)].filter(Boolean))];
+  if (texts.length && preserve.delete("text")) notes.push("The text you typed replaces the source’s lettering, so “Text & logos” is not preserved.");
 
   const lines: string[] = [];
   const seen = new Set<string>();
@@ -255,8 +265,14 @@ export function composePrompt(state: BuilderState): ComposeResult {
     state.lighting === "style" ? style.look.lighting : findOption(lightingOptions, state.lighting)!.phrase;
   if (state.lighting !== "style" || !isRedundant(lighting, seen)) add("Lighting", `${lighting}.`);
 
-  // 7. Typography only when text is likely to appear
-  if (TEXT_HINT.test(state.subject) || preserve.has("text")) {
+  // 7. Typography: the exact text typed, or guidance only when text is likely to appear
+  if (texts.length) {
+    const quoted = joinList(texts.map((t) => `"${t}"`));
+    const set = isRestyle
+      ? `change the lettering to read exactly ${quoted}`
+      : texts.length > 1 ? `set exactly these texts: ${quoted}` : `set exactly this text: ${quoted}`;
+    add("Lettering", `${set} in ${style.look.typography}; spell ${texts.length > 1 ? "each" : "it"} exactly as written and add no other words.`);
+  } else if (TEXT_HINT.test(state.subject) || preserve.has("text")) {
     if (preserve.has("text")) add("Lettering", "keep existing lettering exactly as it is.");
     else add("Lettering", `if text appears, ${style.look.typography}.`);
   }
@@ -285,7 +301,8 @@ export function composePrompt(state: BuilderState): ComposeResult {
 
   // 10. Avoid — drop items that would contradict the user's own choices
   let avoid = style.prompt.avoid;
-  if (state.paletteMode !== "style" || keepColours) avoid = avoid.filter((a) => !COLOUR_WORDS.test(a));
+  // A 1-colour palette leaves the other colours to the style, so its colour advice still applies.
+  if ((state.paletteMode !== "style" && resolvePalette(state, style).colours.length > 1) || keepColours) avoid = avoid.filter((a) => !COLOUR_WORDS.test(a));
   if (state.lighting !== "style") avoid = avoid.filter((a) => !LIGHT_WORDS.test(a));
   if (avoid.length) add("Avoid", `${joinList(avoid)}.`);
 
@@ -303,6 +320,7 @@ export function themeState(style: StyleRecord, output: "image" | "video"): Build
     output,
     task: "restyle",
     subject: "",
+    text: "",
     intensity: "balanced",
     paletteMode: "style",
     count: 4,

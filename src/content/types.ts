@@ -99,7 +99,8 @@ export interface StyleRecord {
   featured?: number;
 }
 
-export type PaletteSize = 2 | 3 | 4;
+/** 1 sets the background only; curated palettes have 2 to 4. */
+export type PaletteSize = 1 | 2 | 3 | 4;
 
 export type PaletteRole = "background" | "primary" | "secondary" | "accent";
 

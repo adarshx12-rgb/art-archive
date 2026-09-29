@@ -1,7 +1,7 @@
 import { withArticle } from "../sketch/layers";
 import type { Glyph } from "../sketch/parse";
 import { byPriority, type Projected } from "./camera";
-import { isSky, WIDTH_RATIO } from "./model";
+import { isSky, isText, widthRatio } from "./model";
 
 /** Things that have a front, so which way they face is worth saying. */
 const FACES = new Set<Glyph>(["person", "child", "robot", "animal", "big-animal", "bird", "fish", "car", "bike", "boat", "train", "plane"]);
@@ -55,7 +55,7 @@ function tilt(p: Projected): string {
 /** Approximate on-screen box, as fractions of the frame. */
 function box(p: Projected, aspect: number) {
   const h = p.size;
-  const w = (h * (WIDTH_RATIO[p.glyph] ?? 1) * p.count) / aspect;
+  const w = (h * widthRatio(p.glyph, p.label) * p.count) / aspect;
   return { x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - h / 2, y1: p.y + h / 2, area: w * h };
 }
 
@@ -77,9 +77,9 @@ function hiddenBy(p: Projected, nearer: Projected[], aspect: number): string {
  */
 export function describeScene(projected: Projected[], aspect: number): string {
   const ordered = byPriority(projected);
-  const grounded = ordered.filter((p) => !isSky(p.glyph));
+  const grounded = ordered.filter((p) => !isSky(p.glyph) && !isText(p.glyph));
   const depthBand = (p: Projected) => {
-    if (grounded.length < 2 || isSky(p.glyph)) return "";
+    if (grounded.length < 2 || !grounded.includes(p)) return "";
     const near = grounded[0]!.depth;
     const far = grounded[grounded.length - 1]!.depth;
     if (far - near < 1.5) return "";
@@ -90,7 +90,7 @@ export function describeScene(projected: Projected[], aspect: number): string {
     .map((p, i) => {
       const nearer = ordered.slice(0, i).filter((q) => q.depth < p.depth);
       const parts = [
-        withArticle(p.label),
+        isText(p.glyph) ? `the text "${p.label}"` : withArticle(p.label),
         where(p),
         depthBand(p),
         size(p),

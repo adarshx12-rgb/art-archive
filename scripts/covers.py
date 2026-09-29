@@ -25,6 +25,7 @@ ALIASES = {
     "gen-x-softclub": "gen-x-soft-club",
     "vapourwave": "vaporwave",
     "cyperpop": "cyberpop",
+    "future-punk": "future-funk",
     "web-2-0": "web-2-0-gloss",
 }
 

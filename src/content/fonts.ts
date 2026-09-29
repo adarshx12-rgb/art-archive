@@ -290,4 +290,11 @@ export const fontSuggestions: Record<string, FontSuggestion[]> = {
     paid("Neue Machina", "Headlines", "An inktrap geometric with a hyper-digital edge.", "Pangram Pangram", "https://pangrampangram.com"),
     paid("Eurostile", "Details", "Squared tech letters for HUD-style interface text.", "Linotype"),
   ],
+  "future-funk": [
+    free("Audiowide", "Headlines", "Streamlined 80s techno letters that take a chrome-and-neon finish well."),
+    free("Mochiy Pop One", "Headlines", "Bubbly Japanese letters for city-pop katakana titles."),
+    free("Zen Maru Gothic", "Details", "A soft, rounded Japanese sans for credits and track lists."),
+    paid("ITC Serif Gothic", "Headlines", "Flared 70s–80s display capitals in the spirit of Japanese city pop sleeves.", "ITC / Monotype"),
+    paid("Eurostile", "Details", "Extended squared letters for sleek, retro-futuristic labels.", "Linotype"),
+  ],
 };

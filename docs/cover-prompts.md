@@ -337,29 +337,30 @@ Avoid: photorealistic skin, 3D rendering, neon colours, hard geometric grids.
 ## 13. Cyberpunk
 
 - Slug: `cyberpunk`
-- Artwork: Film concept painting (Digital painting)
+- Artwork: Sci-fi film concept painting (Digital painting with glitch effects)
 - Format: square 1:1
 - Cover: not yet
+- Save as: `public/covers/cyberpunk.png`
 
 ```text
-A cinematic cyberpunk city street at night, painted as high-end digital concept art for a science-fiction film.
+A cinematic cyberpunk city street at night, painted as high-end digital concept art for a dystopian science-fiction film, with glitch effects breaking into the image. Dark, dense, high-contrast and gritty.
 
-Composition: a street-level view straight down a long, wet avenue with a strong one-point perspective. Towering buildings crowd both sides, with overhanging floors, balconies and pipes stacked high, rising into a cyan haze that fades into a glowing vanishing point in the distance. Tangled power cables sag across the top of the frame. Both sides are covered in dense vertical and horizontal neon signs, shop fronts and screens, glowing as illegible glyph-like shapes rather than readable words. Silhouetted pedestrians walk along the street in small groups, with one figure in a long coat at the centre walking away from the viewer. On the right, a dark car with bright headlights waits by the kerb; a second car sits further back in the haze.
+Composition: a low, street-level view straight down a wide, empty avenue with a strong one-point perspective. Towering buildings crowd both sides, stacked with balconies, pipes, cables and jutting signs, rising into darkness. Both sides are covered in dense neon signs, screens and shop fronts, glowing as illegible glyph-like shapes rather than readable words. At the far end of the street, a bright, glowing fog swallows the vanishing point, and a few small silhouetted figures stand in the haze. The wet road surface catches long pink and cyan reflections that run toward the viewer. Across the image, glitch effects break in: a few signs split into offset red and cyan channels, thin horizontal scan lines and small displaced bands slice through the neon, and blocks of corrupted pixels flicker on one screen. Moody and chaotic, but the vanishing point stays the clear focal point.
 
-Colours: a deep blue-black night (#07090F) with a strong neon-cyan haze (#00F0FF) in the distance, neon magenta (#FF1F8E) and sodium amber (#FFB000) signs, and small touches of red and green.
+Colours: near-black shadows (#07090F), dominant hot magenta and pink neon (#FF1F8E), electric cyan and blue (#00F0FF), with small touches of sodium amber (#FFB000) and violet.
 
-Light: the neon signs, screens and headlights are the only light sources. The wet asphalt mirrors every sign in long coloured streaks of magenta, cyan and amber, and soft volumetric haze and light rain fill the air.
+Light: neon signs and screens are the only light sources, with harsh contrast between deep shadow and blazing colour, bright volumetric fog at the end of the street, and long coloured reflections on the wet ground.
 
-Finish: a rich, glossy digital painting with sharp detail in the foreground, softer atmospheric detail in the distance, strong colour contrast and cinematic depth.
+Finish: a rich digital painting with sharp detail in the foreground and softer atmosphere in the distance, gritty surfaces and grime on the buildings, fine grain, and crisp digital glitch artefacts (RGB split, scan lines, pixel blocks) that feel deliberate rather than random.
 
-Format: Square (1:1). Show the image itself, full frame.
+Format: square (1:1). Show the image itself, full frame.
 
-Text: no readable words, letters, logos or watermarks anywhere; the signs show only abstract glyph shapes and light.
+Text: no readable words, letters, logos, watermarks or stock-photo marks anywhere; the signs show only abstract glyph shapes and light.
 
-Avoid: daylight, empty streets, pastel colours, flat lighting, a clean or tidy city.
+Avoid: daylight, pastel colours, clean or tidy streets, flat lighting, glitch effects that cover the whole image.
 ```
 
-**If it misses:** Make the reflections on the wet street brighter and longer, and deepen the cyan haze toward the vanishing point. Turn any readable sign into abstract glyphs.
+**If it misses:** Make it darker and grittier: deeper shadows, brighter magenta and cyan neon, more fog at the vanishing point, and keep the glitch effects to a few signs and bands. Remove any readable text or watermarks.
 
 ## 14. Synthwave
 
@@ -1074,30 +1075,91 @@ Avoid: austere minimalism, monochrome, neat grids, a single typeface, copying an
 ## 39. Future Funk
 
 - Slug: `future-funk`
-- Artwork: Future funk single cover (Late-80s cyberpunk anime cel painting)
+- Artwork: Future funk single cover (Late-80s anime background painting)
 - Format: square 1:1
-- Cover: not yet
+- Cover: `public/covers/future-punk.png`
 - Save as: `public/covers/future-funk.png`
 
 ```text
-The cover art for an invented future funk single, painted as a single cel from a late-1980s Japanese cyberpunk anime film: fast, neon-soaked and retro-futuristic, with a disco and vaporwave twist.
+The cover art for an invented future funk single, painted as a hand-made background painting from a late-1980s Japanese science-fiction anime film: a vast, glowing night megacity, retro-futuristic and full of energy.
 
-Composition: an original young rider in a white-and-pink racing suit and a mirrored visor helmet leans hard into a turn on a sleek, futuristic motorcycle with a long, low, glossy pastel-blue body and glowing wheel rims, racing toward the viewer at a dramatic low angle. Long streaks of light trail behind the bike, and bold anime speed lines radiate out from the rider. Around them rises a night megacity seen from an elevated highway: towering skyscrapers stacked with glowing katakana billboards, a huge mirror-ball dome scattering light over the rooftops, holographic sparkles and a magenta perspective grid glowing on the road surface. A giant sunset-pink moon hangs low between the towers. Dynamic and futuristic, with the rider and bike as the clear focal point.
+Composition: a dense canyon of skyscrapers seen from a low angle on an elevated rail line, rising in stacked layers toward the top of the frame. The towers on the upper left glow in hot orange and red, with rows of lit windows; the towers on the right and below glow in cool blues, violets and teal, trimmed with thin neon bands. Four or five white searchlight beams sweep diagonally up into the night sky from different rooftops and cross each other. A sleek pastel-pink monorail curves in from the lower right and bends away into the city, leaving a long ribbon of orange and pink light trail behind it. Small katakana billboards glow on a few towers, and tiny silhouettes of people stand on a lit platform in the lower left. A small mirror-ball dome on one rooftop scatters sparkles as a nod to disco. Grand and immersive, with the light trail and searchlights leading the eye into the city.
 
 Typography: bold, italic, chrome-edged 80s lettering with a neon glow for the English title, and glowing neon katakana set vertically on a billboard. Set exactly this text: "NEON RUSH" across the bottom; "ネオン" in vertical neon katakana on the right.
 
-Colours: deep night navy and violet sky, with bubblegum #FF6FB5 and hot magenta neon, summer sky blue #59C3FF and cyan light trails, lemon #FFD447 highlights and blush #FFE9F3 glows.
+Colours: deep night navy and violet, hot orange and red in the upper-left towers, teal and electric blue in the lower-right towers, with bubblegum #FF6FB5 and summer sky blue #59C3FF in the neon, lemon #FFD447 window lights and blush #FFE9F3 glows.
 
-Light: neon signs and light trails as the main light sources, hard rim light along the bike and helmet, bright specular glints on the glossy bodywork, and soft bloom around every light.
+Light: thousands of glowing windows, crossing white searchlight beams, neon bands and the monorail's light trail as the only light sources, with soft bloom around every light.
 
-Finish: hand-painted anime cel with crisp ink outlines and flat cel shading, painted background art with fine detail, airbrushed glows, streaked motion blur on the light trails, faint film grain and slight VHS softness.
+Finish: a hand-painted anime background with fine, patient detail in every building, flat painted colour with crisp edges, airbrushed glows and beams, streaked motion blur on the light trail, faint film grain and slight softness like a projected film frame.
 
 Format: square (1:1). Show the flat cover artwork itself, edge to edge, not a vinyl or phone mockup.
 
 Text: spell the lettering exactly as written, including the katakana; add no other words, Japanese or English, logos or signatures.
 
-Avoid: copying any existing anime film, character, motorcycle or scene; a red bike or red jacket; the likeness of a real person; daylight; dull colours; modern 3D rendering.
+Avoid: copying any existing anime film, frame, character or vehicle; a motorcycle or rider in the foreground; daylight; dull colours; modern 3D rendering.
 ```
 
-**If it misses:** Make it feel faster and more futuristic: stronger speed lines and light trails, a lower camera angle on the bike, denser neon towers, and keep the flat 80s cel look. Correct the lettering to read exactly "NEON RUSH" and "ネオン".
+**If it misses:** Make the city denser and more painted: more layered towers, brighter crossing searchlights and a longer glowing light trail, with the flat look of a hand-painted 1980s anime background. Correct the lettering to read exactly "NEON RUSH" and "ネオン".
+
+
+## 40. Luxury Minimal
+
+- Slug: `luxury-minimal`
+- Artwork: Luxury fragrance print campaign (Studio still-life photograph with foil typography)
+- Format: tall 2:3
+- Cover: not yet
+- Save as: `public/covers/luxury-minimal.png`
+
+```text
+A full-page print advertisement for an invented luxury fragrance house, as it would appear in a high-end fashion magazine: a studio still-life photograph with refined typography and a touch of brushed-gold foil. Elegant, calm and expensive.
+
+Composition: a single heavy glass perfume bottle with softly bevelled edges and a solid brushed-brass cap stands on a low block of honed travertine, placed slightly below and to the right of centre. A fold of cashmere-coloured linen drapes behind the plinth and falls out of frame. Soft window light from the left casts a long, gentle shadow across the stone. Most of the frame is quiet, warm negative space. At the top, a small, perfectly centred wordmark; near the bottom, one fine line of text. Nothing else competes with the bottle.
+
+Typography: a refined, high-contrast thin serif in widely spaced capitals for the wordmark, printed in brushed-gold foil, and a small, light sans-serif for the detail line. Set exactly this text: "SOLENNE" as the wordmark; "eau de parfum" small beneath the bottle.
+
+Colours: travertine #EDE6DC and cashmere #C8B79E as the dominant warm neutrals, brushed brass #9C7C4A for the cap and foil lettering, espresso #2B2622 for the deepest shadows and the detail line.
+
+Light: soft, sculptural window light with long, gentle shadows, a quiet glow through the glass and a subtle highlight along the brass edges.
+
+Finish: a real medium-format photograph with true material detail (the pores of the travertine, the weave of the linen, the brushed grain of the brass and the thickness of the glass), printed on heavy matte paper with a slight sheen on the gold foil.
+
+Format: tall portrait (2:3). Show the full advertisement page itself, edge to edge, with no magazine spread, wall, frame or hands.
+
+Text: spell the lettering exactly as written; add no other words, prices, real brand names, logos or signatures.
+
+Avoid: clutter, saturated colour, glossy plastic, shiny yellow gold, busy props, harsh contrast, a generic stock-photo look.
+```
+
+**If it misses:** Make it quieter and more refined: more empty space around the bottle, softer window light, subtler brushed-gold instead of shiny gold, and keep the lettering exactly as it is.
+
+## 41. Type Doodles
+
+- Slug: `type-doodles`
+- Artwork: Doodle-art lettering cover (Inked cartoon illustration with flat colour)
+- Format: square 1:1
+- Cover: not yet
+- Save as: `public/covers/type-doodles.png`
+
+```text
+An original doodle-art cover illustration where big, chunky hand-drawn lettering sits in the middle of a packed, playful doodle world. Bold black ink outlines, flat bright colour and cartoon shine, like the cover of an illustrator's lettering zine.
+
+Composition: the lettering stacks through the centre of the square, overlapping and tilting: a bubbly word in the upper left, a huge chunky block word right in the middle with cartoon hands gripping its edges, a small word inside an oval badge, a long word curving along the bottom, and a number on a tag in the lower right. Every letter is illustrated: puffy with glossy highlight blobs, some with drips, spots, cracks or little bite marks, one with a tiny face. Around and behind the letters, every inch of the square is filled with interlocking doodles: chunky sneakers, spray cans, mushrooms, cute blobby characters with dot eyes, pipes, drippy shapes, clouds, stars, bubbles, swirls and wavy lines, all overlapping like a puzzle. Dense and joyful, but the lettering pops forward as the clear focal point.
+
+Typography: fully hand-drawn cartoon lettering: chunky graffiti-style block letters, bouncy bubble letters and a small outlined badge word, each with a thick black outline, a drop shadow and glossy highlights. Set exactly this text: "doodle" as the bubbly word in the upper left; "TYPE" as the huge block word in the centre; "and" inside the oval badge; "LETTERING" curving along the bottom; "#1" on the tag in the lower right.
+
+Colours: coral orange #FF7A59 and sky-blue teal #4BB3FD for the main lettering, marker black #1F1F1F for all outlines, notebook-paper cream #FBF8EF and soft light greys for the doodles behind, so the lettering stands out.
+
+Light: flat cartoon lighting with simple highlight shines and soft cast shadows under the letters.
+
+Finish: crisp, confident inked outlines with slightly varied line weight, clean flat colour fills, simple cel-style shading and small glossy highlight blobs: a finished digital illustration that still feels hand-drawn.
+
+Format: square (1:1). Show the flat illustration itself, edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, artist names, logos, watermarks or signatures.
+
+Avoid: realistic 3D rendering, photographs, muddy colour, empty space, copying any existing artwork or artist's characters.
+```
+
+**If it misses:** Make the lettering pop more: bigger, chunkier letters with thicker black outlines and brighter colour, and keep the doodles lighter in grey and cream behind them. Keep the lettering exactly as it is.
 

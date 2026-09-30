@@ -27,8 +27,17 @@ export const SceneRequest = z.object({
   mode: z.enum(["new", "edit", "from-prompt"]),
   text: z.string().min(1).max(3000),
   scene: z.array(ActorIn).max(MAX_ACTORS),
-  /** What the shot camera sees at z = 0, so subjects can be placed in frame. */
-  frame: z.object({ halfWidth: z.number(), height: z.number(), cameraZ: z.number() }),
+  /** What the shot camera sees at z = 0, so subjects can be placed in frame; the camera itself lets the server work out other depths. */
+  frame: z.object({
+    halfWidth: z.number(),
+    height: z.number(),
+    cameraZ: z.number(),
+    eyeY: z.number().optional(),
+    lookY: z.number().optional(),
+    /** tan(vertical field of view / 2). */
+    slope: z.number().positive().optional(),
+    aspect: z.number().positive().optional(),
+  }),
   style: z.string().max(80),
 });
 
@@ -68,11 +77,11 @@ const SYSTEM = `You block out scenes for an image-prompt builder. The user descr
 The set:
 - Units are metres. y is up; the ground is y = 0. x runs left (negative) to right (positive).
 - The shot camera sits at z = +cameraZ looking towards the origin, so positive z is nearer the camera and negative z is further away. The main subject should usually be nearest the camera, around the origin.
-- You are told what the frame covers at z = 0 (halfWidth either side of x = 0, from the ground up to height). Keep subjects inside the frame unless the user wants something cut off. Things further back can spread wider.
-- Real sizes at scale 1 (metres tall): person 1.75, child 1.2, dog/cat-sized animal 0.6, horse-sized animal 1.7, car 1.5, house 6, tree 6, castle 18, tower 20, mountain 300. Backdrops (buildings, trees, mountains) belong well behind the people, often 15-300 m away.
+- You are told what the frame covers at z = 0 (halfWidth either side of x = 0, from the ground up to height), and usually frameAtDepth: what it covers further back (halfWidth, bottom and top in metres at each z; interpolate between rows). Keep every subject inside the frame at its own depth unless the user wants something cut off: its base above bottom, its top (y + real size × scale) below top. Things further back can spread wider.
+- Real sizes at scale 1 (metres tall): person 1.75, child 1.2, dog/cat-sized animal 0.6, horse-sized animal 1.7, car 1.5, house 6, tree 6, castle 18, tower 20, hill 30, mountain 300, cloud 20, sun 60, moon 50, text 0.4. Backdrops (buildings, trees, mountains) belong well behind the people, often 15-300 m away.
 - Sky things (sun, moon, planet, cloud, star) go far away and high: z around -600, y around 100-150, unless something sits on or against them (see below).
-- Land, ground, grass, fields, farmland and countryside are one wide backdrop: kind "hill", labelled with the user's word (e.g. "land"), placed behind everything else, around z -40 to -80. Things "on the ground" stand at y = 0 in front of it.
-- "X on top of Y" / "X on Y": put X directly above Y at the same z and x, its base at Y's top (Y's height is its real size times its scale). When Y is a sky thing, bring Y near enough for both to read (a cloud around z -40 to -80, y 8-15) rather than 600 m away.
+- Land, ground, grass, fields, farmland and countryside are one wide, low backdrop: kind "hill", labelled with the user's word (e.g. "land"), placed behind everything else, around z -40 to -80, scaled so it reaches only a third or so of the way up the frame at its depth (usually scale 0.2-0.5). Things "on the ground" stand at y = 0 in front of it.
+- y is where a subject's base is, not its middle. "X on top of Y" / "X on Y": put X at Y's x and z, with X's y = Y's y + Y's real size × Y's scale, so X rests on Y's top edge rather than inside it. When Y is a sky thing, bring Y near enough for both to read rather than 600 m away, and low enough that X still fits under the frame's top at that depth: e.g. if the top at z -50 is 19 m, a cloud at z -50, y 6, scale 0.4 is 8 m tall, so lettering on it goes at y 14, z -50, scale 8-10 (3-4 m tall).
 - "small" / "tiny" / "big" / "huge" set scale (e.g. 0.5, 0.3, 1.8, 3); "far" / "in the distance" set a more negative z instead.
 - turn: 0 faces the camera, 90 faces screen-right, -90 faces screen-left, 180 faces away. Make people face each other, the camera or what they're doing, as the description implies. Animals and vehicles usually side-on (90 or -90).
 - Poses: stand, walk, run, sit, dance, lie. Pick from what the subject is doing.
@@ -90,6 +99,22 @@ Modes:
 Reply in one short, plain sentence.`;
 
 type SubjectOut = z.infer<typeof SceneOut>["subjects"][number];
+
+/**
+ * What the frame covers at a few depths. Models place far things (clouds, hills,
+ * lettering on a cloud) badly when told only about z = 0, so spell it out.
+ */
+export function frameTable(frame: z.infer<typeof SceneRequest>["frame"]) {
+  const { cameraZ, eyeY, lookY, slope, aspect } = frame;
+  if (eyeY === undefined || lookY === undefined || slope === undefined || aspect === undefined || cameraZ <= 0) return undefined;
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return [0, -10, -50, -200].map((z) => {
+    const d = cameraZ - z;
+    const centre = eyeY + ((lookY - eyeY) * d) / cameraZ;
+    const half = slope * d;
+    return { z, halfWidth: r(half * aspect), bottom: r(centre - half), top: r(centre + half) };
+  });
+}
 
 /** Lettering must be words the user quoted (or text already on the sketch), never the model's own. */
 function quotedOrKept(label: string, request: string, kept: Set<string>): boolean {
@@ -133,6 +158,7 @@ export async function buildScene(
     request: body.text,
     style: body.style,
     frame: { halfWidth: r(body.frame.halfWidth), height: r(body.frame.height), cameraZ: r(body.frame.cameraZ) },
+    frameAtDepth: frameTable(body.frame),
     currentCamera: { shot: current.shot, angle: current.angle, lens: current.lens, placement: current.composition },
     currentLighting: current.lighting,
     currentSubjects:

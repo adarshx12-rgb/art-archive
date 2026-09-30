@@ -33,7 +33,16 @@ export interface SceneReply {
 function frameAtOrigin(cam: ShotCamera) {
   const dist = Math.max(Math.hypot(cam.eye[0] - cam.target[0], cam.eye[1] - cam.target[1], cam.eye[2] - cam.target[2]), 0.5);
   const half = dist * Math.tan((cam.fov * Math.PI) / 360);
-  return { halfWidth: half * cam.aspect, height: cam.target[1] + half, cameraZ: cam.eye[2] };
+  return {
+    halfWidth: half * cam.aspect,
+    height: cam.target[1] + half,
+    cameraZ: cam.eye[2],
+    // Enough for the server to work out what the frame covers further back.
+    eyeY: cam.eye[1],
+    lookY: cam.target[1],
+    slope: Math.tan((cam.fov * Math.PI) / 360),
+    aspect: cam.aspect,
+  };
 }
 
 export function aiScene(state: BuilderState, cam: ShotCamera, mode: "new" | "edit" | "from-prompt", text: string) {

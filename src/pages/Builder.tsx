@@ -28,6 +28,7 @@ import {
 import { decodeState, defaultState, encodeState, SUBJECT_MAX, TEXT_MAX, type BuilderState } from "../lib/prompt/state";
 import { byPriority, projectScene, shotCamera } from "../lib/scene/camera";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
+import { fillText, needsLayout } from "../lib/scene/instruction";
 import { actorFromText, MAX_ACTORS, newActor, textActor, type Actor } from "../lib/scene/model";
 import type { Layer } from "../lib/sketch/layers";
 import { useMeta } from "../lib/useMeta";
@@ -352,13 +353,33 @@ export function Builder() {
   const setActors = (fn: (actors: Actor[]) => Actor[]) => setState((s) => ({ ...s, actors: fn(s.actors) }));
   /** New subjects land in a free spot of the current frame. */
   const framed = (a: Actor) => placeInFrame(shotCamera(state), a, state.actors.length);
-  /** Put the typed subject in the scene and clear the box for the next one. */
-  const addDraft = () => {
-    const raw = actorFromText(state.subject, state.actors);
-    if (!raw || state.actors.length >= MAX_ACTORS) return;
-    const actor = framed(raw);
-    setState((s) => ({ ...s, subject: "", actors: [...s.actors, actor] }));
-    setSelectedId(actor.id);
+  /** Put the typed words in the scene as one subject and clear the box for the next one. */
+  const placeDraft = (words: string) => {
+    const raw = actorFromText(words, state.actors);
+    if (!raw) return;
+    setState((s) => (s.actors.length >= MAX_ACTORS ? s : { ...s, subject: "", actors: [...s.actors, placeInFrame(shotCamera(s), raw, s.actors.length)] }));
+    setSelectedId(raw.id);
+  };
+  /** ADD: a plain subject is placed at once; a described layout ("add {text} on a cloud with cows below") is worked out by the server. */
+  const addDraft = async () => {
+    if (aiBusy || state.actors.length >= MAX_ACTORS || !state.subject.trim()) return;
+    const words = state.subject;
+    if (!needsLayout(words)) {
+      placeDraft(words);
+      subjectRef.current?.focus();
+      return;
+    }
+    const filled = fillText(words, state.text);
+    if (filled.missing) {
+      toast("{text} stands for the words under “Text in the image”. Type them there first.", "error");
+      letteringRef.current?.focus();
+      return;
+    }
+    const ok = await runScene(state.actors.length ? "edit" : "new", filled.request, { clearDraft: true, clearText: filled.used, quiet: true });
+    if (!ok) {
+      placeDraft(words);
+      toast("Couldn’t lay that out, so it was added as one subject.");
+    }
     subjectRef.current?.focus();
   };
   /** Put the typed text on the sketch, where it can be moved and sized, and clear the box. */
@@ -399,20 +420,34 @@ export function Builder() {
   const [aiBusy, setAiBusy] = useState<null | "scene" | "prompt">(null);
   const [aiNote, setAiNote] = useState<{ text: string; undo?: () => void } | null>(null);
   const [promptWarnings, setPromptWarnings] = useState<string[]>([]);
-  /** Build, edit or re-sync the scene with AI. The previous scene can be restored. */
-  const runScene = async (mode: "new" | "edit" | "from-prompt", text: string, clearDraft: boolean) => {
+  /**
+   * Lay out, change or re-sync the scene on the server. The previous scene can be restored.
+   * clearDraft / clearText empty the boxes whose words were used; quiet leaves failures to the caller.
+   */
+  const runScene = async (mode: "new" | "edit" | "from-prompt", text: string, opts: { clearDraft?: boolean; clearText?: boolean; quiet?: boolean } = {}) => {
     setAiBusy("scene");
     const before = { actors: state.actors, shot: state.shot, angle: state.angle, lens: state.lens, composition: state.composition, lighting: state.lighting };
     const res = await aiScene(state, shotCamera(state), mode, text);
     setAiBusy(null);
     if (!res.ok) {
-      toast(res.error, "error");
-      return;
+      if (!opts.quiet) toast(res.error, "error");
+      return false;
     }
     const { actors, camera: cam, lighting } = res.data;
-    setState((s) => ({ ...s, actors, shot: cam.shot, angle: cam.angle, lens: cam.lens, composition: cam.placement, lighting, subject: clearDraft ? "" : s.subject }));
+    setState((s) => ({
+      ...s,
+      actors,
+      shot: cam.shot,
+      angle: cam.angle,
+      lens: cam.lens,
+      composition: cam.placement,
+      lighting,
+      subject: opts.clearDraft ? "" : s.subject,
+      text: opts.clearText ? "" : s.text,
+    }));
     setSelectedId(null);
     setAiNote({ text: res.data.reply, undo: () => setState((s) => ({ ...s, ...before })) });
+    return true;
   };
 
   // The flat sketch is the scene seen through the shot camera.
@@ -538,12 +573,13 @@ export function Builder() {
               autoComplete="off"
               name="subject"
               value={state.subject}
+              readOnly={aiBusy === "scene"}
               onChange={(e) => set("subject", e.target.value)}
               onKeyDown={(e) => {
                 // Enter adds the subject to the sketch; Shift+Enter keeps a new line.
                 if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
-                  addDraft();
+                  void addDraft();
                 }
               }}
             />
@@ -555,8 +591,7 @@ export function Builder() {
               onSelect={setSelectedId}
               onRename={(id, label) => updateActor(id, { label: label.slice(0, 80) })}
               onDelete={deleteActor}
-              onAi={() => runScene(state.actors.length ? "edit" : "new", state.subject, true)}
-              aiBusy={aiBusy === "scene"}
+              busy={aiBusy === "scene"}
             />
           </Group>
 
@@ -799,7 +834,6 @@ export function Builder() {
 
             {aiNote && (
               <div role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-rule p-2 text-sm">
-                <Sparkles size={14} className="shrink-0 text-muted" aria-hidden />
                 <p className="min-w-0 flex-1">{aiNote.text}</p>
                 {aiNote.undo && (
                   <button
@@ -878,7 +912,7 @@ export function Builder() {
                   {aiBusy === "prompt" ? "Writing…" : "Perfect prompt"}
                 </button>
                 {edited && (
-                  <button type="button" className="btn btn-sm btn-ghost" disabled={aiBusy !== null} onClick={() => runScene("from-prompt", prompt, false)} title="Rebuild the scene so it matches the prompt as you’ve edited it">
+                  <button type="button" className="btn btn-sm btn-ghost" disabled={aiBusy !== null} onClick={() => runScene("from-prompt", prompt)} title="Rebuild the scene so it matches the prompt as you’ve edited it">
                     <RefreshCw size={14} aria-hidden />
                     {aiBusy === "scene" ? "Updating…" : "Update scene from prompt"}
                   </button>

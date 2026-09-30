@@ -70,20 +70,56 @@ The set:
 - The shot camera sits at z = +cameraZ looking towards the origin, so positive z is nearer the camera and negative z is further away. The main subject should usually be nearest the camera, around the origin.
 - You are told what the frame covers at z = 0 (halfWidth either side of x = 0, from the ground up to height). Keep subjects inside the frame unless the user wants something cut off. Things further back can spread wider.
 - Real sizes at scale 1 (metres tall): person 1.75, child 1.2, dog/cat-sized animal 0.6, horse-sized animal 1.7, car 1.5, house 6, tree 6, castle 18, tower 20, mountain 300. Backdrops (buildings, trees, mountains) belong well behind the people, often 15-300 m away.
-- Sky things (sun, moon, planet, cloud, star) go far away and high: z around -600, y around 100-150.
+- Sky things (sun, moon, planet, cloud, star) go far away and high: z around -600, y around 100-150, unless something sits on or against them (see below).
+- Land, ground, grass, fields, farmland and countryside are one wide backdrop: kind "hill", labelled with the user's word (e.g. "land"), placed behind everything else, around z -40 to -80. Things "on the ground" stand at y = 0 in front of it.
+- "X on top of Y" / "X on Y": put X directly above Y at the same z and x, its base at Y's top (Y's height is its real size times its scale). When Y is a sky thing, bring Y near enough for both to read (a cloud around z -40 to -80, y 8-15) rather than 600 m away.
+- "small" / "tiny" / "big" / "huge" set scale (e.g. 0.5, 0.3, 1.8, 3); "far" / "in the distance" set a more negative z instead.
 - turn: 0 faces the camera, 90 faces screen-right, -90 faces screen-left, 180 faces away. Make people face each other, the camera or what they're doing, as the description implies. Animals and vehicles usually side-on (90 or -90).
 - Poses: stand, walk, run, sit, dance, lie. Pick from what the subject is doing.
 - kind is only the drawn shape. Put the real detail in label using the user's wording ("elderly fisherman in a yellow raincoat", not "person"). Use count for groups ("three crows" is one subject with count 3).
+- Text: words in quotes are lettering to show in the picture (a title, sign or slogan). Make each quoted phrase one subject of kind "text" whose label is exactly the quoted words, same spelling and case, without the quotes. Lettering is 0.4 m tall at scale 1; scale it so it reads at its distance and matches what it sits on (e.g. scale 8-15 on a cloud 50 m away). Never make a text subject from words that weren't quoted, and keep existing text subjects' labels unchanged.
 - Labels contain only what the user said about that subject. Don't add moods, expressions, clothing, colours, ages or actions they didn't mention ("two children running", not "two laughing children running"). Where the subject is and which way it faces belong in the numbers, not the label.
 
 Camera and light: set shot, angle, lens, placement and lighting only when the user asks for or clearly implies them (e.g. "close-up", "from below", "at night", "golden hour"). Otherwise keep the current values you are given; "auto" and "style" mean "leave it to the style".
 
 Modes:
 - new: build the scene from the description. Ignore any current subjects.
-- edit: apply the instruction to the current scene. Return every subject, keeping the id and values of anything the instruction doesn't touch.
+- edit: apply the instruction to the current scene. Return every subject, keeping the id and values of anything the instruction doesn't touch. A description of new things ("a cloud with cows under it") adds them to the current scene; it never replaces subjects the user didn't mention.
 - from-prompt: the user edited the written prompt; make the scene match it. Keep ids for subjects that are still there.
 
 Reply in one short, plain sentence.`;
+
+type SubjectOut = z.infer<typeof SceneOut>["subjects"][number];
+
+/** Lettering must be words the user quoted (or text already on the sketch), never the model's own. */
+function quotedOrKept(label: string, request: string, kept: Set<string>): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const want = norm(label);
+  if (!want) return false;
+  if (kept.has(want)) return true;
+  const quoted = [...request.matchAll(/["“«]([^"”»]+)["”»]/g)].map((m) => norm(m[1]!));
+  return quoted.some((q) => q === want);
+}
+
+/** Trust nothing: clamp every number, keep only known ids, cap the count, drop invented lettering. */
+export function sceneActors(subjects: SubjectOut[], body: Pick<z.infer<typeof SceneRequest>, "mode" | "text" | "scene">): Actor[] {
+  const current = body.mode === "new" ? [] : body.scene;
+  const known = new Set(current.map((a) => a.id));
+  const keptText = new Set(current.filter((a) => a.glyph === "text").map((a) => a.label.toLowerCase().replace(/\s+/g, " ").trim()));
+  return subjects
+    .filter((s) => s.kind !== "text" || quotedOrKept(s.label, body.text, keptText))
+    .slice(0, MAX_ACTORS)
+    .map((s, i) => ({
+      id: known.has(s.id) ? s.id : `${s.kind}-${Date.now().toString(36)}-${i}`,
+      glyph: s.kind,
+      label: cleanLabel(s.label) || s.kind,
+      position: [clamp(s.x, -5000, 5000), clamp(s.y, -100, 5000), clamp(s.z, -5000, 5000)],
+      rotation: [clamp(s.lean, -3600, 3600), clamp(s.turn, -3600, 3600), clamp(s.roll, -3600, 3600)],
+      scale: Number.isFinite(s.scale) && s.scale > 0 ? clamp(s.scale, 0.05, 20) : 1,
+      pose: s.pose as Actor["pose"],
+      count: clamp(Math.round(s.count || 1), 1, 6),
+    }));
+}
 
 export async function buildScene(
   env: Env,
@@ -105,18 +141,6 @@ export async function buildScene(
         : body.scene.map((a) => ({ id: a.id, kind: a.glyph, label: a.label, count: a.count, x: r(a.position[0]), y: r(a.position[1]), z: r(a.position[2]), turn: r(a.rotation[1], 0), lean: r(a.rotation[0], 0), roll: r(a.rotation[2], 0), scale: r(a.scale), pose: a.pose })),
   };
   const { data, usage, model } = await ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: SceneOut, name: "scene", effort: "medium" }, override);
-
-  // Trust nothing: clamp every number, keep only known ids, cap the count.
-  const known = new Set(body.mode === "new" ? [] : body.scene.map((a) => a.id));
-  const actors: Actor[] = data.subjects.slice(0, MAX_ACTORS).map((s, i) => ({
-    id: known.has(s.id) ? s.id : `${s.kind}-${Date.now().toString(36)}-${i}`,
-    glyph: s.kind,
-    label: cleanLabel(s.label) || s.kind,
-    position: [clamp(s.x, -5000, 5000), clamp(s.y, -100, 5000), clamp(s.z, -5000, 5000)],
-    rotation: [clamp(s.lean, -3600, 3600), clamp(s.turn, -3600, 3600), clamp(s.roll, -3600, 3600)],
-    scale: Number.isFinite(s.scale) && s.scale > 0 ? clamp(s.scale, 0.05, 20) : 1,
-    pose: s.pose as Actor["pose"],
-    count: clamp(Math.round(s.count || 1), 1, 6),
-  }));
+  const actors = sceneActors(data.subjects, body);
   return { actors, camera: data.camera, lighting: data.lighting, reply: data.reply.slice(0, 300), model, usage };
 }

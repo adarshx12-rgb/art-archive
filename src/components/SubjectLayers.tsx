@@ -1,4 +1,4 @@
-import { Plus, Sparkles, X } from "lucide-react";
+import { LoaderCircle, Plus, X } from "lucide-react";
 import { MAX_ACTORS } from "../lib/scene/model";
 
 export interface SubjectLayersProps {
@@ -7,18 +7,17 @@ export interface SubjectLayersProps {
   /** Subjects nearest the camera first, then placed text; the first non-text one is the main subject. */
   subjects: { id: string; label: string; text?: boolean }[];
   selectedId: string | null;
-  /** Add the typed subject or object to the sketch; its shape comes from the words. */
+  /** Add the typed subject, or lay out what the words describe ("a cat on a table"). */
   onAddDraft: () => void;
   onSelect: (id: string) => void;
   onRename: (id: string, label: string) => void;
   onDelete: (id: string) => void;
-  /** Build (empty scene) or edit (existing scene) the scene with AI from the typed text. */
-  onAi?: () => void;
-  aiBusy?: boolean;
+  /** Set while a described layout is being worked out. */
+  busy?: boolean;
 }
 
-/** Under the subject box: ADD + puts the typed subject or object on the sketch; the list orders subjects front to back. */
-export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onSelect, onRename, onDelete, onAi, aiBusy = false }: SubjectLayersProps) {
+/** Under the subject box: ADD + puts what's typed on the sketch; the list orders subjects front to back. */
+export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onSelect, onRename, onDelete, busy = false }: SubjectLayersProps) {
   const full = subjects.length >= MAX_ACTORS;
   const hasDraft = draft.trim().length > 0;
   const mainId = subjects.find((s) => !s.text)?.id;
@@ -26,25 +25,13 @@ export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onSelec
   return (
     <div className="mt-2 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="btn btn-sm btn-primary" disabled={full || !hasDraft} onClick={onAddDraft}>
+        <button type="button" className="btn btn-sm btn-primary" disabled={full || !hasDraft || busy} aria-busy={busy} onClick={onAddDraft}>
           ADD
-          <Plus size={14} aria-hidden />
-          <span className="sr-only">the typed subject or object to the sketch</span>
+          {busy ? <LoaderCircle size={14} className="animate-spin" aria-hidden /> : <Plus size={14} aria-hidden />}
+          <span className="sr-only">{busy ? "Placing…" : "what's typed to the sketch"}</span>
         </button>
-        {onAi && (
-          <button
-            type="button"
-            className="btn btn-sm btn-ghost"
-            disabled={!hasDraft || aiBusy}
-            onClick={onAi}
-            title={subjects.length ? "Change the scene as the text describes, e.g. “make the dog sit by the door”" : "Build the whole scene from the text"}
-          >
-            <Sparkles size={14} aria-hidden />
-            {aiBusy ? "Thinking…" : subjects.length ? "Edit scene" : "Build scene"}
-          </button>
-        )}
         <span className="meta text-muted">
-          {full ? `Up to ${MAX_ACTORS} subjects.` : hasDraft ? "Enter also adds it." : "Type a subject or object, then ADD +."}
+          {busy ? "Placing…" : full ? `Up to ${MAX_ACTORS} subjects.` : hasDraft ? "Enter also adds it." : "Type a subject, or describe the scene: “a cloud with cows below”."}
         </span>
       </div>
 

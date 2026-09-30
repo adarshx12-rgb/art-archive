@@ -3,7 +3,7 @@ import type { Hex, NamedColour, StyleRecord } from "../types";
 /** Shorthand for a named colour. */
 export const c = (hex: Hex, name: string): NamedColour => ({ hex, name });
 
-type StyleInput = Omit<StyleRecord, "art" | "references" | "related" | "aliases"> &
+type StyleInput = Omit<StyleRecord, "art" | "references" | "related" | "aliases" | "description"> &
   Partial<Pick<StyleRecord, "art" | "references" | "related" | "aliases">>;
 
 /** Fills optional fields so entries can stay short. */
@@ -13,6 +13,8 @@ export function defineStyle(input: StyleInput): StyleRecord {
     references: [],
     related: [],
     art: { kind: "study" },
+    // Filled from descriptions.ts by the catalogue index.
+    description: "",
     ...input,
   };
 }

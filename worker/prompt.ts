@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getStyle } from "../src/content/styles";
+import { getTemplate, slotText } from "../src/content/templates";
 import { composePrompt, resolvePalette } from "../src/lib/prompt/compose";
 import { lensOptions, findOption } from "../src/lib/prompt/options";
 import { cleanText, decodeState, type BuilderState } from "../src/lib/prompt/state";
@@ -44,9 +45,30 @@ function mustInclude(state: BuilderState, colours: string[]): { label: string; a
   if (style) checks.push({ label: `the ${style.name} style`, any: [style.name.toLowerCase(), style.name.split(/[\s/]+/)[0]!.toLowerCase()] });
   const text = cleanText(state.text);
   if (text) checks.push({ label: `the text "${text}"`, any: [text.toLowerCase()] });
+  const template = state.template ? getTemplate(state.style, state.template) : undefined;
+  if (template) for (const words of Object.values(slotText(template, state.templateText))) checks.push({ label: `the text "${words}"`, any: [words.toLowerCase()] });
   if (state.lens !== "auto") checks.push({ label: "the lens", any: [`${findOption(lensOptions, state.lens)?.id}mm`] });
   if (/Avoid:/.test(composePrompt(state).prompt)) checks.push({ label: "the Avoid line", any: ["avoid"] });
   return checks;
+}
+
+/**
+ * Drop stray characters some models leave at the end (a closing brace, an
+ * unmatched quote). A closing quote that ends quoted lettering is kept.
+ */
+export function tidy(prompt: string): string {
+  let s = prompt.trim();
+  for (let i = 0; i < 4; i++) {
+    const before = s;
+    s = s.replace(/[}\]]+$/, "").trimEnd();
+    const straight = (s.match(/"/g) ?? []).length;
+    if (s.endsWith('"') && straight % 2 === 1) s = s.slice(0, -1).trimEnd();
+    const open = (s.match(/“/g) ?? []).length;
+    const close = (s.match(/”/g) ?? []).length;
+    if (s.endsWith("”") && close > open) s = s.slice(0, -1).trimEnd();
+    if (s === before) break;
+  }
+  return s;
 }
 
 const missing = (prompt: string, checks: ReturnType<typeof mustInclude>) => {
@@ -76,7 +98,8 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     style: { name: style.name, cues: style.prompt.cues, ...(/Lettering:/.test(facts) ? { typography: style.look.typography } : {}) },
     facts,
   };
-  const write = (from = 0) => ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PromptOut, name: "prompt", effort: "high", from }, override);
+  const models = env.OPENROUTER_PROMPT_MODELS;
+  const write = (from = 0) => ask(env, { system: SYSTEM, user: JSON.stringify(input), schema: PromptOut, name: "prompt", effort: "high", from, models }, override);
   let best: AskResult<z.infer<typeof PromptOut>> = await write();
   let usage = best.usage;
   let gaps = missing(best.data.prompt, checks);
@@ -92,6 +115,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
         name: "prompt",
         effort: "medium",
         from: best.index,
+        models,
       },
       override,
     );
@@ -104,7 +128,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
   }
 
   // 2. Still incomplete: let the next model in the chain write it from scratch.
-  if (gaps.length && best.index + 1 < chain(env, override).length) {
+  if (gaps.length && best.index + 1 < chain(env, override, models).length) {
     const next = await write(best.index + 1).catch(() => null);
     if (next) {
       usage = add(usage, next.usage);
@@ -117,7 +141,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
   }
 
   return {
-    prompt: best.data.prompt.trim(),
+    prompt: tidy(best.data.prompt),
     warnings: gaps.map((g) => `The prompt may not mention ${g}. Check it before using it.`),
     model: best.model,
     usage,

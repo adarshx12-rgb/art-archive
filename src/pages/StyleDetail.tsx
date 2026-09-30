@@ -1,4 +1,4 @@
-import { ArrowRight, Info, Wand2 } from "lucide-react";
+import { ArrowRight, LayoutTemplate, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { PaletteArt } from "../art/PaletteArt";
@@ -7,12 +7,13 @@ import { StyleArt } from "../art/StyleArt";
 import { CopyButton, SaveButton } from "../components/actions";
 import { FontSuggestions } from "../components/FontSuggestions";
 import { StyleCard } from "../components/cards";
+import { StyleTemplates } from "../components/StyleTemplates";
+import { templatesFor } from "../content/templates";
 import { Recovery } from "../components/Recovery";
 import { HexSwatch } from "../components/Swatches";
 import { Tabs } from "../components/Tabs";
 import { coverPrompts, promptForImage, type CoverPrompt } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
-import { kindDescriptions, kindLabels } from "../content/facets";
 import { fontSuggestions } from "../content/fonts";
 import { getReference } from "../content/references";
 import { getStyle } from "../content/styles";
@@ -174,27 +175,20 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Header ——— */}
       <header className="wrap grid gap-8 pt-8 pb-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7 lg:pr-6">
-          <p className="meta text-muted" title={kindDescriptions[style.kind]}>
-            {kindLabels[style.kind]}: {kindDescriptions[style.kind].replace(/\.$/, "").toLowerCase()}
-          </p>
-          <h1 className="mt-3 text-h1 font-bold [overflow-wrap:anywhere]">{style.name}</h1>
-          {style.aliases.length > 0 && (
-            <p className="mt-4 text-[0.9375rem] text-muted">
-              Also called: {style.aliases.filter((a) => a !== style.name).join(", ")}
-            </p>
-          )}
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl">{style.about}</p>
-          {style.note && (
-            <p className="mt-5 flex max-w-2xl gap-2 border-l-2 border-ink pl-3 text-[0.9375rem] text-muted">
-              <Info size={16} className="mt-0.5 shrink-0" aria-hidden />
-              {style.note}
-            </p>
-          )}
+          <h1 className="text-h1 font-bold [overflow-wrap:anywhere]">{style.name}</h1>
+          {/* A short description; the details are in the sections below. */}
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed sm:text-xl">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
             <Link to={builder} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
               <Wand2 size={16} aria-hidden />
               Use in builder
             </Link>
+            {templatesFor(style.slug).length > 0 && (
+              <a href="#templates" className="btn btn-ghost">
+                <LayoutTemplate size={16} aria-hidden />
+                Choose template
+              </a>
+            )}
             <CopyButton text={imagePrompt} what={`${style.name} theme prompt`}>
               Copy theme prompt
             </CopyButton>
@@ -214,6 +208,9 @@ function StyleView({ style }: { style: StyleRecord }) {
           <HeaderArt key={style.slug} style={style} />
         </div>
       </header>
+
+      {/* ——— Templates ——— */}
+      <StyleTemplates style={style} />
 
       {/* ——— References ——— */}
       <section className="wrap border-t border-ink py-12" aria-labelledby="refs-title">

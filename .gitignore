@@ -6,8 +6,9 @@ dist
 # Unused full-size texture originals (the site uses the optimised .webp files)
 public/textures/*.png
 
-# Full-size cover originals (the site uses the optimised .webp files)
-public/covers/*.png
+# Full-size cover originals, kept out of public/ so builds don't ship them
+# (the site uses the optimised .webp files made by scripts/covers.py)
+covers-src/
 
 # Local secrets for the Worker (ANTHROPIC_API_KEY) and Wrangler's cache
 .dev.vars

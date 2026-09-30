@@ -1,6 +1,7 @@
 import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
-import type { Hex, PaletteSize } from "../../content/types";
+import { getTemplate, isTemplateFormat, textSlots } from "../../content/templates";
+import type { Hex, PaletteSize, TemplateFormat } from "../../content/types";
 import { normaliseHex } from "../color";
 import { shotCamera } from "../scene/camera";
 import { actorFromLayer } from "../scene/convert";
@@ -74,6 +75,10 @@ export interface BuilderState {
   view: "3d" | "2d";
   /** Where the 3D view has been turned (degrees), tilted (degrees) and panned (metres). */
   orbit: { yaw: number; tilt: number; panX: number; panY: number };
+  /** A design template of the style (content/templates.ts), or none. */
+  template: TemplateFormat | null;
+  /** The visitor's words for the template's text blocks, by block id; missing ones use the sample. */
+  templateText: Record<string, string>;
 }
 
 export const SUBJECT_MAX = 400;
@@ -109,6 +114,8 @@ export function defaultState(): BuilderState {
     actors: [],
     view: "3d",
     orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
+    template: null,
+    templateText: {},
   };
 }
 
@@ -120,6 +127,9 @@ export function cleanSubject(input: string, max = SUBJECT_MAX): string {
     .trim()
     .slice(0, max);
 }
+
+/** Words for a template's text block; ~ and | separate share-link fields. */
+export const cleanSlot = (input: string) => cleanSubject(input.replace(/[~|]/g, " "), TEXT_MAX);
 
 /** The same cleaning for the text to letter, with its own cap. */
 export const cleanText = (input: string) => cleanSubject(input, TEXT_MAX);
@@ -154,6 +164,8 @@ const KEYS = {
   orbit: "ob",
   /** Older links: flat 2D layers, converted to the 3D scene on load. */
   layers: "ly",
+  template: "tp",
+  templateText: "tt",
 } as const;
 
 /** Only non-default values are written, keeping share links short. */
@@ -185,6 +197,11 @@ export function encodeState(state: BuilderState): URLSearchParams {
   if (state.task === "restyle") put(KEYS.preserve, state.preserve.join("-"), d.preserve.join("-"));
   if (state.actors.length) q.set(KEYS.actors, encodeActors(state.actors));
   if (state.view === "2d") q.set(KEYS.view, "2d");
+  if (state.template) {
+    q.set(KEYS.template, state.template);
+    const words = Object.entries(state.templateText).filter(([, v]) => v.trim());
+    if (words.length) q.set(KEYS.templateText, words.map(([id, v]) => `${id}~${cleanSlot(v)}`).join("|"));
+  }
   const o = state.orbit;
   if (o.yaw || o.tilt || o.panX || o.panY) q.set(KEYS.orbit, [o.yaw, o.tilt, o.panX, o.panY].map((n) => Math.round(n * 100) / 100).join("~"));
   if (state.output === "video") {
@@ -292,6 +309,20 @@ export function decodeState(params: URLSearchParams): DecodeResult {
     const valid = parts.filter((p) => allowed.includes(p)) as PreserveId[];
     if (valid.length !== parts.length) issues.push("Some “preserve” options in this link weren’t recognised.");
     state.preserve = [...new Set(valid)];
+  }
+
+  const template = params.get(KEYS.template);
+  if (template !== null) {
+    const t = isTemplateFormat(template) ? getTemplate(state.style, template) : undefined;
+    if (t) {
+      state.template = t.format;
+      const slots = new Set(textSlots(t).map((b) => b.id));
+      for (const pair of (params.get(KEYS.templateText) ?? "").split("|")) {
+        const [id, ...rest] = pair.split("~");
+        const words = cleanSlot(rest.join(" "));
+        if (id && slots.has(id) && words) state.templateText[id] = words;
+      }
+    } else issues.push(`This style has no “${template.slice(0, 20)}” template, so none is used.`);
   }
 
   const duration = pick<string>(KEYS.duration, ids(durationOptions), "Duration");

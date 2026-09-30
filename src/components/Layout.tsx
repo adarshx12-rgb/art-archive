@@ -7,6 +7,7 @@ import { ThemeToggle } from "../state/theme";
 
 const nav = [
   { to: "/styles", label: "Styles" },
+  { to: "/templates", label: "Templates" },
   { to: "/palettes", label: "Palettes" },
   { to: "/builder", label: "Prompt Builder", newTab: true },
   { to: "/saved", label: "Saved" },
@@ -123,6 +124,7 @@ export function Layout() {
             <p className="meta mb-3 text-muted">Browse</p>
             <ul className="space-y-1.5 text-[0.9375rem]">
               <li><Link className="hover:underline" to="/styles">All styles</Link></li>
+              <li><Link className="hover:underline" to="/templates">All templates</Link></li>
               <li><Link className="hover:underline" to="/palettes">All palettes</Link></li>
               <li><Link className="hover:underline" to="/builder" target="_blank" rel="noopener">Prompt builder<span className="sr-only"> (opens in a new tab)</span></Link></li>
               <li><Link className="hover:underline" to="/saved">Saved items</Link></li>

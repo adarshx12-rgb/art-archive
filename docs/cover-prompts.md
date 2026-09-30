@@ -1,6 +1,6 @@
 # FORM / FIELD cover prompts
 
-ChatGPT image prompts for the style covers, one per style. Colours come from each style's swatches in `src/content/styles/*.ts`. Save each result as `public/covers/<slug>.png` (or `<slug>1.png`, `<slug>2.png`… for several; image 2 becomes the main cover) and run `python scripts/covers.py`.
+ChatGPT image prompts for the style covers, one per style. Colours come from each style's swatches in `src/content/styles/*.ts`. Save each result as `covers-src/<slug>.png` (or `<slug>1.png`, `<slug>2.png`… for several; image 2 becomes the main cover) and run `python scripts/covers.py`.
 
 ## Follow-ups for any style
 
@@ -15,7 +15,7 @@ ChatGPT image prompts for the style covers, one per style. Colours come from eac
 - Slug: `swiss`
 - Artwork: 1962 typographic concert poster (Screen print)
 - Format: tall 2:3
-- Cover: `public/covers/swiss.png`
+- Cover: `covers-src/swiss.png`
 
 ```text
 An original 1962 Swiss concert poster in the International Typographic Style, screen-printed on off-white uncoated paper. The typography is the image.
@@ -42,7 +42,7 @@ Avoid: gradients, drop shadows, centred symmetry, ornament, photographs, copying
 - Slug: `bauhaus`
 - Artwork: 1926 exhibition poster (Colour lithograph)
 - Format: tall 2:3
-- Cover: `public/covers/bauhaus.png`
+- Cover: `covers-src/bauhaus.png`
 
 ```text
 An original 1926 exhibition poster from the Bauhaus workshops in Dessau: a colour lithograph in primary red, yellow, blue and black on unbleached cream paper.
@@ -69,7 +69,7 @@ Avoid: gradients, 3D shading, ornament, scattered clip-art shapes.
 - Slug: `gen-x-soft-club`
 - Artwork: 1998 fashion editorial (35mm colour film)
 - Format: tall 2:3
-- Cover: `public/covers/gen-x-softclub.png`
+- Cover: `covers-src/gen-x-softclub.png`
 
 ```text
 A late-1990s fashion editorial photograph from an avant-garde style magazine, shot on 35mm colour film.
@@ -96,7 +96,7 @@ Avoid: hard contrast, saturated neon, gritty texture, crisp digital sharpness, s
 - Slug: `art-deco`
 - Artwork: 1928 hotel lobby panel (Lacquer, marble and gold leaf)
 - Format: square 1:1
-- Cover: `public/covers/art-deco.png`
+- Cover: `covers-src/art-deco.png`
 
 ```text
 A straight-on photograph of an original 1928 Art Deco decorative wall panel from the lobby of a luxury hotel, made of black and deep-emerald lacquer, green veined marble, gold leaf and brass inlay.
@@ -123,7 +123,7 @@ Avoid: asymmetry, clutter, rustic textures, neon colours, gold that looks like y
 - Slug: `vaporwave`
 - Artwork: 2012 album cover (Digital collage)
 - Format: square 1:1
-- Cover: `public/covers/vapourwave.png`
+- Cover: `covers-src/vapourwave.png`
 
 ```text
 The original cover artwork for a 2012 vaporwave album: a digital collage made in early image-editing software, shown as artwork only, with no title or artist name.
@@ -148,7 +148,7 @@ Avoid: gritty realism, earthy colours, sunglasses on the statue, hyper-detailed 
 - Slug: `collage-art`
 - Artwork: 1921 Dada collage (Cut paper on kraft card)
 - Format: tall 2:3
-- Cover: `public/covers/collage-art.png`
+- Cover: `covers-src/collage-art.png`
 
 ```text
 An original 1921 Dada collage of cut and torn papers pasted on kraft card, photographed flat for a museum archive.
@@ -175,7 +175,7 @@ Avoid: seamless digital blending, clean vector shapes, glossy 3D.
 - Slug: `cyberminimalism`
 - Artwork: Industrial-design object (Anodised aluminium on dark glass)
 - Format: square 1:1
-- Cover: `public/covers/cyberminimalism.png`
+- Cover: `covers-src/cyberminimalism.png`
 
 ```text
 A contemporary industrial-design object photographed for a gallery catalogue: a single slim, matte-black anodised-aluminium monolith with rounded edges, standing upright on a dark glass floor.
@@ -202,7 +202,7 @@ Avoid: clutter, warm or vintage tones, ornament, lens flares, sci-fi glow overlo
 - Slug: `steampunk`
 - Artwork: Kinetic sculpture (Brass, copper, walnut)
 - Format: square 1:1
-- Cover: `public/covers/steampunk.png`
+- Cover: `covers-src/steampunk.png`
 
 ```text
 A handcrafted kinetic sculpture photographed for an auction catalogue: a mechanical hummingbird in brass and copper.
@@ -229,7 +229,7 @@ Avoid: plastic, neon, magical glow, random piles of loose gears.
 - Slug: `y2k`
 - Artwork: 2000 phone launch poster (Digital collage, chrome 3D and pixel graphics)
 - Format: tall 2:3
-- Cover: `public/covers/y2k.png`
+- Cover: `covers-src/y2k.png`
 
 ```text
 A Y2K-era graphic poster from 2000: a glossy digital collage that mixes early 3D chrome renders with flat pixel graphics, for a mobile-phone launch party.
@@ -258,7 +258,7 @@ Avoid: real phone brands or copies of real products, muted earth tones, flat mat
 - Slug: `psychedelic`
 - Artwork: 1967 concert poster (Offset lithograph)
 - Format: tall 2:3
-- Cover: `public/covers/psychedelic.png`
+- Cover: `covers-src/psychedelic.png`
 
 ```text
 An original 1967 psychedelic concert poster from the San Francisco ballroom scene: an offset lithograph.
@@ -285,7 +285,7 @@ Avoid: muted neutrals, empty space, rigid grids, 3D shading, smooth gradients.
 - Slug: `memphis`
 - Artwork: 1982 cabinet (Plastic laminate, lacquered wood)
 - Format: tall 2:3
-- Cover: `public/covers/memphis.png`
+- Cover: `covers-src/memphis.png`
 
 ```text
 A 1982 postmodern cabinet by a Milan design collective, photographed for a design-museum catalogue.
@@ -312,7 +312,7 @@ Avoid: muted earth tones, heavy wear, empty minimalism, shiny CGI plastic.
 - Slug: `art-nouveau`
 - Artwork: 1898 decorative poster (Stone lithograph)
 - Format: tall 2:3
-- Cover: `public/covers/art-nouveau.png`
+- Cover: `covers-src/art-nouveau.png`
 
 ```text
 An original 1898 Parisian decorative poster: a colour lithograph in the Art Nouveau style.
@@ -337,37 +337,37 @@ Avoid: photorealistic skin, 3D rendering, neon colours, hard geometric grids.
 ## 13. Cyberpunk
 
 - Slug: `cyberpunk`
-- Artwork: Sci-fi film concept painting (Digital painting with glitch effects)
+- Artwork: Sci-fi film concept painting (Soft, hazy digital painting)
 - Format: square 1:1
-- Cover: not yet
-- Save as: `public/covers/cyberpunk.png`
+- Cover: `covers-src/cyberpunk.png`
+- Save as: `covers-src/cyberpunk.png`
 
 ```text
-A cinematic cyberpunk city street at night, painted as high-end digital concept art for a dystopian science-fiction film, with glitch effects breaking into the image. Dark, dense, high-contrast and gritty.
+A dreamy cyberpunk city street at night, painted as soft, atmospheric digital concept art for a science-fiction film. The whole scene is wrapped in glowing blue and pink haze, with gentle, low contrast rather than harsh darkness.
 
-Composition: a low, street-level view straight down a wide, empty avenue with a strong one-point perspective. Towering buildings crowd both sides, stacked with balconies, pipes, cables and jutting signs, rising into darkness. Both sides are covered in dense neon signs, screens and shop fronts, glowing as illegible glyph-like shapes rather than readable words. At the far end of the street, a bright, glowing fog swallows the vanishing point, and a few small silhouetted figures stand in the haze. The wet road surface catches long pink and cyan reflections that run toward the viewer. Across the image, glitch effects break in: a few signs split into offset red and cyan channels, thin horizontal scan lines and small displaced bands slice through the neon, and blocks of corrupted pixels flicker on one screen. Moody and chaotic, but the vanishing point stays the clear focal point.
+Composition: a low, street-level view straight down a wide, empty avenue with a strong one-point perspective. Tall buildings line both sides, their facades crowded with glowing signs, screens and shop fronts that read as illegible glyph-like shapes rather than words. The buildings on the left glow in electric blue with pink accents; the buildings on the right are washed in hot pink and magenta neon with blue highlights. The towers fade into a bright blue haze toward the top of the frame. At the far end of the street, a luminous pinkish-white fog swallows the vanishing point, and a few small silhouetted figures stand softly in the glow. The road surface is a smooth indigo-violet, catching soft pink reflections along the right side and blue reflections on the left. A single thin cable crosses the sky. A few signs show a very subtle red-and-cyan colour split, like a faint digital glitch.
 
-Colours: near-black shadows (#07090F), dominant hot magenta and pink neon (#FF1F8E), electric cyan and blue (#00F0FF), with small touches of sodium amber (#FFB000) and violet.
+Colours: electric blue and cyan haze (#00B8FF, #3A7BFF), hot pink and magenta neon (#FF2E9A, #FF5FC8), soft violet and indigo in the shadows and the road (#2A1F5C, #4B2E83), and a pale pink-white glow at the vanishing point. No pure black anywhere; even the darkest areas are deep blue-violet.
 
-Light: neon signs and screens are the only light sources, with harsh contrast between deep shadow and blazing colour, bright volumetric fog at the end of the street, and long coloured reflections on the wet ground.
+Light: everything glows. Neon light diffuses through thick atmospheric haze, so edges soften and colours bleed into each other. Contrast is gentle and even, with lifted shadows and a bright, misty centre.
 
-Finish: a rich digital painting with sharp detail in the foreground and softer atmosphere in the distance, gritty surfaces and grime on the buildings, fine grain, and crisp digital glitch artefacts (RGB split, scan lines, pixel blocks) that feel deliberate rather than random.
+Finish: a smooth, painterly digital illustration with soft focus in the distance, gentle bloom around every light, fine atmospheric grain and a dreamy, slightly hazy quality: calm, moody and immersive rather than gritty.
 
 Format: square (1:1). Show the image itself, full frame.
 
 Text: no readable words, letters, logos, watermarks or stock-photo marks anywhere; the signs show only abstract glyph shapes and light.
 
-Avoid: daylight, pastel colours, clean or tidy streets, flat lighting, glitch effects that cover the whole image.
+Avoid: harsh contrast, crushed black shadows, gritty grime, heavy glitch effects, daylight, pastel daytime colours, crisp hard edges everywhere.
 ```
 
-**If it misses:** Make it darker and grittier: deeper shadows, brighter magenta and cyan neon, more fog at the vanishing point, and keep the glitch effects to a few signs and bands. Remove any readable text or watermarks.
+**If it misses:** Make it softer and hazier: lift the shadows into deep blue-violet, add more glowing fog and bloom, reduce the contrast, and keep the pink-and-blue colour scheme. Remove any readable text or watermarks.
 
 ## 14. Synthwave
 
 - Slug: `synthwave`
 - Artwork: 1985 record sleeve painting (Airbrushed acrylic on board)
 - Format: square 1:1
-- Cover: `public/covers/synthwave.png`
+- Cover: `covers-src/synthwave.png`
 
 ```text
 The original airbrush painting for a 1985 synth-pop record sleeve, shown as artwork only, with no title or band name.
@@ -394,7 +394,7 @@ Avoid: cars, chrome lettering, daylight, clutter, modern 3D rendering.
 - Slug: `pop-art`
 - Artwork: 1964 painting (Silkscreen and acrylic on canvas)
 - Format: square 1:1
-- Cover: `public/covers/pop-art.png`
+- Cover: `covers-src/pop-art.png`
 
 ```text
 An original 1964 Pop Art painting in silkscreen and acrylic on canvas.
@@ -421,7 +421,7 @@ Avoid: muted colour, realistic shading, soft gradients, copying any famous exist
 - Slug: `brutalism`
 - Artwork: 1971 architectural photograph (Gelatin silver print)
 - Format: tall 2:3
-- Cover: `public/covers/brutalism.png`
+- Cover: `covers-src/brutalism.png`
 
 ```text
 A 1971 architectural photograph of a Brutalist housing estate, shot on a large-format camera and printed as a warm-toned black-and-white gelatin silver print.
@@ -448,7 +448,7 @@ Avoid: HDR, colour, sunset skies, glossy surfaces.
 - Slug: `mid-century-modern`
 - Artwork: 1957 exhibition poster (Screen print)
 - Format: tall 2:3
-- Cover: `public/covers/mid-century-modern.png`
+- Cover: `covers-src/mid-century-modern.png`
 
 ```text
 An original 1957 screen-printed poster for a modern furniture exhibition.
@@ -475,7 +475,7 @@ Avoid: chrome, neon, clutter, perfect modern vector shapes.
 - Slug: `clay-style`
 - Artwork: Stop-motion film set (Plasticine miniature)
 - Format: tall 2:3
-- Cover: `public/covers/clay-art.png`
+- Cover: `covers-src/clay-art.png`
 
 ```text
 A photograph of a hand-made stop-motion miniature set built for an animated short film.
@@ -502,7 +502,7 @@ Avoid: glossy CGI, faces on objects, a plastic-toy look.
 - Slug: `surreal-design`
 - Artwork: 1950s Surrealist painting (Oil on canvas)
 - Format: tall 2:3
-- Cover: `public/covers/surreal-design.png`
+- Cover: `covers-src/surreal-design.png`
 
 ```text
 An original 1950s Surrealist oil painting on canvas.
@@ -556,7 +556,7 @@ Avoid: opaque panels, hard outlines, interface elements, earthy textures.
 - Slug: `web-1-0`
 - Artwork: 1998 personal homepage (Screen capture, early browser)
 - Format: tall 2:3
-- Cover: `public/covers/web-1-0.png`
+- Cover: `covers-src/web-1-0.png`
 
 ```text
 A full-page screen capture of a 1998 personal homepage, shown inside a grey early-browser window with a navy title bar, captured as one tall scrolling page.
@@ -583,7 +583,7 @@ Avoid: smooth gradients, modern flat UI, high-resolution 3D, subtle minimalism.
 - Slug: `cyberpop`
 - Artwork: Holographic art print (Digital illustration on holo-foil paper)
 - Format: tall 2:3
-- Cover: `public/covers/cyperpop.png`
+- Cover: `covers-src/cyperpop.png`
 
 ```text
 A limited-edition art print of an original cyberpop illustration, printed on holographic foil paper.
@@ -612,7 +612,7 @@ Avoid: dystopian grime, muted earth tones, heavy darkness, any existing anime ch
 - Slug: `bubbleglam`
 - Artwork: Pop fragrance campaign still life (Studio photograph)
 - Format: tall 2:3
-- Cover: `public/covers/bubbleglam.png`
+- Cover: `covers-src/bubbleglam.png`
 
 ```text
 A studio still-life photograph for a pop-star fragrance campaign in the early 2000s.
@@ -641,7 +641,7 @@ Avoid: matte earth tones, sharp angular forms, grunge, CGI-looking plastic.
 - Slug: `chromecore`
 - Artwork: 1980s sci-fi art book illustration (Airbrush and gouache on board)
 - Format: tall 2:3
-- Cover: `public/covers/chromecore.png`
+- Cover: `covers-src/chromecore.png`
 
 ```text
 An original illustration from a 1980s Japanese science-fiction art book, painted in airbrush and gouache on illustration board.
@@ -668,7 +668,7 @@ Avoid: gore, blood, matte surfaces, earthy colours, photoreal CGI, clutter.
 - Slug: `web-2-0-gloss`
 - Artwork: Mid-2000s desktop wallpaper (Glossy digital collage)
 - Format: tall 2:3
-- Cover: `public/covers/web-2-0.png`
+- Cover: `covers-src/web-2-0.png`
 
 ```text
 An original mid-2000s desktop wallpaper in the glossy Web 2.0 style, a bright, optimistic digital collage of nature and technology, shown full screen as one tall image.
@@ -697,7 +697,7 @@ Avoid: flat modern design, dark moody scenes, grunge textures, real software log
 - Slug: `maximalism`
 - Artwork: Maximalist graphic-design poster (Risograph, screen print and marker)
 - Format: tall 2:3
-- Cover: `public/covers/maximalism1.png`
+- Cover: `covers-src/maximalism1.png`
 
 ```text
 An original maximalist graphic-design poster, printed in risograph and screen print, with hand-drawn marker added on top.
@@ -722,7 +722,7 @@ Avoid: empty space, neat grids, muted colours, copying any existing poster, the 
 - Slug: `gothic`
 - Artwork: 1887 gothic novel binding (Tooled oxblood leather and gold leaf)
 - Format: tall 2:3
-- Cover: `public/covers/gothic2.png`
+- Cover: `covers-src/gothic2.png`
 
 ```text
 An original 1887 gothic novel, bound in oxblood leather with tooled gold decoration, photographed straight on for an antiquarian book catalogue.
@@ -751,7 +751,7 @@ Avoid: bright pastels, flat vector shapes, cheerful daylight, gore, cartoon styl
 - Slug: `surveillance`
 - Artwork: Graphic-design poster (Drone photograph with survey-drawing overlays)
 - Format: tall 2:3
-- Cover: `public/covers/surveillance.png`
+- Cover: `covers-src/surveillance.png`
 
 ```text
 An original contemporary graphic-design poster about surveillance, combining an overhead drone photograph with the look of a technical survey drawing. Printed as a large digital print.
@@ -780,7 +780,7 @@ Avoid: a visible face, the likeness of a real person, cinematic shallow depth of
 - Slug: `acid`
 - Artwork: 1992 rave flyer (Offset print, chrome 3D type)
 - Format: tall 2:3
-- Cover: `public/covers/acid.png`
+- Cover: `covers-src/acid.png`
 
 ```text
 An original 1992 acid-house rave flyer, printed on glossy card.
@@ -809,7 +809,7 @@ Avoid: soft pastels, paper textures, calm minimal space, modern 3D rendering.
 - Slug: `glitch`
 - Artwork: Glitch-art poster (Corrupted digital marbling, gallery print)
 - Format: tall 2:3
-- Cover: `public/covers/glitch2.png`
+- Cover: `covers-src/glitch2.png`
 
 ```text
 An original contemporary glitch-art poster: a digitally marbled image whose file has been deliberately corrupted, printed as a large gallery poster.
@@ -838,7 +838,7 @@ Avoid: random noise with no structure, muddy colour, soft pastels, organic paper
 - Slug: `blueprint`
 - Artwork: Architectural presentation drawing (Cyanotype and ink-and-watercolour, split sheet)
 - Format: tall 2:3
-- Cover: `public/covers/blueprint.png`
+- Cover: `covers-src/blueprint.png`
 
 ```text
 An original architectural presentation drawing of a modern glass-and-concrete mid-rise tower on a city street corner, drawn in two-point perspective from a low street-level viewpoint on one tall sheet.
@@ -867,7 +867,7 @@ Avoid: full-colour photoreal rendering, 3D CGI, soft focus, clutter that hides t
 - Slug: `italo-disco`
 - Artwork: 1984 12-inch maxi-single cover (Airbrush on board, chrome lettering)
 - Format: square 1:1
-- Cover: `public/covers/italo-disco2.png`
+- Cover: `covers-src/italo-disco2.png`
 
 ```text
 The original front cover of a 1984 Italo disco 12-inch maxi single, painted in airbrush and gouache on illustration board, with chrome lettering.
@@ -896,8 +896,8 @@ Avoid: natural daylight, paper texture, earth tones, modern 3D rendering, the li
 - Slug: `grunge`
 - Artwork: 1993 underground gig flyer (Photocopy, paste-up and marker)
 - Format: tall 2:3
-- Cover: `public/covers/grunge.png`
-- Save as: `public/covers/grunge.png`
+- Cover: `covers-src/grunge.png`
+- Save as: `covers-src/grunge.png`
 
 ```text
 An original 1993 flyer for an underground grunge gig, made by hand with a photocopier, scissors, glue and tape, then photographed flat as a found object.
@@ -926,8 +926,8 @@ Avoid: clean glossy surfaces, bright pastels, perfect alignment, neat grids, the
 - Slug: `punk`
 - Artwork: 1977 punk fanzine cover (Xerox, cut-and-paste and marker)
 - Format: tall 2:3
-- Cover: `public/covers/punk.png`
-- Save as: `public/covers/punk.png`
+- Cover: `covers-src/punk.png`
+- Save as: `covers-src/punk.png`
 
 ```text
 The original cover of a 1977 punk fanzine, made in one night with scissors, glue, a typewriter and an office photocopier, then photographed flat.
@@ -957,7 +957,7 @@ Avoid: polished gradients, elegant serif type, soft pastels, neat alignment, the
 - Artwork: 1968 minimal art exhibition poster (Screen print)
 - Format: tall 2:3
 - Cover: not yet
-- Save as: `public/covers/minimalism.png`
+- Save as: `covers-src/minimalism.png`
 
 ```text
 An original 1968 poster for an exhibition of minimal art, screen-printed in two quiet inks on heavy chalk-white paper.
@@ -986,8 +986,8 @@ Avoid: clutter, extra shapes, gradients, textures, bright colours, centred symme
 - Slug: `deconstructivism`
 - Artwork: 1991 design lecture poster (Offset print with overprinted layers)
 - Format: tall 2:3
-- Cover: `public/covers/deconstructivism.png`
-- Save as: `public/covers/deconstructivism.png`
+- Cover: `covers-src/deconstructivism.png`
+- Save as: `covers-src/deconstructivism.png`
 
 ```text
 An original 1991 poster for an architecture and design lecture series, in the deconstructivist style, offset-printed on uncoated paper with overlapping transparent ink layers.
@@ -1016,8 +1016,8 @@ Avoid: calm symmetry, soft rounded forms, pastels, random mess with no underlyin
 - Slug: `new-wave`
 - Artwork: 1981 new wave magazine cover (Photo collage with airbrush and offset print)
 - Format: tall 2:3
-- Cover: `public/covers/new-wave.png`
-- Save as: `public/covers/new-wave.png`
+- Cover: `covers-src/new-wave.png`
+- Save as: `covers-src/new-wave.png`
 
 ```text
 The original cover of an invented 1981 new wave art and music magazine: a bright, playful photo collage with airbrushed shapes and offset printing, experimental and typographic.
@@ -1046,8 +1046,8 @@ Avoid: the likeness of a real person, copying any existing magazine cover, muted
 - Slug: `post-modernism`
 - Artwork: 1986 postmodern design exhibition poster (Collage, screen print and cut-out type)
 - Format: tall 2:3
-- Cover: `public/covers/post-modernism.png`
-- Save as: `public/covers/post-modernism.png`
+- Cover: `covers-src/post-modernism.png`
+- Save as: `covers-src/post-modernism.png`
 
 ```text
 An original 1986 poster for a design exhibition in the postmodern style: loud, eclectic and ironic, made from cut-out type and a dense collage, then screen-printed.
@@ -1077,8 +1077,8 @@ Avoid: austere minimalism, monochrome, neat grids, a single typeface, copying an
 - Slug: `future-funk`
 - Artwork: Future funk single cover (Late-80s anime background painting)
 - Format: square 1:1
-- Cover: `public/covers/future-punk.png`
-- Save as: `public/covers/future-funk.png`
+- Cover: `covers-src/future-punk.png`
+- Save as: `covers-src/future-funk.png`
 
 ```text
 The cover art for an invented future funk single, painted as a hand-made background painting from a late-1980s Japanese science-fiction anime film: a vast, glowing night megacity, retro-futuristic and full of energy.
@@ -1108,17 +1108,17 @@ Avoid: copying any existing anime film, frame, character or vehicle; a motorcycl
 - Slug: `luxury-minimal`
 - Artwork: Luxury fragrance print campaign (Studio still-life photograph with foil typography)
 - Format: tall 2:3
-- Cover: not yet
-- Save as: `public/covers/luxury-minimal.png`
+- Cover: `covers-src/luxury-minimal.png`
+- Save as: `covers-src/luxury-minimal.png`
 
 ```text
-A full-page print advertisement for an invented luxury fragrance house, as it would appear in a high-end fashion magazine: a studio still-life photograph with refined typography and a touch of brushed-gold foil. Elegant, calm and expensive.
+A full-page print advertisement for an invented luxury fragrance house, as it would appear in a high-end fashion magazine: a studio still-life photograph with refined typography and a touch of brushed-gold foil. Elegant, calm and sophisticated rather than stark.
 
-Composition: a single heavy glass perfume bottle with softly bevelled edges and a solid brushed-brass cap stands on a low block of honed travertine, placed slightly below and to the right of centre. A fold of cashmere-coloured linen drapes behind the plinth and falls out of frame. Soft window light from the left casts a long, gentle shadow across the stone. Most of the frame is quiet, warm negative space. At the top, a small, perfectly centred wordmark; near the bottom, one fine line of text. Nothing else competes with the bottle.
+Composition: a single heavy glass perfume bottle with softly bevelled edges and a solid brushed-brass cap stands on a low block of honed travertine, placed slightly below and to the right of centre. A fold of cashmere-coloured linen drapes behind the plinth and falls out of frame. Soft window light from the left casts a long, gentle shadow across the stone. Most of the frame is quiet, warm negative space. The type is arranged with care: the wordmark centred at the top, a short tagline beneath it, and two small lines near the bottom margin, all aligned to a calm, generous grid. Nothing competes with the bottle.
 
-Typography: a refined, high-contrast thin serif in widely spaced capitals for the wordmark, printed in brushed-gold foil, and a small, light sans-serif for the detail line. Set exactly this text: "SOLENNE" as the wordmark; "eau de parfum" small beneath the bottle.
+Typography: a refined, high-contrast thin serif in widely spaced capitals for the wordmark, printed in brushed-gold foil; an elegant serif italic for the tagline; and a small, light, widely spaced sans-serif for the details. Set exactly this text: "SOLENNE" as the wordmark; "The art of quiet." as the tagline beneath it; "eau de parfum" small beneath the bottle; "Paris" small at the very bottom.
 
-Colours: travertine #EDE6DC and cashmere #C8B79E as the dominant warm neutrals, brushed brass #9C7C4A for the cap and foil lettering, espresso #2B2622 for the deepest shadows and the detail line.
+Colours: travertine #EDE6DC and cashmere #C8B79E as the dominant warm neutrals, brushed brass #9C7C4A for the cap and foil lettering, espresso #2B2622 for the deepest shadows and the small text.
 
 Light: soft, sculptural window light with long, gentle shadows, a quiet glow through the glass and a subtle highlight along the brass edges.
 
@@ -1138,8 +1138,8 @@ Avoid: clutter, saturated colour, glossy plastic, shiny yellow gold, busy props,
 - Slug: `type-doodles`
 - Artwork: Doodle-art lettering cover (Inked cartoon illustration with flat colour)
 - Format: square 1:1
-- Cover: not yet
-- Save as: `public/covers/type-doodles.png`
+- Cover: `covers-src/type-doodle.png`
+- Save as: `covers-src/type-doodles.png`
 
 ```text
 An original doodle-art cover illustration where big, chunky hand-drawn lettering sits in the middle of a packed, playful doodle world. Bold black ink outlines, flat bright colour and cartoon shine, like the cover of an illustrator's lettering zine.
@@ -1163,3 +1163,91 @@ Avoid: realistic 3D rendering, photographs, muddy colour, empty space, copying a
 
 **If it misses:** Make the lettering pop more: bigger, chunkier letters with thicker black outlines and brighter colour, and keep the doodles lighter in grey and cream behind them. Keep the lettering exactly as it is.
 
+
+## 42. 70’s Retro
+
+- Slug: `70s-retro`
+- Artwork: 1976 drive-in poster (Distressed multi-colour screen print)
+- Format: tall 2:3
+- Cover: `covers-src/70s-retro.png`
+- Save as: `covers-src/70s-retro.png`
+
+```text
+An original 1976 screen-printed poster for a retro-futurist drive-in, printed in a few bold inks on cream paper and worn with age. Warm, loud, nostalgic and full of life.
+
+Composition: the upper half is dominated by the head and shoulders of an invented woman with a voluminous 70s hairdo and huge yellow sunglasses, mouth wide open mid-shout, framed by a bold sunburst of alternating rust-red and cream rays that radiates to the edges. Below her, the lower half is a busy, detailed scene of a sunny drive-in of the future: a long-nosed orange convertible in the foreground seen from behind, a roller-skating carhop in a striped uniform carrying a tray of burgers, a row of chrome-finned cars, surfboards, palm trees, and a curving monorail on stilts. In the sky beside the woman, a huge teal-and-orange planet hangs low, a small rocket streaks past and a figure with a jetpack flies overhead trailing flames. Dense and energetic, with the shouting face as the clear focal point.
+
+Typography: chunky, rounded 70s display lettering with a thick outline and an inline stripe, plus a small condensed sans-serif. Set exactly this text: "SUNSET DRIVE-IN" in a curved banner across the bottom; "open all summer · 1976" small beneath it.
+
+Colours: sunbleached cream #F3E3C3 paper, burnt orange #E0762A, rust red #B8421E and olive brown #6F5A1E, with mustard yellow for the sunglasses and sky, deep teal for the planet, the shadows and the hair, and near-black for the linework.
+
+Light: flat, bold screen-print colour with graphic shadows in teal and black, and a warm, sunny golden-hour mood.
+
+Finish: a real multi-colour screen print: flat opaque inks with slight misregistration, crisp inked linework and hatching, halftone dots in the shadows, and heavy wear (scratches, scuffs, faded ink, paper creases and a torn corner), like a poster that has hung outside for decades.
+
+Format: tall portrait (2:3). Show it as a flat archival scan of the complete poster, evenly lit and filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, real brand names, logos or signatures.
+
+Avoid: the likeness of a real person, cold blue tones, glossy digital gradients, clean undamaged print, copying any existing poster.
+```
+
+**If it misses:** Make it look more like a worn 1970s screen print: flatter inks in fewer colours, stronger rust-red sunburst, more scratches and fading, and keep the shouting face as the focal point. Keep the lettering exactly as it is.
+
+## 43. Retro
+
+- Slug: `retro`
+- Artwork: 1940s pulp magazine cover (Oil painting printed on pulp paper)
+- Format: tall 2:3
+- Cover: `covers-src/retro.png`
+- Save as: `covers-src/retro.png`
+
+```text
+The original front cover of an invented 1940s pulp magazine that mixes science fiction and hard-boiled detective stories, painted in oils and printed on cheap pulp paper.
+
+Composition: a dramatic night scene on a rain-slick city street under an elevated railway. A tough detective in a brown suit, loosened tie and fedora charges toward the viewer, gripping a glowing ray gun, his coat flying out behind him. Behind him, a sleek silver flying saucer hovers over the rooftops, sweeping a beam of light down onto the street, and a police car with its headlights blazing swerves at the kerb. In the foreground on the right, a red-haired woman in a green silk blouse presses back against a brick doorway, looking over her shoulder with alarm. The masthead fills the top of the cover in huge, bold letters, with the price in a small circle in one corner and story titles set in blocks of yellow type around the scene. Dynamic and dramatic, with the charging detective as the clear focal point.
+
+Typography: huge, heavy slab-serif capitals with a thick black drop shadow for the masthead, bold condensed capitals for the story titles, and a small circle for the price. Set exactly this text: "ATOMIC DETECTIVE" as the masthead with "STORIES" smaller beneath it; "15¢" in the corner circle; "THE ROBOT WHO KNEW TOO MUCH" as a story title on the right; "APRIL" small near the top.
+
+Colours: warm pulp-cover colours: poster red #D0442C and mustard-yellow #E9B44C for the masthead and titles, deep teal #23535E and night violet for the sky, glowing green and silver on the saucer, and rich skin tones, brick orange and green on the figures, all on aged paper #EFE3C8.
+
+Light: dramatic, theatrical lighting: the saucer's beam and the car's headlights rim-light the detective, and warm light spills from the doorway onto the woman.
+
+Finish: a real oil painting reproduced on rough, yellowed pulp paper, with visible confident brushstrokes, slight colour misregistration in the printed type, worn corners, small creases and faint foxing.
+
+Format: tall portrait (2:3). Show the complete cover flat, filling the image edge to edge, with no wall, frame, mockup or hands.
+
+Text: spell the lettering exactly as written; add no other words, real magazine names, author names, logos or signatures.
+
+Avoid: the likeness of a real person, gore, modern digital rendering, clean glossy paper, copying any existing magazine cover.
+```
+
+**If it misses:** Correct the lettering so it reads exactly "ATOMIC DETECTIVE", "STORIES", "15¢", "THE ROBOT WHO KNEW TOO MUCH" and "APRIL". Keep the painting identical.
+
+## 44. Baroque Tenebrism
+
+- Slug: `baroque-tenebrism`
+- Artwork: 17th-century-style gallery painting (Oil on canvas, tenebrist light)
+- Format: tall 2:3
+- Cover: `covers-src/baroque-tenebrism.png`
+- Save as: `covers-src/baroque-tenebrism.png`
+
+```text
+An original oil painting in the manner of 17th-century Baroque tenebrism, as if hanging in a museum: an invented, quiet scene of scholars gathered around an old book in a vaulted stone hall.
+
+Composition: inside a dim Romanesque hall with heavy carved columns and round arches, a single tall arched window high on the left sends a hard, dusty beam of daylight diagonally down across the room. In the centre, an elderly scholar with a long white beard, wrapped in a deep red robe, sits at a heavy wooden table and traces a line in a large open book with one finger. A young man in a pale linen shirt and dark vest leans over the table from the left, studying the page. To the right stands a young woman in an ochre dress, holding a small oil lamp whose flame lights her face from below. Three or four more onlookers stand at the edges, their faces half-lost in shadow, one resting his chin on his hand. A patterned green brocade cloth is draped over the end of the table, with a brass jug on the floor beside it. The stone floor catches the patch of window light. Calm and reverent, with the scholar and the open book as the clear focal point.
+
+Colours: near-black umber shadows #15110D over most of the canvas, warm candle gold #D9A95B in the light, madder red #8E2A1E in the scholar's robe, raw umber #5E4A2E in the stone and wood, with ochre, olive green and pale linen accents.
+
+Light: tenebrism: one hard light source from the high window plus the small lamp flame; faces, hands, the book and the folds of cloth are picked out sharply while everything else falls into deep, near-black shadow, with visible dust in the beam.
+
+Finish: rich oil paint on canvas with transparent glazes in the shadows, confident visible brushwork in the lit areas, fine craquelure and a faint aged varnish; it should look like a real painted canvas, not a digital render.
+
+Format: tall portrait (2:3). Show the painting itself, filling the image edge to edge, with no frame, gallery wall or label.
+
+Text: no words, letters, signatures or inscriptions anywhere; the book's pages show only illegible marks.
+
+Avoid: the likeness of a real person, copying any existing painting, even or flat lighting, bright saturated colours, modern clothing or objects, glossy 3D rendering.
+```
+
+**If it misses:** Make the shadows deeper and the window beam harder, so most of the canvas falls into near-black and only faces, hands, the book and cloth catch the light. Keep the figures and the room as they are.

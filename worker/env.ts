@@ -7,6 +7,8 @@ export interface Env {
   ANTHROPIC_API_KEY?: string;
   /** Comma-separated OpenRouter model IDs, tried in order. */
   OPENROUTER_MODELS?: string;
+  /** The same for writing final prompts, which a different model may do best; empty uses OPENROUTER_MODELS. */
+  OPENROUTER_PROMPT_MODELS?: string;
   /** Anthropic model used directly as the last resort. */
   AI_MODEL?: string;
   /** Sent to OpenRouter for app attribution. */

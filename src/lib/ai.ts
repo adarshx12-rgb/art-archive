@@ -56,15 +56,14 @@ export function aiScene(state: BuilderState, cam: ShotCamera, mode: "new" | "edi
   });
 }
 
-export interface PaletteReply {
-  name: string;
-  colours: { hex: Hex; name: string; role: PaletteRole }[];
-  why: string;
-  warnings: string[];
+export interface SchemesReply {
+  /** Up to three schemes, fewest colours first. */
+  schemes: { name: string; colours: { hex: Hex; name: string; role: PaletteRole }[]; why: string }[];
 }
 
-export function aiPalette(state: BuilderState, request: string) {
-  return post<PaletteReply>("/api/palette", { request, style: state.style, count: state.count });
+/** 2, 3 and 4-colour schemes true to the chosen style, optionally for a mood. */
+export function aiSchemes(state: BuilderState, request: string) {
+  return post<SchemesReply>("/api/schemes", { style: state.style, request });
 }
 
 export interface PromptReply {
@@ -75,4 +74,11 @@ export interface PromptReply {
 /** The server re-derives every fact from the settings themselves (the share-link form). */
 export function aiPrompt(state: BuilderState) {
   return post<PromptReply>("/api/prompt", { query: encodeState(state).toString() });
+}
+
+export type Idea = { title: string; why: string } & ({ kind: "scene"; instruction: string } | { kind: "words"; slot: string; words: string });
+
+/** Ideas for the template design in progress; the server reads everything from the settings. */
+export function aiGuide(state: BuilderState) {
+  return post<{ ideas: Idea[] }>("/api/guide", { query: encodeState(state).toString() });
 }

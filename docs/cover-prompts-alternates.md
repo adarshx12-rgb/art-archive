@@ -7,7 +7,7 @@ Second versions of some style prompts. The site reads only `docs/cover-prompts.m
 - Slug: `italo-disco`
 - Artwork: 1985 dance compilation LP cover (Airbrush on board)
 - Format: square 1:1
-- Cover: `public/covers/italo-disco1.png`
+- Cover: `covers-src/italo-disco1.png`
 
 ```text
 The original front cover of a 1985 Italo disco dance compilation LP, painted in airbrush and gouache on illustration board.
@@ -36,7 +36,7 @@ Avoid: the likeness of a real person, daylight realism, paper texture, earth-ton
 - Slug: `maximalism`
 - Artwork: Interior photograph (Design-magazine editorial)
 - Format: tall 2:3
-- Cover: `public/covers/maximalism2.png`
+- Cover: `covers-src/maximalism2.png`
 
 ```text
 An editorial interior photograph for a design magazine: a joyful maximalist living room, shot with a wide lens.
@@ -61,7 +61,7 @@ Avoid: empty space, beige or muted palettes, sterile minimalism, CGI-looking fur
 - Slug: `glitch`
 - Artwork: Glitch-art portrait (Archival pigment print)
 - Format: tall 2:3
-- Cover: `public/covers/glitch1.png`
+- Cover: `covers-src/glitch1.png`
 
 ```text
 An original contemporary glitch-art portrait, printed as a large archival pigment print for a gallery.
@@ -115,7 +115,7 @@ Avoid: empty space, monochrome palettes, sterile minimalism, CGI-looking furnitu
 - Slug: `gothic`
 - Artwork: 19th-century cathedral interior (Oil on canvas)
 - Format: tall 2:3
-- Cover: `public/covers/gothic1.png`
+- Cover: `covers-src/gothic1.png`
 
 ```text
 An original 19th-century oil painting of a Gothic cathedral interior at night.
@@ -165,3 +165,31 @@ Avoid: cinematic shallow depth of field, vivid colour, flattering lighting, shar
 ```
 
 **If it misses:** Make it look more like old CCTV tape: more sensor noise, interlacing and compression blocks, and a flatter green-grey tone. Keep the overlay text exactly as it is.
+
+## Luxury Minimal: unbranded high-top sneaker
+
+- Slug: `luxury-minimal`
+- Artwork: Luxury footwear print campaign (Studio still-life photograph with foil typography)
+- Format: tall 2:3
+- Cover: not yet
+- The live prompt in `cover-prompts.md` is the "SOLENNE" perfume advert (`luxury-minimal.png`).
+
+```text
+A full-page print advertisement for an invented luxury footwear house, as it would appear in a high-end fashion magazine: a studio still-life photograph of a single sneaker, treated like a piece of sculpture, with refined typography and a touch of brushed-gold foil.
+
+Composition: one classic 1980s-style leather high-top basketball sneaker stands in three-quarter view on a low block of honed travertine, placed slightly below and to the right of centre. It is made of cream full-grain leather with espresso suede overlays around the toe, heel and collar, waxed cream laces, small brushed-brass eyelets and a padded ankle collar, with a thin brushed-gold line stitched along the side. The shoe is completely unbranded, with no logos, swooshes, wings or emblems anywhere. A fold of cashmere-coloured linen drapes behind the plinth. Soft window light from the left casts a long, gentle shadow across the stone. Most of the frame is quiet, warm negative space, and the type sits on a calm, generous grid.
+
+Typography: a refined, high-contrast thin serif in widely spaced capitals for the wordmark, printed in brushed-gold foil; an elegant serif italic for the tagline; and a small, light, widely spaced sans-serif for the details. Set exactly this text: "HAUTECOURT" as the wordmark at the top; "Made to be seen." as the tagline beneath it; "handmade in Italy" small near the bottom.
+
+Colours: travertine #EDE6DC and cashmere #C8B79E as the dominant warm neutrals, brushed brass #9C7C4A for the eyelets, stitching and foil lettering, espresso #2B2622 for the suede and the deepest shadows.
+
+Light: soft, sculptural window light with long, gentle shadows, a subtle sheen on the leather and a quiet highlight on the brass eyelets.
+
+Finish: a real medium-format photograph with true material detail (the grain of the leather, the nap of the suede, the pores of the travertine and the weave of the linen), printed on heavy matte paper with a slight sheen on the gold foil.
+
+Format: tall portrait (2:3). Show the full advertisement page itself, edge to edge, with no magazine spread, wall, frame or hands.
+
+Text: spell the lettering exactly as written; add no other words, prices, real brand names, logos or signatures.
+
+Avoid: Nike or any real brand's logos, names or emblems; bright sporty colours; clutter; glossy plastic; shiny yellow gold; harsh contrast; a generic sneaker-shop look.
+```

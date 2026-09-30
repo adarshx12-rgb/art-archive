@@ -252,6 +252,44 @@ export const movementStudies: Record<string, Renderer> = {
       </>
     );
   },
+
+  "baroque-tenebrism": ([dark, gold, red, umber], u) => (
+    <>
+      <defs>
+        <radialGradient id={`tb-glow-${u}`} cx="0.5" cy="0.62" r="0.5">
+          <stop offset="0" stopColor={gold} stopOpacity={0.55} />
+          <stop offset="1" stopColor={gold} stopOpacity={0} />
+        </radialGradient>
+        <linearGradient id={`tb-beam-${u}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={gold} stopOpacity={0.45} />
+          <stop offset="1" stopColor={gold} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <rect width={W} height={H} fill={dark} />
+      {/* High window and its beam */}
+      <path d="M40 40 H90 V150 H40 Z" fill={gold} opacity={0.7} />
+      <path d="M40 40 H90 L330 380 L200 400 Z" fill={`url(#tb-beam-${u})`} />
+      {/* Arch and column lost in shadow */}
+      <path d="M150 500 V150 A110 110 0 0 1 370 150 V500" fill="none" stroke={umber} strokeWidth={14} opacity={0.45} />
+      <rect x={330} y={150} width={36} height={350} fill={umber} opacity={0.35} />
+      <ellipse cx={200} cy={310} rx={190} ry={150} fill={`url(#tb-glow-${u})`} />
+      {/* Table with an open book */}
+      <path d="M80 350 H320 L300 372 H100 Z" fill={umber} />
+      <path d="M150 346 Q200 330 250 346 L250 352 Q200 338 150 352 Z" fill={gold} opacity={0.9} />
+      {/* Seated elder in red, lit from the left */}
+      <path d="M170 350 C160 290 175 250 200 248 C228 250 242 290 232 350 Z" fill={red} />
+      <circle cx={202} cy={232} r={20} fill={gold} opacity={0.85} />
+      {/* Standing figure with a candle, and figures at the edges in shadow */}
+      <path d="M262 350 C258 290 268 262 284 260 C300 262 306 300 302 350 Z" fill={umber} />
+      <circle cx={284} cy={246} r={15} fill={gold} opacity={0.6} />
+      <circle cx={270} cy={296} r={4} fill={gold} />
+      <path d="M100 350 C95 300 110 278 128 276 C146 280 150 310 146 350 Z" fill={umber} opacity={0.7} />
+      <circle cx={126} cy={262} r={14} fill={gold} opacity={0.45} />
+      {/* Floor fading to black */}
+      <rect x={0} y={372} width={W} height={128} fill={dark} opacity={0.75} />
+      <Grain u={u} opacity={0.22} />
+    </>
+  ),
 };
 
 

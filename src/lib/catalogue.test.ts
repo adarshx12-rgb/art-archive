@@ -4,22 +4,39 @@ import { coverPrompts, promptForImage } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
 import { fontSuggestions } from "../content/fonts";
 import { references } from "../content/references";
-import { styles } from "../content/styles";
+import { allStyles, styles } from "../content/styles";
 import { renderers } from "../art/studies";
 import { describeHex, normaliseHex } from "./color";
 import { emptyStyleQuery, filterPalettes, filterStyles, palettesForStyle, suggestStyles } from "./catalogue";
 import { parseSaved } from "./storage";
 
 describe("content integrity", () => {
-  it("has 63 styles with unique slugs", () => {
-    expect(styles).toHaveLength(63);
-    expect(new Set(styles.map((s) => s.slug)).size).toBe(styles.length);
+  it("has 64 styles with unique slugs", () => {
+    expect(allStyles).toHaveLength(64);
+    expect(new Set(allStyles.map((s) => s.slug)).size).toBe(allStyles.length);
+  });
+
+  it("describes every style in a few plain sentences", () => {
+    for (const s of allStyles) {
+      expect(s.description.length, s.slug).toBeGreaterThanOrEqual(150);
+      expect(s.description.length, s.slug).toBeLessThanOrEqual(420);
+      expect(s.description.split(/(?<=\.)\s/).length, s.slug).toBeGreaterThanOrEqual(2);
+    }
+    expect(new Set(allStyles.map((s) => s.description)).size).toBe(allStyles.length);
+  });
+
+  it("shows only styles with a cover, and links only to shown styles", () => {
+    expect(styles.map((s) => s.slug).sort()).toEqual(Object.keys(covers).sort());
+    const shown = new Set(styles.map((s) => s.slug));
+    for (const s of styles) s.related.forEach((r) => expect(shown.has(r), `${s.slug} → ${r}`).toBe(true));
+    // Hidden styles keep their full entries, ready for when a cover arrives.
+    expect(allStyles.length).toBeGreaterThan(styles.length);
   });
 
   it("every style is complete and links resolve", () => {
-    const slugs = new Set(styles.map((s) => s.slug));
+    const slugs = new Set(allStyles.map((s) => s.slug));
     const refIds = new Set(references.map((r) => r.id));
-    for (const s of styles) {
+    for (const s of allStyles) {
       expect(s.swatches, s.slug).toHaveLength(4);
       s.swatches.forEach((sw) => expect(normaliseHex(sw.hex), s.slug).toBe(sw.hex.toUpperCase()));
       expect(s.prompt.cues.length, s.slug).toBeGreaterThanOrEqual(5);
@@ -45,7 +62,7 @@ describe("content integrity", () => {
   });
 
   it("parses a cover prompt for real styles from docs/cover-prompts.md", () => {
-    const slugs = new Set(styles.map((s) => s.slug));
+    const slugs = new Set(allStyles.map((s) => s.slug));
     const entries = Object.values(coverPrompts);
     // One prompt per style, however many have been written so far.
     expect(entries.length).toBeGreaterThanOrEqual(32);
@@ -87,7 +104,7 @@ describe("content integrity", () => {
 
   it("has at least 18 palettes spread across 2, 3 and 4 colours, shares totalling 100", () => {
     expect(palettes.length).toBeGreaterThanOrEqual(18);
-    const slugs = new Set(styles.map((s) => s.slug));
+    const slugs = new Set(allStyles.map((s) => s.slug));
     for (const size of [2, 3, 4]) {
       expect(palettes.filter((p) => p.colours.length === size).length).toBeGreaterThanOrEqual(6);
     }
@@ -110,7 +127,7 @@ describe("content integrity", () => {
 
 describe("style filtering", () => {
   it("searches name, alias, description and tags", () => {
-    const f = (q: string) => filterStyles(styles, { ...emptyStyleQuery, q }).map((s) => s.slug);
+    const f = (q: string) => filterStyles(allStyles, { ...emptyStyleQuery, q }).map((s) => s.slug);
     expect(f("international typographic")).toContain("swiss"); // alias
     expect(f("Jugendstil")).toContain("art-nouveau"); // alias
     expect(f("gears")).toContain("steampunk"); // description / cues

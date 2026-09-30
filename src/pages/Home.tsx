@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { lazy, Suspense } from "react";
 import { Link } from "react-router";
 import { ReferenceFigure } from "../art/ReferenceFigure";
 import { StyleArt } from "../art/StyleArt";
@@ -11,6 +12,23 @@ import { getReference } from "../content/references";
 import { featuredStyles, getStyle, styles } from "../content/styles";
 import { palettes } from "../content/palettes";
 import { useMeta } from "../lib/useMeta";
+
+// The template tiles load on their own so the template data stays out of the home page's first download.
+const HomeTemplateTiles = lazy(() => import("../components/HomeTemplateTiles"));
+
+/** Same footprint as the four tiles, shown while they load. */
+function HomeTemplateTilesPlaceholder() {
+  return (
+    <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4" aria-hidden>
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i}>
+          <div className="aspect-square rounded-lg bg-paper-2" />
+          <div className="mt-3 h-5" />
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Home() {
   useMeta(null, site.description);
@@ -37,6 +55,12 @@ export function Home() {
             <Link to="/styles" className="btn btn-primary">
               Explore styles
               <ArrowRight size={16} aria-hidden />
+            </Link>
+            <Link to="/templates" className="btn btn-ghost">
+              Explore templates
+            </Link>
+            <Link to="/builder" target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
+              Prompt builder
             </Link>
             <Link to="/palettes" className="btn btn-ghost">
               Explore palettes
@@ -157,6 +181,24 @@ export function Home() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* ——— Templates: one of each format, from different styles ——— */}
+      <section className="wrap pb-20" aria-labelledby="templates-title">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="templates-title" className="text-h2 font-bold">
+              Templates
+            </h2>
+            <p className="mt-3 max-w-xl text-muted">Magazine covers, posters, flyers and thumbnails, each designed in the look of its style. Change the words, then take one to the builder.</p>
+          </div>
+          <Link to="/templates" className="inline-flex items-center gap-1.5 text-[0.9375rem] underline-offset-4 hover:underline">
+            All templates <ArrowRight size={16} aria-hidden />
+          </Link>
+        </div>
+        <Suspense fallback={<HomeTemplateTilesPlaceholder />}>
+          <HomeTemplateTiles />
+        </Suspense>
       </section>
 
       {/* ——— How it works: an ordered list, since the steps are a real sequence ——— */}

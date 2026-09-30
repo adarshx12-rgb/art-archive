@@ -1,9 +1,9 @@
 import { Aperture, Clapperboard, ChevronUp, Check, ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fontSuggestions } from "../content/fonts";
-import { palettes } from "../content/palettes";
 import type { Hex, PaletteSize, StyleRecord } from "../content/types";
 import { styleSuggestions, type SuggestedPalette } from "../lib/prompt/suggest";
+import type { AiResult, SchemesReply } from "../lib/ai";
 import { useGooglePreview } from "./FontSuggestions";
 import type { ResolvedPalette } from "../lib/prompt/compose";
 import {
@@ -89,15 +89,12 @@ export interface PresetBarProps {
   /** Use exactly these colours, as a custom palette. */
   onColours: (hexes: Hex[]) => void;
   onCustom: () => void;
-  /** Ask the AI for a palette; resolves to a note to show, or an error message. */
-  onAiPalette?: (request: string) => Promise<{ ok: boolean; message: string }>;
+  /** Ask for 2, 3 and 4-colour schemes for the style, optionally for a mood. */
+  onAiSchemes?: (request: string) => Promise<AiResult<SchemesReply>>;
 }
 
 /** Cinema-style quick settings under the sketch. Each pill opens a panel of choices. */
-export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onColours, onCustom, onAiPalette }: PresetBarProps) {
-  const [mood, setMood] = useState("");
-  const [asking, setAsking] = useState(false);
-  const [aiNote, setAiNote] = useState<{ ok: boolean; message: string } | null>(null);
+export function PresetBar({ state, style, palette, keepColours, keepComposition, set, onStylePalette, onCurated, onColours, onCustom, onAiSchemes }: PresetBarProps) {
   const [open, setOpen] = useState<PresetId | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -192,48 +189,7 @@ export function PresetBar({ state, style, palette, keepColours, keepComposition,
                       Custom colours…
                     </button>
                   </div>
-                  {onAiPalette && (
-                    <form
-                      className="rounded-lg border border-rule p-2"
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        if (!mood.trim() || asking) return;
-                        setAsking(true);
-                        setAiNote(await onAiPalette(mood.trim()));
-                        setAsking(false);
-                      }}
-                    >
-                      <label htmlFor="ai-mood" className="meta mb-1 block text-muted">
-                        Suggest {state.count === 1 ? "a background colour" : `${state.count} colours`}
-                      </label>
-                      <div className="flex gap-2">
-                        <input id="ai-mood" value={mood} maxLength={400} onChange={(e) => setMood(e.target.value)} placeholder="e.g. misty harbour at dawn, calm and cold" className="field min-w-0 flex-1 py-1.5 text-sm" />
-                        <button type="submit" className="btn btn-sm btn-primary" disabled={asking || !mood.trim()}>
-                          <Sparkles size={14} aria-hidden />
-                          {asking ? "Thinking…" : "Suggest"}
-                        </button>
-                      </div>
-                      {aiNote && <p className={`mt-1.5 text-sm ${aiNote.ok ? "text-muted" : "text-alert"}`} role="status">{aiNote.message}</p>}
-                    </form>
-                  )}
-                  <p className="meta text-muted">All curated palettes</p>
-                  <ul className="grid gap-1.5 sm:grid-cols-2">
-                    {palettes.map((p) => {
-                      const on = state.paletteMode === "curated" && state.palette === p.slug;
-                      return (
-                        <li key={p.slug}>
-                          <button type="button" aria-pressed={on} onClick={() => onCurated(p.slug)} className={`flex w-full items-center gap-2 rounded-lg border p-1.5 text-left text-sm ${on ? "border-ink bg-field" : "border-rule hover:border-rule-strong"}`}>
-                            <span className="flex h-6 w-16 shrink-0 overflow-hidden rounded" aria-hidden>
-                              {p.colours.map((c) => (
-                                <span key={c.hex} style={{ background: c.hex, flex: c.share }} />
-                              ))}
-                            </span>
-                            <span className="truncate">{p.name}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  {onAiSchemes && <SchemeSuggestions style={style} state={state} onAsk={onAiSchemes} onPick={onColours} />}
                 </>
               )}
             </div>
@@ -335,5 +291,69 @@ function StyleSuggestions({ state, style, onPick }: { state: BuilderState; style
         )}
       </div>
     </section>
+  );
+}
+
+/** Asks for three fresh schemes (2, 3 and 4 colours) true to the style; click one to use it. */
+function SchemeSuggestions({ style, state, onAsk, onPick }: { style: StyleRecord; state: BuilderState; onAsk: (request: string) => Promise<AiResult<SchemesReply>>; onPick: (hexes: Hex[]) => void }) {
+  const [mood, setMood] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [result, setResult] = useState<AiResult<SchemesReply> | null>(null);
+  // Schemes are made for one style; a different style starts afresh.
+  useEffect(() => setResult(null), [style.slug]);
+  const isOn = (hexes: Hex[]) => state.paletteMode === "custom" && state.count === hexes.length && hexes.every((h, i) => state.custom[i]?.toUpperCase() === h);
+  return (
+    <form
+      className="rounded-lg border border-rule p-2"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (asking) return;
+        setAsking(true);
+        setResult(await onAsk(mood.trim()));
+        setAsking(false);
+      }}
+    >
+      <label htmlFor="scheme-mood" className="meta mb-1 block text-muted">
+        More colour schemes for {style.name} (optional mood or scene)
+      </label>
+      <div className="flex gap-2">
+        <input id="scheme-mood" value={mood} maxLength={400} onChange={(e) => setMood(e.target.value)} placeholder="e.g. misty harbour at dawn, calm and cold" className="field min-w-0 flex-1 py-1.5 text-sm" />
+        <button type="submit" className="btn btn-sm btn-primary shrink-0" disabled={asking}>
+          <Sparkles size={14} aria-hidden />
+          {asking ? "Thinking…" : "Suggest colour schemes"}
+        </button>
+      </div>
+      {result && !result.ok && (
+        <p className="mt-1.5 text-sm text-alert" role="status">
+          {result.error}
+        </p>
+      )}
+      {result?.ok && (
+        <ul className="mt-2 grid gap-1.5" role="status" aria-label="Suggested colour schemes">
+          {result.data.schemes.map((sc) => {
+            const hexes = sc.colours.map((c) => c.hex);
+            const on = isOn(hexes);
+            return (
+              <li key={hexes.join()}>
+                <button type="button" aria-pressed={on} onClick={() => onPick(hexes)} className={`flex w-full items-center gap-2 rounded-lg border p-1.5 text-left text-sm ${on ? "border-ink bg-field" : "border-rule hover:border-rule-strong"}`}>
+                  <span className="flex h-8 w-20 shrink-0 overflow-hidden rounded border border-swatch-edge" aria-hidden>
+                    {sc.colours.map((c) => (
+                      <span key={c.hex} className="flex-1" style={{ background: c.hex }} title={`${c.name} ${c.hex}`} />
+                    ))}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">
+                      {sc.name} <span className="meta font-normal text-muted">· {sc.colours.length} colours</span>
+                    </span>
+                    <span className="block text-muted">{sc.why}</span>
+                  </span>
+                  {on && <Check size={13} className="ml-auto shrink-0" aria-hidden />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </form>
   );
 }

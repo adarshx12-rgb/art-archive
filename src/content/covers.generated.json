@@ -1,4 +1,12 @@
 {
+  "70s-retro": [
+    {
+      "src": "/covers/70s-retro.webp",
+      "file": "70s-retro.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "acid": [
     {
       "src": "/covers/acid.webp",
@@ -19,6 +27,14 @@
     {
       "src": "/covers/art-nouveau.webp",
       "file": "art-nouveau.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "baroque-tenebrism": [
+    {
+      "src": "/covers/baroque-tenebrism.webp",
+      "file": "baroque-tenebrism.png",
       "width": 1024,
       "height": 1536
     }
@@ -95,6 +111,14 @@
       "height": 1536
     }
   ],
+  "cyberpunk": [
+    {
+      "src": "/covers/cyberpunk.webp",
+      "file": "cyberpunk.png",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
   "deconstructivism": [
     {
       "src": "/covers/deconstructivism.webp",
@@ -169,6 +193,14 @@
       "height": 1080
     }
   ],
+  "luxury-minimal": [
+    {
+      "src": "/covers/luxury-minimal.webp",
+      "file": "luxury-minimal.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "maximalism": [
     {
       "src": "/covers/maximalism.webp",
@@ -239,6 +271,14 @@
       "height": 1536
     }
   ],
+  "retro": [
+    {
+      "src": "/covers/retro.webp",
+      "file": "retro.png",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
   "steampunk": [
     {
       "src": "/covers/steampunk.webp",
@@ -275,6 +315,14 @@
     {
       "src": "/covers/synthwave.webp",
       "file": "synthwave.png",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "type-doodles": [
+    {
+      "src": "/covers/type-doodles.webp",
+      "file": "type-doodle.png",
       "width": 1080,
       "height": 1080
     }

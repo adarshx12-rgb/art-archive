@@ -1,4 +1,4 @@
-"""Convert the cover PNGs in public/covers to WebP and write the manifest.
+"""Convert the cover PNGs in covers-src to WebP in public/covers and write the manifest.
 
     python scripts/covers.py
 
@@ -6,6 +6,7 @@ Files are named after the style slug, optionally with a number:
 `gothic.png`, or `gothic1.png`, `gothic2.png`, `gothic3.png`. Image 2 is the
 main cover (or the unnumbered file, or the lowest number) unless MAIN below
 says otherwise; the rest are shown as similar covers on the style page.
+The PNGs stay out of public/ so builds don't ship them; git ignores them.
 Needs Pillow.
 """
 import json
@@ -15,6 +16,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
+SOURCE = ROOT / "covers-src"
 COVERS = ROOT / "public" / "covers"
 MANIFEST = ROOT / "src" / "content" / "covers.generated.json"
 MAX = (1080, 1536)
@@ -26,6 +28,7 @@ ALIASES = {
     "vapourwave": "vaporwave",
     "cyperpop": "cyberpop",
     "future-punk": "future-funk",
+    "type-doodle": "type-doodles",
     "web-2-0": "web-2-0-gloss",
 }
 
@@ -42,7 +45,11 @@ def rank(n, main=2):
 
 
 groups = {}
-for png in sorted(COVERS.glob("*.png")):
+pngs = sorted(SOURCE.glob("*.png"))
+# The WebPs are rebuilt from scratch below, so never run without the originals.
+if not pngs:
+    raise SystemExit(f"No PNGs in {SOURCE}; nothing changed.")
+for png in pngs:
     # A trailing number after a letter is an image number; "web-1-0" is a slug.
     m = re.fullmatch(r"(.*[^-\d])(\d+)", png.stem)
     name, num = (m[1], int(m[2])) if m else (png.stem, None)

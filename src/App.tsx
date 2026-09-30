@@ -42,6 +42,7 @@ const router = createBrowserRouter([
       // Route-level code splitting: each page loads its own chunk on first visit.
       { path: "styles", lazy: async () => ({ Component: (await import("./pages/Styles")).Styles }) },
       { path: "styles/:slug", lazy: async () => ({ Component: (await import("./pages/StyleDetail")).StyleDetail }) },
+      { path: "templates", lazy: async () => ({ Component: (await import("./pages/Templates")).Templates }) },
       { path: "palettes", lazy: async () => ({ Component: (await import("./pages/Palettes")).Palettes }) },
       { path: "palettes/:slug", lazy: async () => ({ Component: (await import("./pages/PaletteDetail")).PaletteDetail }) },
       { path: "saved", lazy: async () => ({ Component: (await import("./pages/Saved")).Saved }) },

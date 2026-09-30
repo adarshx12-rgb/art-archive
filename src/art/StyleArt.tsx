@@ -67,6 +67,7 @@ export function StyleArt({ style, colours, className = "", eager = false, label 
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           className={`h-full w-full object-cover ${zoom ? "art-zoom" : ""}`}
+          style={{ objectPosition: "var(--focus, 50% 50%)", transformOrigin: "var(--focus, 50% 50%)", scale: "var(--zoom, 1)" }}
         />
         {label && <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">Cover image</span>}
       </div>

@@ -16,7 +16,9 @@
   },
   "vars": {
     // Tried in order through OpenRouter; OpenRouter switches on outages and rate limits.
-    "OPENROUTER_MODELS": "google/gemini-3.8-flash,anthropic/claude-sonnet-5",
+    "OPENROUTER_MODELS": "google/gemini-3.8-flash,moonshotai/kimi-k3,anthropic/claude-sonnet-5",
+    // Writing the final prompt: Kimi K3 wrote the most faithful, best-placed prompts in side-by-side tests.
+    "OPENROUTER_PROMPT_MODELS": "moonshotai/kimi-k3,google/gemini-3.8-flash,anthropic/claude-sonnet-5",
     // Last resort, called on Anthropic directly if OpenRouter is down.
     "AI_MODEL": "claude-sonnet-5",
     // The live address, for OpenRouter's app attribution.

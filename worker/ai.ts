@@ -30,6 +30,12 @@ export interface AskOptions<T extends z.ZodType> {
   effort: Effort;
   /** Skip models before this position in the chain. */
   from?: number;
+  /** Milliseconds to wait for one model. Visitor-facing calls keep the default; offline scripts can wait longer. */
+  timeout?: number;
+  /** Output token cap, thinking included. */
+  maxTokens?: number;
+  /** This task's own comma-separated OpenRouter model order; empty uses OPENROUTER_MODELS. */
+  models?: string;
 }
 
 export interface Usage {
@@ -69,19 +75,23 @@ const list = (s?: string) =>
     .map((m) => m.trim())
     .filter(Boolean);
 
-/** The models to try, in order. A dev-only override pins a single model (for comparing models in evals). */
-export function chain(env: Env, override?: string | null): Target[] {
+/**
+ * The models to try, in order. A task can bring its own OpenRouter order (models);
+ * a dev-only override pins a single model (for comparing models in evals).
+ */
+export function chain(env: Env, override?: string | null, models?: string): Target[] {
   if (override && env.ALLOW_MODEL_OVERRIDE === "1") {
     return [override.includes("/") ? { kind: "openrouter", model: override } : { kind: "anthropic", model: override }];
   }
   const targets: Target[] = [];
-  if (env.OPENROUTER_API_KEY) for (const model of list(env.OPENROUTER_MODELS)) targets.push({ kind: "openrouter", model });
+  const order = list(models).length ? list(models) : list(env.OPENROUTER_MODELS);
+  if (env.OPENROUTER_API_KEY) for (const model of order) targets.push({ kind: "openrouter", model });
   if (env.ANTHROPIC_API_KEY) targets.push({ kind: "anthropic", model: env.AI_MODEL || "claude-sonnet-5" });
   return targets;
 }
 
 export async function ask<T extends z.ZodType>(env: Env, opts: AskOptions<T>, override?: string | null): Promise<AskResult<z.infer<T>>> {
-  const targets = chain(env, override);
+  const targets = chain(env, override, opts.models);
   if (!targets.length) throw new AiError("This isn’t set up on this server yet.", 503, false);
   let last: AiError | null = null;
   let i = opts.from ?? 0;
@@ -162,14 +172,20 @@ async function openRouter<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mo
         // Only use providers that honour the schema.
         provider: { require_parameters: true },
         reasoning: { effort: opts.effort },
-        max_tokens: 16000,
+        max_tokens: opts.maxTokens ?? 16000,
       }),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(opts.timeout ?? 45_000),
     });
   } catch {
     throw new AiError("Couldn’t reach the AI service. Try again.", 504);
   }
-  const body = (await res.json().catch(() => ({}))) as ChatResponse;
+  // A timeout can also land while the body is still arriving; say so rather than "empty".
+  let body: ChatResponse;
+  try {
+    body = (await res.json()) as ChatResponse;
+  } catch {
+    throw new AiError(res.ok ? "The AI took too long to answer. Try again." : "The AI service had a problem. Try again.", 504);
+  }
   if (res.status === 401 || res.status === 403) throw new AiError("This isn’t set up correctly on this server.", 503);
   if (res.status === 402) throw new AiError("The AI account is out of credit.", 503);
   if (res.status === 429) throw new AiError("The AI is busy right now. Try again in a minute.", 429);
@@ -208,11 +224,11 @@ function parseReply<T extends z.ZodType>(content: string | null | undefined, sch
 // ——— Anthropic (direct, last resort) ———
 
 async function anthropic<T extends z.ZodType>(env: Env, opts: AskOptions<T>, model: string) {
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: 60_000 });
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: opts.timeout ?? 60_000 });
   try {
     const response = await client.messages.parse({
       model,
-      max_tokens: 16000,
+      max_tokens: opts.maxTokens ?? 16000,
       // The instructions are identical on every call, so cache them.
       cache_control: { type: "ephemeral" },
       system: opts.system,

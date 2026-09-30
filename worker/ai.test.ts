@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { ask, chain } from "./ai";
 import type { Env } from "./env";
+import { suggestSchemes } from "./palette";
 import { perfectPrompt } from "./prompt";
 
 const env = (patch: Partial<Env> = {}): Env =>
@@ -49,6 +50,18 @@ describe("model chain", () => {
   it("lists OpenRouter models in order, then Anthropic directly; skips providers without a key", () => {
     expect(chain(env()).map((t) => `${t.kind}:${t.model}`)).toEqual(["openrouter:google/gemini-3.8-flash", "openrouter:anthropic/claude-sonnet-5", "anthropic:claude-sonnet-5"]);
     expect(chain(env({ OPENROUTER_API_KEY: undefined })).map((t) => t.kind)).toEqual(["anthropic"]);
+  });
+
+  it("lets a task use its own OpenRouter model order", () => {
+    expect(chain(env(), null, "moonshotai/kimi-k3,google/gemini-3.8-flash").map((t) => t.model)).toEqual(["moonshotai/kimi-k3", "google/gemini-3.8-flash", "claude-sonnet-5"]);
+    // An empty task list falls back to the site-wide order.
+    expect(chain(env(), null, "").map((t) => t.model)).toEqual(["google/gemini-3.8-flash", "anthropic/claude-sonnet-5", "claude-sonnet-5"]);
+  });
+
+  it("sends a task's own model order to OpenRouter", async () => {
+    const calls = fakeFetch({ openrouter: () => openRouterReply('{"answer":"hi"}', "moonshotai/kimi-k3") });
+    await ask(env(), { ...opts, models: "moonshotai/kimi-k3,google/gemini-3.8-flash" });
+    expect(calls[0]!.body.models).toEqual(["moonshotai/kimi-k3", "google/gemini-3.8-flash"]);
   });
 
   it("only honours a pinned model when overrides are allowed", () => {
@@ -112,10 +125,53 @@ describe("prompt task", () => {
     expect(r.prompt).toBe(complete);
   });
 
+  it("writes prompts with the prompt task's own model order", async () => {
+    const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: complete }), "moonshotai/kimi-k3") });
+    const r = await perfectPrompt(env({ OPENROUTER_PROMPT_MODELS: "moonshotai/kimi-k3,google/gemini-3.8-flash" }), { query });
+    expect(calls[0]!.body.models).toEqual(["moonshotai/kimi-k3", "google/gemini-3.8-flash"]);
+    expect(r.model).toBe("moonshotai/kimi-k3");
+  });
+
+  it("strips stray characters a model leaves at the end", async () => {
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: complete + "”}" })) });
+    expect((await perfectPrompt(env(), { query })).prompt).toBe(complete);
+  });
+
+  it("keeps a closing quote that belongs to quoted lettering", async () => {
+    const quoted = complete.replace("Avoid: bright pastels.", 'Letter exactly "ELSEWHERE"');
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: quoted })) });
+    expect((await perfectPrompt(env(), { query })).prompt).toBe(quoted);
+  });
+
   it("keeps the first model's prompt when it is complete", async () => {
     const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: complete })) });
     const r = await perfectPrompt(env(), { query });
     expect(r).toMatchObject({ warnings: [], model: "google/gemini-3.8-flash" });
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe("colour schemes", () => {
+  const scheme = (n: number, name: string) => ({
+    name,
+    colours: ["#1a1a1a", "#c9a24b", "#f2ead8", "#2f5d50"].slice(0, n).map((hex, i) => ({ hex, name: `colour ${i}` })),
+    why: "Suits the style.",
+  });
+
+  it("returns one 2, 3 and 4-colour scheme with roles, whatever order the model uses", async () => {
+    const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ schemes: [scheme(4, "Four"), scheme(2, "Two"), scheme(3, "Three")] })) });
+    const out = await suggestSchemes(env(), { style: "art-deco", request: "" });
+    expect(out.schemes.map((s) => [s.name, s.colours.length])).toEqual([["Two", 2], ["Three", 3], ["Four", 4]]);
+    expect(out.schemes[2]!.colours.map((c) => c.role)).toEqual(["background", "primary", "secondary", "accent"]);
+    expect(out.schemes[0]!.colours[0]!.hex).toBe("#1A1A1A");
+    expect(JSON.stringify(calls[0]!.body)).toContain("Art Deco");
+  });
+
+  it("drops schemes with bad colours and fails when none are left", async () => {
+    const bad = { name: "Bad", colours: [{ hex: "nope", name: "x" }, { hex: "#000000", name: "y" }], why: "" };
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ schemes: [bad, scheme(3, "Three")] })) });
+    expect((await suggestSchemes(env(), { style: "art-deco", request: "" })).schemes.map((s) => s.name)).toEqual(["Three"]);
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ schemes: [bad] })) });
+    await expect(suggestSchemes(env(), { style: "art-deco", request: "" })).rejects.toThrow(/colour schemes/);
   });
 });

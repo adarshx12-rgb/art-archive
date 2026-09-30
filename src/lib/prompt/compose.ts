@@ -1,6 +1,7 @@
 import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
-import type { Hex, PaletteRole, PaletteSize, StyleRecord } from "../../content/types";
+import { fillPrompt, formatInfo, getTemplate, slotText } from "../../content/templates";
+import type { Hex, PaletteRole, PaletteSize, StyleRecord, TemplateFormat } from "../../content/types";
 import { describeHex } from "../color";
 import {
   angleOptions,
@@ -167,7 +168,9 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const keepColours = preserve.has("colours");
   const keepTiming = isVideo && preserve.has("timing");
   // Text placed on the sketch, then any still in the box. It replaces the source's lettering, so "keep existing text" no longer applies.
-  const texts = [...new Set([...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), cleanText(state.text)].filter(Boolean))];
+  const template = state.template ? getTemplate(style.slug, state.template) : undefined;
+  const templateWords = template ? Object.values(slotText(template, state.templateText)) : [];
+  const texts = [...new Set([...templateWords, ...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), cleanText(state.text)].filter(Boolean))];
   if (texts.length && preserve.delete("text")) notes.push("The text you typed replaces the source’s lettering, so “Text & logos” is not preserved.");
 
   const lines: string[] = [];
@@ -251,6 +254,11 @@ export function composePrompt(state: BuilderState): ComposeResult {
     // e.g. "a medium shot …, from a low angle looking up, on a 35mm lens …"
     const parts = [shot, angle, lens && `${shot || angle ? "on" : "shot on"} ${lens}`].filter(Boolean);
     add("Shot", `${parts.join(", ")}.`);
+  }
+
+  // 5b2. Design template: where the masthead, headline and image go
+  if (template && !keepComposition) {
+    add("Design", `a ${formatInfo(template.format).label.toLowerCase()} layout. ${fillPrompt(template, state.templateText)}`);
   }
 
   // 5c. Layout of subjects placed on the sketch
@@ -341,6 +349,20 @@ export function themeState(style: StyleRecord, output: "image" | "video"): Build
     actors: [],
     view: "3d",
     orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
+    template: null,
+    templateText: {},
+  };
+}
+
+/** Builder settings for a style's design template: a new image in the style's four colours, framed for the format. */
+export function templateState(style: StyleRecord, format: TemplateFormat, templateText: Record<string, string>): BuilderState {
+  return {
+    ...themeState(style, "image"),
+    task: "create",
+    preserve: [],
+    aspect: formatInfo(format).aspect,
+    template: format,
+    templateText,
   };
 }
 

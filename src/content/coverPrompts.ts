@@ -12,7 +12,7 @@ export interface CoverPrompt {
   /** e.g. "tall 2:3" */
   format: string;
   prompt: string;
-  /** The image in public/covers this prompt made, e.g. "gothic2.png". */
+  /** The original in covers-src this prompt made, e.g. "gothic2.png". */
   cover?: string;
   /** Follow-up to send when the first result misses. */
   ifItMisses?: string;
@@ -29,7 +29,7 @@ export function parseCoverPrompts(md: string): CoverPrompt[] {
       artwork: section.match(/^- Artwork: (.+)$/m)?.[1]?.trim() ?? "",
       format: section.match(/^- Format: (.+)$/m)?.[1]?.trim() ?? "",
       prompt,
-      cover: section.match(/^- Cover: `public\/covers\/([^`]+)`/m)?.[1],
+      cover: section.match(/^- Cover: `covers-src\/([^`]+)`/m)?.[1],
       ifItMisses: section.match(/^\*\*If it misses:\*\* (.+)$/m)?.[1]?.trim(),
     });
   }

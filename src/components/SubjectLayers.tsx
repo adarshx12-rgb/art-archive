@@ -39,13 +39,13 @@ export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onSelec
         <div>
           <p className="meta mb-1.5 text-muted">Nearest the camera first. The nearest is the main subject; move subjects to change it.</p>
           {/* Compact chips that wrap, so many subjects take little room. */}
-          <ol className="flex flex-wrap gap-1.5">
+          <ol className="flex min-w-0 flex-wrap gap-1.5">
             {subjects.map((l, i) => {
               const on = l.id === selectedId;
               const main = l.id === mainId;
               const tag = l.text ? "T" : main ? "main" : i + 1;
               return (
-                <li key={l.id} className={`flex max-w-full items-center rounded-full border pl-0.5 ${on ? "border-[#4E9BFF] bg-field" : "border-rule"}`}>
+                <li key={l.id} className={`flex max-w-full min-w-0 items-center rounded-full border pl-0.5 ${on ? "border-[#4E9BFF] bg-field" : "border-rule"}`}>
                   <button
                     type="button"
                     onClick={() => onSelect(l.id)}
@@ -63,7 +63,7 @@ export function SubjectLayers({ draft, subjects, selectedId, onAddDraft, onSelec
                     onFocus={() => onSelect(l.id)}
                     onChange={(e) => onRename(l.id, e.target.value)}
                     style={{ fieldSizing: "content" } as React.CSSProperties}
-                    className={`min-w-[3ch] max-w-full bg-transparent py-1 pl-1 text-sm outline-none ${l.text ? "font-semibold" : ""}`}
+                    className={`min-w-[3ch] max-w-full shrink truncate bg-transparent py-1 pl-1 text-sm outline-none ${l.text ? "font-semibold" : ""}`}
                   />
                   <button type="button" onClick={() => onDelete(l.id)} className="shrink-0 p-1 pr-1.5 text-muted hover:text-ink" aria-label={`Remove ${l.label}`}>
                     <X size={12} aria-hidden />

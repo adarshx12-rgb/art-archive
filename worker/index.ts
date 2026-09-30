@@ -2,7 +2,8 @@ import { z } from "zod";
 import { angleOptions, compositionOptions, lensOptions, lightingOptions, shotOptions } from "../src/lib/prompt/options";
 import { AiError } from "./ai";
 import type { Env } from "./env";
-import { PaletteRequest, suggestPalette } from "./palette";
+import { SchemesRequest, suggestSchemes } from "./palette";
+import { guide, GuideRequest } from "./guide";
 import { perfectPrompt, PromptRequest } from "./prompt";
 import { buildScene, SceneRequest } from "./scene";
 
@@ -11,8 +12,9 @@ import { buildScene, SceneRequest } from "./scene";
  * only /api/* reaches this code (see wrangler.jsonc).
  *
  *   POST /api/scene    text or instruction  -> 3D scene
- *   POST /api/palette  mood                 -> 2-4 colours
+ *   POST /api/schemes  style (+ mood)       -> a 2, 3 and 4-colour scheme
  *   POST /api/prompt   builder settings     -> checked, polished prompt
+ *   POST /api/guide    builder settings     -> ideas for the template design
  */
 
 const MAX_BODY = 32_000;
@@ -66,15 +68,20 @@ async function handle(request: Request, env: Env): Promise<Response> {
       if (!body.success) return fail("That scene request isn’t valid.", 400);
       return json(await buildScene(env, body.data, body.data.settings, override));
     }
-    case "/api/palette": {
-      const body = PaletteRequest.safeParse(raw);
-      if (!body.success) return fail("That palette request isn’t valid.", 400);
-      return json(await suggestPalette(env, body.data, override));
+    case "/api/schemes": {
+      const body = SchemesRequest.safeParse(raw);
+      if (!body.success) return fail("That colour scheme request isn’t valid.", 400);
+      return json(await suggestSchemes(env, body.data, override));
     }
     case "/api/prompt": {
       const body = PromptRequest.safeParse(raw);
       if (!body.success) return fail("That prompt request isn’t valid.", 400);
       return json(await perfectPrompt(env, body.data, override));
+    }
+    case "/api/guide": {
+      const body = GuideRequest.safeParse(raw);
+      if (!body.success) return fail("That request isn’t valid.", 400);
+      return json(await guide(env, body.data, override));
     }
     default:
       return fail("Not found.", 404);

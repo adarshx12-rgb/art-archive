@@ -81,6 +81,8 @@ export interface StyleRecord {
   summary: string;
   /** Two–four sentences for the detail page. Visual, not historical claims. */
   about: string;
+  /** The short description at the top of the style page (content/styles/descriptions.ts). */
+  description: string;
   /** Optional caveat, e.g. when a label is used inconsistently online. */
   note?: string;
   tags: string[];
@@ -157,4 +159,67 @@ export interface ReferenceImage {
   sourceName: "Wikimedia Commons";
   /** Always false for real references; placeholders are SVG studies. */
   placeholder: false;
+}
+
+// ——— Design templates (content/templates.ts) ———
+
+export type TemplateFormat = "magazine" | "poster" | "flyer" | "thumbnail";
+
+export type TemplateBlockKind = "masthead" | "headline" | "subhead" | "coverline" | "body" | "cta" | "meta" | "image" | "shape";
+
+/** A palette role, or one of two neutrals every template may use for type: ink (near-black) and paper (off-white). */
+export type TemplateColour = PaletteRole | "ink" | "paper";
+
+export type TemplateShape = "rect" | "circle" | "line" | "arc" | "stripes" | "sunburst" | "frame";
+
+/** One element of a template. Positions and sizes are fractions of the canvas (0–1). */
+export interface TemplateBlock {
+  id: string;
+  kind: TemplateBlockKind;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Degrees, clockwise. */
+  rotate?: number;
+  /** Text blocks: sample words, and the field name visitors fill in ("Headline"). */
+  text?: string;
+  label?: string;
+  font?: string;
+  weight?: number;
+  /** Font size (1 em) as a fraction of the canvas height. */
+  size?: number;
+  align?: "left" | "center" | "right";
+  upper?: boolean;
+  /** Letter spacing in em. */
+  tracking?: number;
+  /** Line height as a multiple of the size. */
+  leading?: number;
+  italic?: boolean;
+  colour?: TemplateColour;
+  /** Shapes and image frames. */
+  shape?: TemplateShape;
+  fill?: TemplateColour;
+  stroke?: TemplateColour;
+  opacity?: number;
+  /** Image areas: which part of the picture to keep when cropping, 0 = top, 0.5 = middle, 1 = bottom. */
+  focus?: number;
+  /** Image areas: the same, across: 0 = left, 0.5 = centre, 1 = right. */
+  focusX?: number;
+  /** Image areas: how far to zoom in on the focus (1 = fit the area). */
+  zoom?: number;
+}
+
+export interface StyleTemplate {
+  style: string;
+  format: TemplateFormat;
+  /** A short name for the layout, e.g. "Sunburst masthead". */
+  name: string;
+  /** Why the layout works for the style and format, 3–4 short notes. */
+  notes: string[];
+  background: TemplateColour;
+  /** Drawn in order: the first is at the back. */
+  blocks: TemplateBlock[];
+  /** Layout direction for image prompts; {id} slots are filled with the block's text. */
+  prompt: string;
 }

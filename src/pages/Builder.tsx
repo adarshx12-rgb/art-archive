@@ -7,13 +7,16 @@ import { CopyButton } from "../components/actions";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PresetBar } from "../components/PresetBar";
 import { SubjectLayers } from "../components/SubjectLayers";
+import { TemplateIdeas } from "../components/TemplateIdeas";
+import { TemplatePreview, useTemplateFonts } from "../components/TemplatePreview";
 import { TransformPanel } from "../components/TransformPanel";
 import { site } from "../config/site";
 import { kindLabels } from "../content/facets";
 import { palettes, getPalette } from "../content/palettes";
 import { getStyle, styles } from "../content/styles";
-import type { Hex, PaletteSize, StyleKind } from "../content/types";
-import { aiPalette, aiPrompt, aiScene } from "../lib/ai";
+import { formatInfo, getTemplate, roleColours, styleColours, templatesFor, textSlots } from "../content/templates";
+import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/types";
+import { aiGuide, aiPrompt, aiScene, aiSchemes, type Idea } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
@@ -39,7 +42,7 @@ import { useToast } from "../state/toast";
 
 function Group({ legend, children, hint, id }: { legend: string; children: React.ReactNode; hint?: React.ReactNode; id?: string }) {
   return (
-    <fieldset className="border-t border-rule py-5" id={id}>
+    <fieldset className="min-w-0 border-t border-rule py-5" id={id}>
       <legend className="float-left mb-3 w-full text-[0.9375rem] font-semibold">{legend}</legend>
       <div className="clear-both">
         {children}
@@ -228,6 +231,9 @@ export function Builder() {
   const composed = useMemo(() => composePrompt(state), [state]);
   const palette = resolvePalette(state, style);
   // A 1-colour palette is the background only; the sketch fills the other roles with the style's colours.
+  const template = state.template ? getTemplate(style.slug, state.template) : undefined;
+  const styleTemplates = templatesFor(style.slug);
+  useTemplateFonts(template ? [template] : []);
   const sketchColours = palette.colours.length === 1 ? [palette.colours[0]!, ...resolvePalette({ ...state, paletteMode: "style", count: 4 }, style).colours.slice(1)] : palette.colours;
   const prompt = edited ? text : composed.prompt;
   const staleEdit = edited && basis !== composed.prompt;
@@ -310,7 +316,11 @@ export function Builder() {
       const st = getStyle(slug)!;
       // Custom colours stay yours; only reseed them if you haven't customised.
       const custom = s.paletteMode === "custom" ? s.custom : (st.swatches.map((w) => w.hex) as BuilderState["custom"]);
-      return { ...s, style: slug, custom };
+      // Keep the layout if the new style has the same format; its words carry over only if the blocks match.
+      const next = s.template ? getTemplate(slug, s.template) : undefined;
+      const slots = new Set(next ? textSlots(next).map((b) => b.id) : []);
+      const templateText = Object.fromEntries(Object.entries(s.templateText).filter(([id]) => slots.has(id)));
+      return { ...s, style: slug, custom, template: next ? s.template : null, templateText };
     });
 
   /** Copy the colours currently in use into editable custom slots. Curated entries are never modified. */
@@ -450,6 +460,44 @@ export function Builder() {
     return true;
   };
 
+  // ——— Design templates ———
+  /** Use one of the style's layouts (or none); the frame takes the format's aspect ratio. */
+  const chooseTemplate = (format: TemplateFormat | null) =>
+    setState((s) => ({ ...s, template: format, templateText: {}, ...(format ? { aspect: formatInfo(format).aspect } : {}) }));
+  const [ideas, setIdeas] = useState<{ list: Idea[]; key: string } | null>(null);
+  const [ideasBusy, setIdeasBusy] = useState(false);
+  /** Changes whenever the design does, so ideas can say they're out of date. */
+  const designKey = template ? encodeState(state).toString() : "";
+  const loadIdeas = async () => {
+    if (!template) return;
+    const key = designKey;
+    setIdeasBusy(true);
+    const res = await aiGuide(state);
+    setIdeasBusy(false);
+    if (res.ok) setIdeas({ list: res.data.ideas, key });
+    else toast(res.error, "error");
+  };
+  // Fresh ideas each time a layout is picked.
+  const templateKey = template ? `${style.slug}/${template.format}` : "";
+  const ideasFor = useRef("");
+  useEffect(() => {
+    // Once per layout, even when effects run twice in development.
+    if (ideasFor.current === templateKey) return;
+    ideasFor.current = templateKey;
+    setIdeas(null);
+    if (templateKey) void loadIdeas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateKey]);
+  const applyIdea = async (idea: Idea) => {
+    const drop = () => setIdeas((i) => (i ? { ...i, list: i.list.filter((x) => x !== idea) } : i));
+    if (idea.kind === "words") {
+      setState((s) => ({ ...s, templateText: { ...s.templateText, [idea.slot]: idea.words } }));
+      drop();
+      return;
+    }
+    if (await runScene(state.actors.length ? "edit" : "new", idea.instruction)) drop();
+  };
+
   // The flat sketch is the scene seen through the shot camera.
   const camera = shotCamera(state);
   const projected = projectScene(camera, state.actors);
@@ -558,6 +606,42 @@ export function Builder() {
             <Segmented<Task> name="task" value={state.task} onChange={(v) => set("task", v)} options={[{ id: "create", label: "Create new image" }, { id: "restyle", label: "Restyle an image" }]} />
           </Group>
 
+          {styleTemplates.length > 0 && !isRestyle && (
+            <Group legend="Layout" hint={template ? `${template.name}. ${formatInfo(template.format).blurb}` : `Start from a ${style.name} cover, poster, flyer or thumbnail layout.`}>
+              <label htmlFor="layout" className="sr-only">
+                Layout template
+              </label>
+              <select id="layout" className="field" value={template?.format ?? ""} onChange={(e) => chooseTemplate((e.target.value || null) as TemplateFormat | null)}>
+                <option value="">None</option>
+                {styleTemplates.map((t) => (
+                  <option key={t.format} value={t.format}>
+                    {formatInfo(t.format).label}: {t.name}
+                  </option>
+                ))}
+              </select>
+              {template && (
+                <div className="mt-3 space-y-2">
+                  {textSlots(template).map((b) => (
+                    <div key={b.id}>
+                      <label htmlFor={`slot-${b.id}`} className="meta mb-1 block text-muted">
+                        {b.label ?? b.kind}
+                      </label>
+                      <input
+                        id={`slot-${b.id}`}
+                        className="field w-full"
+                        maxLength={TEXT_MAX}
+                        placeholder={b.text?.replace(/\s*\n\s*/g, " / ")}
+                        autoComplete="off"
+                        value={state.templateText[b.id] ?? ""}
+                        onChange={(e) => setState((s) => ({ ...s, templateText: { ...s.templateText, [b.id]: e.target.value } }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Group>
+          )}
+
           <Group legend={isRestyle ? "What’s in your source? (optional)" : "Subject"} hint={`${state.subject.length}/${SUBJECT_MAX} characters`}>
             <label htmlFor="subject" className="sr-only">
               Subject
@@ -593,6 +677,17 @@ export function Builder() {
               onDelete={deleteActor}
               busy={aiBusy === "scene"}
             />
+            {template && (
+              <TemplateIdeas
+                format={formatInfo(template.format).label.toLowerCase()}
+                ideas={ideas?.list ?? null}
+                loading={ideasBusy}
+                stale={Boolean(ideas && ideas.key !== designKey)}
+                busy={aiBusy !== null}
+                onRefresh={() => void loadIdeas()}
+                onApply={(idea) => void applyIdea(idea)}
+              />
+            )}
           </Group>
 
           <Group legend={isRestyle ? "New text (optional)" : "Text in the image (optional)"} hint={state.text ? `${state.text.length}/${TEXT_MAX} characters. Spelled exactly as typed; + places it on the sketch.` : "A title, sign or slogan to letter in the style’s type. + places it on the sketch."}>
@@ -802,7 +897,7 @@ export function Builder() {
             </div>
             <div ref={stageRef} className="relative">
             <div ref={boardRef} className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
-              <div className="overflow-hidden rounded-xl border border-rule">
+              <div className="relative overflow-hidden rounded-xl border border-rule">
                 <Storyboard
                   state={state}
                   layers={projected}
@@ -817,6 +912,16 @@ export function Builder() {
                   onView={lookAround}
                   viewTool={viewTool}
                 />
+                {template && state.aspect === formatInfo(template.format).aspect && (
+                  <TemplatePreview
+                    overlay
+                    template={template}
+                    colours={roleColours(sketchColours, styleColours(style))}
+                    texts={state.templateText}
+                    className="pointer-events-none opacity-90"
+                    label={`${formatInfo(template.format).label} layout over the sketch`}
+                  />
+                )}
               </div>
             </div>
             {selectedActor && side && (
@@ -830,6 +935,16 @@ export function Builder() {
                 ? "Drag the background to look around; Shift-drag or Pan to slide the view. What you see is the shot. "
                 : "A flat board: subjects move, resize and tilt only within the picture. "}
               {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : "Click a subject to move, scale or rotate it."}
+              {template && state.aspect !== formatInfo(template.format).aspect && (
+                <>
+                  {" "}
+                  The {formatInfo(template.format).label.toLowerCase()} layout is {formatInfo(template.format).aspect};{" "}
+                  <button type="button" className="underline underline-offset-2 hover:text-ink" onClick={() => set("aspect", formatInfo(template.format).aspect)}>
+                    switch back
+                  </button>{" "}
+                  to see it over the sketch.
+                </>
+              )}
             </p>
 
             {aiNote && (
@@ -868,16 +983,7 @@ export function Builder() {
                 onCurated={setCurated}
                 onColours={setColours}
                 onCustom={editCustom}
-                onAiPalette={async (request) => {
-                  const res = await aiPalette(state, request);
-                  if (!res.ok) return { ok: false, message: res.error };
-                  setState((s) => {
-                    const custom = [...s.custom] as BuilderState["custom"];
-                    res.data.colours.forEach((c, i) => (custom[i] = c.hex));
-                    return { ...s, paletteMode: "custom", count: res.data.colours.length as PaletteSize, custom };
-                  });
-                  return { ok: true, message: [`${res.data.name}: ${res.data.why}`, ...res.data.warnings].join(" ") };
-                }}
+                onAiSchemes={(request) => aiSchemes(state, request)}
               />
             </div>
 

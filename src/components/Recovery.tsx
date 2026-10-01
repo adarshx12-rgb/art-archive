@@ -15,7 +15,7 @@ export function Recovery({ title, message, suggestions = [], suggestionsLabel = 
   return (
     <div className="wrap py-16 sm:py-24">
       <p className="meta text-muted">Not found</p>
-      <h1 className="mt-3 max-w-4xl text-h1 font-bold">{title}</h1>
+      <h1 className="mt-3 max-w-4xl font-display text-h1 font-normal">{title}</h1>
       <div className="mt-4 max-w-xl text-lg text-muted">{message}</div>
       {suggestions.length > 0 && (
         <div className="mt-10">

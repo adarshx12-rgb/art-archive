@@ -14,6 +14,19 @@ export interface TemplateIssue {
   message: string;
 }
 
+/**
+ * Words that make template copy read as filler or praise instead of saying
+ * what a design choice does. Notes should be plain and specific, e.g. "The
+ * red block keeps the headline readable over the image."
+ */
+export const FILLER_WORDS =
+  /\b(?:quintessential\w*|uncompromising\w*|honou?ring|iconic\w*|seamless\w*|effortless\w*|curated|evok\w*|evocative\w*|authentic\w*|commanding|monumental|masterful\w*|timeless\w*|elevat(?:e|es|ed|ing)|unmistakabl\w*|impeccabl\w*|breathtaking\w*|stunning\w*)\b/gi;
+
+/** The filler words in a piece of copy, lower-cased, in order. */
+export function fillerWords(text: string): string[] {
+  return [...text.matchAll(FILLER_WORDS)].map((m) => m[0].toLowerCase());
+}
+
 /** Average glyph width in em; capitals run wider. */
 const GLYPH = 0.52;
 const CAPS = 0.66;
@@ -123,5 +136,10 @@ export function checkTemplate(t: StyleTemplate, colours: RoleColours): TemplateI
   for (const [, id] of t.prompt.matchAll(/\{([a-z0-9-]+)\}/gi)) {
     if (!texts.some((b) => b.id === id)) issues.push({ message: `The prompt names {${id}}, but no text block has that id.` });
   }
+  for (const [where, text] of [["name", t.name], ...t.notes.map((n, i) => [`note ${i + 1}`, n])] as const) {
+    const found = fillerWords(text);
+    if (found.length) issues.push({ message: `The ${where} uses filler (${found.join(", ")}); say plainly what the design choice does.` });
+  }
+
   return issues;
 }

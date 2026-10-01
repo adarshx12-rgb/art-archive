@@ -2,15 +2,12 @@ import { ArrowRight } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { Link } from "react-router";
 import { ReferenceFigure } from "../art/ReferenceFigure";
-import { StyleArt } from "../art/StyleArt";
+import { artLabel, StyleArt } from "../art/StyleArt";
 import { PaletteCard, StyleCard } from "../components/cards";
-import { QuoteBlock } from "../components/QuoteBlock";
-import { quotesForDay, type Quote } from "../content/quotes";
 import { site } from "../config/site";
-import { featuredPalettes, getPalette } from "../content/palettes";
+import { featuredPalettes } from "../content/palettes";
 import { getReference } from "../content/references";
-import { featuredStyles, getStyle, styles } from "../content/styles";
-import { palettes } from "../content/palettes";
+import { featuredStyles, getStyle } from "../content/styles";
 import { useMeta } from "../lib/useMeta";
 
 // The template tiles load on their own so the template data stays out of the home page's first download.
@@ -30,6 +27,8 @@ function HomeTemplateTilesPlaceholder() {
   );
 }
 
+const secondaryLink = "inline-flex min-h-10 items-center text-[0.9375rem] underline decoration-rule-strong underline-offset-4 hover:decoration-ink";
+
 export function Home() {
   useMeta(null, site.description);
   const collageRef = getReference("schwitters-entrance-ticket")!;
@@ -37,38 +36,45 @@ export function Home() {
   const swiss = getStyle("swiss")!;
   const softClub = getStyle("gen-x-soft-club")!;
   const vapor = getStyle("vaporwave")!;
-  const chipPalette = getPalette("primary-school")!;
-  const [leadQuote, closingQuote] = quotesForDay(2) as [Quote, Quote];
 
   return (
     <>
       {/* ——— Hero ——— */}
       <section className="wrap grid gap-10 pt-10 pb-16 sm:pt-14 lg:grid-cols-12 lg:gap-8 lg:pt-16 lg:pb-24" aria-labelledby="hero-title">
         <div className="flex flex-col lg:col-span-7 lg:pt-6">
-          <h1 id="hero-title" className="enter text-display font-extrabold">
-            Find the look.
-            <br />
-            Make it yours.
+          <h1 id="hero-title" className="enter font-display text-display font-normal tracking-[-0.02em]">
+            Every style leaves <em>clues.</em>
           </h1>
-          <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-muted sm:text-xl">{site.description}</p>
-          <div className="mt-8 flex flex-wrap gap-2">
+          <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-muted sm:text-xl">
+            Here they are, written down: the colours, type, textures and light behind art movements, past decades and internet
+            aesthetics, ready to carry into your own images and video.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link to="/styles" className="btn btn-primary">
               Explore styles
               <ArrowRight size={16} aria-hidden />
             </Link>
-            <Link to="/templates" className="btn btn-ghost">
-              Explore templates
-            </Link>
-            <Link to="/builder" target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
-              Prompt builder
-            </Link>
-            <Link to="/palettes" className="btn btn-ghost">
-              Explore palettes
-            </Link>
+            <ul className="flex flex-wrap gap-x-5" aria-label="More to explore">
+              <li>
+                <Link to="/templates" className={secondaryLink}>
+                  Templates
+                </Link>
+              </li>
+              <li>
+                <Link to="/palettes" className={secondaryLink}>
+                  Palettes
+                </Link>
+              </li>
+              <li>
+                <Link to="/builder" target="_blank" rel="noopener" aria-describedby="new-tab-note" className={secondaryLink}>
+                  Prompt builder
+                </Link>
+              </li>
+            </ul>
           </div>
 
           <div className="pt-14">
-            <p className="meta text-muted">Try a style</p>
+            <p className="meta text-muted">Or start with one you know</p>
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {["bauhaus", "art-deco", "y2k", "cyberminimalism", "psychedelic", "steampunk"].map((slug) => {
                 const s = getStyle(slug)!;
@@ -81,42 +87,31 @@ export function Home() {
                 );
               })}
             </ul>
-            <p className="meta mt-5 text-muted">
-              A three-colour palette: <Link to={`/palettes/${chipPalette.slug}`} className="underline underline-offset-2">{chipPalette.name}</Link>
-            </p>
-            <ul className="mt-2 flex gap-1.5" aria-label={`${chipPalette.name} colours`}>
-              {chipPalette.colours.map((c) => (
-                <li key={c.hex} className="flex items-center gap-2 border border-rule-strong py-1 pr-2.5 pl-1">
-                  <span className="h-5 w-5 border border-swatch-edge" style={{ background: c.hex }} aria-hidden />
-                  <span className="meta">{c.hex}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
 
-        {/* Collage: references are credited; studies are labelled as studies. */}
+        {/* Collage: references are credited; style artwork says what it is (AI-generated or a study). */}
         <div className="grid grid-cols-6 content-start gap-3 sm:gap-4 lg:col-span-5" aria-label="Sample artwork">
           <div className="col-span-3 row-span-2">
             <ReferenceFigure image={collageRef} eager crop="aspect-[900/1085]" compact />
             <p className="meta mt-1 text-ink">Collage Art, reference</p>
           </div>
           <Link to={`/styles/${swiss.slug}`} className="group col-span-3 block">
-            <StyleArt style={swiss} eager zoom label={false} />
+            <StyleArt style={swiss} eager zoom />
             <p className="meta mt-1.5">
-              {swiss.name.split(" / ")[0]}, <span className="text-muted">illustrative study</span>
+              {swiss.name.split(" / ")[0]}, <span className="text-muted">{artLabel(swiss)}</span>
             </p>
           </Link>
           <Link to={`/styles/${softClub.slug}`} className="group col-span-3 block">
-            <StyleArt style={softClub} eager zoom label={false} aspect="aspect-[4/3]" />
+            <StyleArt style={softClub} eager zoom aspect="aspect-[4/3]" />
             <p className="meta mt-1.5">
-              {softClub.name}, <span className="text-muted">illustrative study</span>
+              {softClub.name}, <span className="text-muted">{artLabel(softClub)}</span>
             </p>
           </Link>
           <Link to={`/styles/${vapor.slug}`} className="group col-span-4 block">
-            <StyleArt style={vapor} eager zoom label={false} aspect="aspect-[4/3]" />
+            <StyleArt style={vapor} eager zoom aspect="aspect-[4/3]" />
             <p className="meta mt-1.5">
-              {vapor.name}, <span className="text-muted">illustrative study</span>
+              {vapor.name}, <span className="text-muted">{artLabel(vapor)}</span>
             </p>
           </Link>
           <div className="col-span-2">
@@ -129,34 +124,21 @@ export function Home() {
       {/* ——— Featured aesthetics ——— */}
       <section className="wrap pb-20" aria-labelledby="featured-title">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
-          <h2 id="featured-title" className="text-h2 font-bold">
-            Featured aesthetics
+          <h2 id="featured-title" className="font-display text-h2 font-normal">
+            Start with these
           </h2>
           <Link to="/styles" className="inline-flex items-center gap-1.5 text-[0.9375rem] underline-offset-4 hover:underline">
-            Explore styles ({styles.length}) <ArrowRight size={15} aria-hidden />
+            All styles <ArrowRight size={15} aria-hidden />
           </Link>
         </div>
-        <div className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredStyles.slice(0, 7).map((s, i) =>
-            i === 0 ? (
-              // The lead card spans two rows on large screens; a quote fills the height it leaves free.
-              <div key={s.slug} className="flex flex-col gap-12 sm:col-span-2 lg:row-span-2">
-                <div>
-                  <StyleCard style={s} large />
-                </div>
-                <div className="hidden flex-1 flex-col lg:flex">
-                  <QuoteBlock quote={leadQuote} shape="tall" />
-                </div>
-              </div>
-            ) : (
-              <div key={s.slug}>
-                <StyleCard style={s} />
-              </div>
-            ),
-          )}
-          {/* Completes the last row next to the final two cards. */}
-          <QuoteBlock quote={closingQuote} className="sm:col-span-2" />
-        </div>
+        {/* The lead card spans two columns; the other six fill the rest of its row and one full row. */}
+        <ul className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+          {featuredStyles.slice(0, 7).map((s, i) => (
+            <li key={s.slug} className={i === 0 ? "sm:col-span-2" : undefined}>
+              <StyleCard style={s} large={i === 0} />
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* ——— Palettes ——— */}
@@ -164,7 +146,7 @@ export function Home() {
         <div className="wrap">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
             <div>
-              <h2 id="palette-title" className="text-h2 font-bold">
+              <h2 id="palette-title" className="font-display text-h2 font-normal">
                 Two, three or four colours
               </h2>
               <p className="mt-2 max-w-xl text-muted">
@@ -172,7 +154,7 @@ export function Home() {
               </p>
             </div>
             <Link to="/palettes" className="inline-flex items-center gap-1.5 text-[0.9375rem] underline-offset-4 hover:underline">
-              Explore palettes ({palettes.length}) <ArrowRight size={15} aria-hidden />
+              All palettes <ArrowRight size={15} aria-hidden />
             </Link>
           </div>
           <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -184,13 +166,13 @@ export function Home() {
       </section>
 
       {/* ——— Templates: one of each format, from different styles ——— */}
-      <section className="wrap pb-20" aria-labelledby="templates-title">
+      <section className="wrap pt-16 pb-20" aria-labelledby="templates-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="templates-title" className="text-h2 font-bold">
+            <h2 id="templates-title" className="font-display text-h2 font-normal">
               Templates
             </h2>
-            <p className="mt-3 max-w-xl text-muted">Magazine covers, posters, flyers and thumbnails, each designed in the look of its style. Change the words, then take one to the builder.</p>
+            <p className="mt-3 max-w-xl text-muted">Magazine covers, posters, flyers and thumbnails, laid out in the manner of each style. Put your own words in, then take one to the builder.</p>
           </div>
           <Link to="/templates" className="inline-flex items-center gap-1.5 text-[0.9375rem] underline-offset-4 hover:underline">
             All templates <ArrowRight size={16} aria-hidden />
@@ -201,27 +183,6 @@ export function Home() {
         </Suspense>
       </section>
 
-      {/* ——— How it works: an ordered list, since the steps are a real sequence ——— */}
-      <section className="wrap py-20" aria-labelledby="steps-title">
-        <h2 id="steps-title" className="text-h2 font-bold">
-          From reference to prompt
-        </h2>
-        <ol className="mt-10 grid gap-8 md:grid-cols-3">
-          {[
-            ["Pick a look", "Browse styles by colour, form and density. Each page lists the textures, lighting and composition that define it.", "/styles", "Explore styles"],
-            ["Choose your colours", "Use the style’s own colours, a curated palette, or your own two to four hex values.", "/palettes", "Explore palettes"],
-            ["Describe and copy", "Add your subject, place it on a rough sketch, then copy, download or share the finished image prompt.", "/builder", "Open the builder"],
-          ].map(([title, body, to, cta]) => (
-            <li key={title} className="border-t border-ink pt-4">
-              <h3 className="text-2xl font-semibold tracking-[-0.02em]">{title}</h3>
-              <p className="mt-2 text-muted">{body}</p>
-              <Link to={to!} {...(to === "/builder" ? { target: "_blank", rel: "noopener", "aria-describedby": "new-tab-note" } : {})} className="mt-3 inline-flex items-center gap-1.5 text-[0.9375rem] underline underline-offset-4">
-                {cta} <ArrowRight size={15} aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </section>
     </>
   );
 }

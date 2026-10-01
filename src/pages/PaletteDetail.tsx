@@ -1,7 +1,7 @@
-import { Pencil, Wand2 } from "lucide-react";
+import { ArrowRight, Pencil } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { PaletteArt } from "../art/PaletteArt";
-import { StyleArt } from "../art/StyleArt";
+import { artLabel, StyleArt } from "../art/StyleArt";
 import { CopyButton, SaveButton } from "../components/actions";
 import { StyleCard } from "../components/cards";
 import { Recovery } from "../components/Recovery";
@@ -63,13 +63,13 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <header className="wrap grid gap-8 pt-8 pb-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-5">
           <p className="meta text-muted">{palette.colours.length}-colour palette</p>
-          <h1 className="mt-3 text-h1 font-bold">{palette.name}</h1>
+          <h1 className="mt-3 font-display text-h1 font-normal">{palette.name}</h1>
           <p className="mt-3 text-xl">{palette.mood}</p>
           <p className="mt-5 max-w-lg text-muted">{palette.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
             <Link to={`/builder?p=${palette.slug}${suits[0] ? `&s=${suits[0].slug}` : ""}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
-              <Wand2 size={16} aria-hidden />
               Use in builder
+              <ArrowRight size={16} aria-hidden />
             </Link>
             <Link to={customHref} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
               <Pencil size={16} aria-hidden />
@@ -80,7 +80,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
             </CopyButton>
             <SaveButton kind="palettes" slug={palette.slug} label={palette.name} />
           </div>
-          <p className="meta mt-3 max-w-md text-muted">“Edit colours” opens a custom copy in the builder. The curated palette stays unchanged.</p>
+          <p className="meta mt-3 max-w-md text-muted">“Edit colours” opens a copy in the builder, so the original stays as it is.</p>
         </div>
         <div className="lg:col-span-7">
           <PaletteArt colours={palette.colours} composition={palette.composition} name={palette.name} className="aspect-[4/3] h-auto w-full" />
@@ -91,7 +91,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="roles-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="roles-title" className="text-h2 font-bold">
+            <h2 id="roles-title" className="font-display text-h2 font-normal">
               Roles and proportions
             </h2>
             <p className="mt-3 max-w-sm text-muted">
@@ -124,7 +124,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="dominant-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="dominant-title" className="text-h2 font-bold">
+            <h2 id="dominant-title" className="font-display text-h2 font-normal">
               Dominant vs. strict
             </h2>
           </div>
@@ -143,16 +143,17 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
 
       {suits.length > 0 && (
         <section className="wrap border-t border-ink py-12" aria-labelledby="suits-title">
-          <h2 id="suits-title" className="text-h2 font-bold">
-            Compatible aesthetics
+          <h2 id="suits-title" className="font-display text-h2 font-normal">
+            Styles it suits
           </h2>
-          <p className="mt-2 max-w-xl text-muted">Studies recoloured with this palette, then the styles it was chosen for.</p>
+          <p className="mt-2 max-w-xl text-muted">The styles this palette was chosen for, first redrawn in its colours.</p>
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {suits.slice(0, 4).map((s) => (
               <li key={s.slug}>
                 <Link to={`/builder?s=${s.slug}&p=${palette.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="group block">
                   <StyleArt style={s} colours={hexes} zoom />
-                  <span className="mt-1.5 block text-sm group-hover:underline">
+                  <span className="meta mt-1.5 block text-muted">{artLabel(s, true)}</span>
+                  <span className="mt-0.5 block text-sm group-hover:underline">
                     {s.name} <span className="text-muted">in the builder</span>
                   </span>
                 </Link>

@@ -7,6 +7,6 @@ export const site = {
   shortName: "Form/Field",
   tagline: "A visual library for styles, colour and prompts.",
   description:
-    "Explore visual styles, discover colour combinations, and build prompts for your next image or video.",
+    "A reference library of visual styles and colour palettes, with a builder that writes image and video prompts. Style images are AI-generated illustrations, labelled as such.",
   storageKey: "formfield:saved:v1",
 } as const;

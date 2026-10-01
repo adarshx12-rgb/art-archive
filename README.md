@@ -70,7 +70,7 @@ src/
     facets.ts               filter labels
   art/
     studies/*.tsx           one original SVG study renderer per style
-    StyleArt.tsx            lazy-mounted, recolourable study with an “Illustrative study” label
+    StyleArt.tsx            a style's AI-generated illustration, or its recolourable SVG study; artLabel() gives the caption shown below it
     PaletteArt.tsx          strict limited-colour palette compositions
     ReferenceFigure.tsx     reference image with credit, licence and source link
   lib/
@@ -108,10 +108,6 @@ The catalogue is your 63-style list; see “Content notes” below for how dupli
 4. Run `npm test`. The content tests check unique slugs, 4 valid swatches, at least 5 cues, that every `related` / `references` / palette `suits` link resolves, that each style has a renderer, and that summaries and first cues are distinct.
 
 The test `has 63 styles` pins the current count, so update it when you add entries.
-
-## Quotes
-
-The homepage fills layout gaps in the featured grid with quotations from `src/content/quotes.ts`, rotating daily. Only lines traceable to a named published source are included (Klee, Kandinsky, Albers, O’Keeffe, Sullivan, and Degas as recorded by Valéry), each shown with its source and year; translations are marked. Add new quotes only with a verifiable source.
 
 ## Adding palettes
 

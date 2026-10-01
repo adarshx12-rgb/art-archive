@@ -117,7 +117,8 @@ export function Layout() {
           <div className="lg:col-span-5">
             <p className="text-2xl font-extrabold tracking-[-0.03em]">{site.name}</p>
             <p className="mt-2 max-w-sm text-[0.9375rem] text-muted">
-              A reference library for visual styles and colour, with a prompt builder. It writes prompts; it does not generate images or video.
+              A working library of visual styles and colour, for designers, artists and anyone who makes images. It writes prompts; the
+              making is yours.
             </p>
           </div>
           <nav aria-label="Footer" className="lg:col-span-3">
@@ -133,7 +134,8 @@ export function Layout() {
           <div className="lg:col-span-4">
             <p className="meta mb-3 text-muted">About the imagery</p>
             <p className="text-[0.9375rem] text-muted">
-              Style artwork is a mix of original illustrative studies (labelled) and openly licensed references from Wikimedia Commons.
+              The main image for each style is an AI-generated illustration made for this library, and is labelled as one. Historical
+              references are openly licensed works from Wikimedia Commons, credited with their source.
             </p>
             <Link to="/credits" className="mt-2 inline-block text-[0.9375rem] underline underline-offset-2">
               Image credits &amp; licences
@@ -141,7 +143,7 @@ export function Layout() {
           </div>
         </div>
         <div className="wrap border-t border-rule py-4">
-          <p className="meta text-muted">Saved items are stored only in this browser. Hex values express colour intent; generators may not match them exactly.</p>
+          <p className="meta text-muted">Anything you save stays in this browser. Hex values describe the colour you’re after; generators may not match them exactly.</p>
         </div>
       </footer>
     </div>

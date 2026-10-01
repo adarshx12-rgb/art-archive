@@ -1,4 +1,4 @@
-import { RotateCcw, Wand2 } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { formatInfo, isTemplateFormat, templatesFor, textSlots } from "../content/templates";
@@ -37,7 +37,7 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
     <section ref={sectionRef} id="templates" className="wrap scroll-mt-16 border-t border-ink py-12" aria-labelledby="templates-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="templates-title" className="text-h2 font-bold">
+          <h2 id="templates-title" className="font-display text-h2 font-normal">
             Templates
           </h2>
           <p className="mt-3 max-w-2xl text-muted">
@@ -89,7 +89,7 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
         <div className="min-w-0 lg:col-span-8">
           <TemplateStage template={template} style={style} texts={words} ratio={info.ratio >= 1 ? 16 / 11 : 5 / 4.6} className="rounded-xl" />
           <p className="meta mt-2 text-center text-muted">
-            {info.label} · {info.aspect} · {info.spec} · the image area shows this style’s cover for scale
+            {info.label} · {info.aspect} · {info.spec} · the image area shows one of this style’s AI-generated illustrations in place of your image
           </p>
         </div>
 
@@ -128,8 +128,8 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
 
           <div className="mt-6 flex flex-wrap gap-2">
             <Link to={`/builder?${encodeState(state)}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
-              <Wand2 size={16} aria-hidden />
               Use template
+              <ArrowRight size={16} aria-hidden />
             </Link>
             <CopyButton text={prompt} what={`${info.label.toLowerCase()} template prompt`}>
               Copy prompt

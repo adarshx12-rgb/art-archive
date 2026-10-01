@@ -88,7 +88,7 @@ const Block = z.object({
 });
 const Template = z.object({
   name: z.string().describe("A short name for the layout, 2–4 words."),
-  notes: z.array(z.string()).describe("3–4 short notes (one sentence each) on why this layout works for this style and format, for designers."),
+  notes: z.array(z.string()).describe("3–4 notes, one plain sentence each, saying what a specific design choice does, e.g. 'The red block keeps the headline readable over the image.'"),
   background: ROLE,
   blocks: z.array(Block),
   prompt: z.string().describe("One or two sentences of layout direction for an image generator, naming text blocks as {id} slots."),
@@ -120,6 +120,8 @@ Colours are roles: background, primary, secondary, accent map to the style's swa
 Fonts: real Google Fonts families only, spelled as Google spells them, at weights that family actually has. Prefer the style's suggested free fonts; otherwise pick a Google font that is true to the style's typography. Use at most two families.
 
 Keep every text block at least 3% in from each edge. Text blocks must not overlap each other. Sizes: masthead 0.08–0.2, headlines 0.05–0.14, cover lines and subheads 0.025–0.05, body and meta 0.018–0.03 (thumbnails: headline 0.12–0.25, nothing under 0.05).
+
+The notes field ("Why it works", shown to visitors): 3–4 sentences of plain, specific English, each naming one element of this layout (a block, a colour, a size, a position) and what it does for the reader, in under 20 words. Good: "The red block keeps the headline readable over the image." "Cover lines stay on the left so they don't cover the subject's face." Don't praise the design or the style, and don't use filler such as quintessential, iconic, authentic, uncompromising, honoring, seamless, effortless, curated, evokes, commanding, monumental or timeless; the automatic checks reject them.
 
 The prompt field: one or two sentences telling an image generator how the image should be laid out for this format, naming each text block's words as a {id} slot (e.g. 'Masthead {masthead} across the top in tall gold Art Deco capitals; the lead line {lead} in the lower left'). Don't describe the style's colours or cues (the builder adds those), and don't name a particular subject: say "the subject" or "the main image", because people bring their own.`;
 

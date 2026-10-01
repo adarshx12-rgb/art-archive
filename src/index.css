@@ -18,16 +18,18 @@
 
   --font-sans: "Schibsted Grotesk Variable", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* Page and section headings: an editorial serif, set at its single regular weight. */
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
 
   --text-display: clamp(2.9rem, 6.6vw, 7.5rem);
   --text-display--line-height: 0.9;
   --text-display--letter-spacing: -0.045em;
-  --text-h1: clamp(2.5rem, 5.6vw, 5.25rem);
-  --text-h1--line-height: 0.95;
-  --text-h1--letter-spacing: -0.035em;
-  --text-h2: clamp(1.75rem, 3vw, 2.6rem);
-  --text-h2--line-height: 1.02;
-  --text-h2--letter-spacing: -0.025em;
+  --text-h1: clamp(2.75rem, 6vw, 5.75rem);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h2: clamp(2rem, 3.4vw, 3rem);
+  --text-h2--line-height: 1.05;
+  --text-h2--letter-spacing: -0.01em;
   --text-meta: 0.75rem;
   --text-meta--line-height: 1.35;
 
@@ -90,6 +92,7 @@
     overscroll-behavior: contain;
   }
   body {
+    position: relative;
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
@@ -97,16 +100,20 @@
     overflow-x: hidden;
   }
   /*
-   * Site-wide texture (background.webp, or background-dark.webp in dark mode). A fixed layer
-   * behind all content: it doesn't scroll or repaint, and never takes clicks.
+   * Site-wide texture (background.webp, or background-dark.webp in dark mode). It sits at the
+   * top of the page, behind the header and hero, and fades to nothing well before it ends, so
+   * it never stops in a hard line however tall the page or viewport is. Never takes clicks.
    */
   body::before {
     content: "";
-    position: fixed;
-    inset: 0;
+    position: absolute;
+    inset: 0 0 auto;
     z-index: -1;
-    background: var(--texture-image) center / cover no-repeat;
+    height: 60rem;
+    background: var(--texture-image) center top / cover no-repeat;
     opacity: var(--texture-opacity);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 18rem, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 18rem, transparent 100%);
     pointer-events: none;
   }
   ::selection {
@@ -299,6 +306,24 @@
     background: var(--color-ink);
     border-color: var(--color-ink);
     color: var(--color-paper);
+  }
+
+  /*
+   * Secondary card actions (Save, Copy): shown on hover or keyboard focus where a mouse is the
+   * pointer, always shown on touch screens. Still in the tab order while hidden; focusing one
+   * shows it. A saved item keeps its button visible so the state is never hidden.
+   */
+  @media (hover: hover) and (pointer: fine) {
+    .reveal {
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .group:hover .reveal,
+    .group:focus-within .reveal,
+    .reveal:has([aria-pressed="true"]),
+    .reveal[aria-pressed="true"] {
+      opacity: 1;
+    }
   }
 
   .art-zoom {

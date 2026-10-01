@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Link2, Plus, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Link2, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
@@ -1014,7 +1014,6 @@ export function Builder() {
                     toast(res.data.warnings.length ? "Prompt written. Check the notes below it." : "Prompt written and checked against your scene");
                   }}
                 >
-                  <Sparkles size={14} aria-hidden />
                   {aiBusy === "prompt" ? "Writing…" : "Perfect prompt"}
                 </button>
                 {edited && (

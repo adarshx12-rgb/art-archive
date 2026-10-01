@@ -14,7 +14,7 @@ export function Palettes() {
   const size = rawN === "2" || rawN === "3" || rawN === "4" ? (Number(rawN) as PaletteSize) : null;
   const q = (params.get("q") ?? "").slice(0, 80);
   const results = filterPalettes(palettes, size, q);
-  useMeta("Palettes", `${palettes.length} curated palettes of exactly two, three or four colours, with roles and proportions.`);
+  useMeta("Palettes", "Palettes of two, three or four colours that work together, each with roles and proportions.");
 
   const update = (next: { n?: PaletteSize | null; q?: string }) => {
     const p = new URLSearchParams();
@@ -30,9 +30,9 @@ export function Palettes() {
   return (
     <div className="wrap pt-10 sm:pt-14">
       <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="text-h1 font-bold lg:col-span-7">Palettes</h1>
+        <h1 className="font-display text-h1 font-normal lg:col-span-7">Palettes</h1>
         <div className="max-w-xl self-end text-muted lg:col-span-5">
-          <p>Every palette has exactly two, three or four colours, with a suggested role and share for each.</p>
+          <p>Small sets of colours that already work together. Each colour has a role and a share, so you know which one leads and which one only accents.</p>
         </div>
       </header>
 
@@ -81,7 +81,7 @@ export function Palettes() {
 
       {results.length === 0 ? (
         <div className="border-t border-ink py-16">
-          <h2 className="text-h2 font-bold">No palettes match.</h2>
+          <h2 className="font-display text-h2 font-normal">No palettes match.</h2>
           <p className="mt-3 text-muted">Try another colour name or hex, or show all sizes.</p>
           <button type="button" className="btn btn-primary mt-6" onClick={() => update({ n: null, q: "" })}>
             Show all palettes

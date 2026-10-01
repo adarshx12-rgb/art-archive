@@ -1,4 +1,4 @@
-import { Aperture, Clapperboard, ChevronUp, Check, ExternalLink, Sparkles } from "lucide-react";
+import { Aperture, Clapperboard, ChevronUp, Check, ExternalLink } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fontSuggestions } from "../content/fonts";
 import type { Hex, PaletteSize, StyleRecord } from "../content/types";
@@ -319,7 +319,6 @@ function SchemeSuggestions({ style, state, onAsk, onPick }: { style: StyleRecord
       <div className="flex gap-2">
         <input id="scheme-mood" value={mood} maxLength={400} onChange={(e) => setMood(e.target.value)} placeholder="e.g. misty harbour at dawn, calm and cold" className="field min-w-0 flex-1 py-1.5 text-sm" />
         <button type="submit" className="btn btn-sm btn-primary shrink-0" disabled={asking}>
-          <Sparkles size={14} aria-hidden />
           {asking ? "Thinking…" : "Suggest colour schemes"}
         </button>
       </div>

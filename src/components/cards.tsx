@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { PaletteArt } from "../art/PaletteArt";
-import { StyleArt } from "../art/StyleArt";
+import { artLabel, StyleArt } from "../art/StyleArt";
 import { kindLabels } from "../content/facets";
 import type { PaletteRecord, StyleRecord } from "../content/types";
 import { CopyButton, SaveButton } from "./actions";
@@ -11,11 +11,15 @@ export function StyleCard({ style, large = false, eager = false }: { style: Styl
     <article className="group relative flex h-full flex-col border-t border-ink pt-3">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <span className="meta text-muted">{kindLabels[style.kind]}</span>
-        <SaveButton kind="styles" slug={style.slug} label={style.name} size="sm" className="relative z-10" />
+        <SaveButton kind="styles" slug={style.slug} label={style.name} size="sm" className="reveal relative z-10" />
       </div>
       <Link to={`/styles/${style.slug}`} className="block" aria-describedby={`sum-${style.slug}`}>
         <StyleArt style={style} zoom eager={eager} aspect={large ? "aspect-[4/5] sm:aspect-[3/2]" : "aspect-[4/5]"} />
         <SwatchStrip colours={style.swatches.map((s) => s.hex)} label={`${style.name} colours: ${style.swatches.map((s) => s.name).join(", ")}`} />
+        {/* Below the art, not over it; the image's alt text already says this. */}
+        <p className="meta mt-1.5 text-muted" aria-hidden>
+          {artLabel(style)}
+        </p>
         <h3 className={`mt-3 font-semibold tracking-[-0.02em] group-hover:underline group-focus-visible:underline decoration-2 underline-offset-4 ${large ? "text-3xl sm:text-4xl" : "text-xl"}`}>
           {style.name}
         </h3>
@@ -25,8 +29,10 @@ export function StyleCard({ style, large = false, eager = false }: { style: Styl
       </p>
       <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1" aria-label="Tags">
         {style.tags.slice(0, large ? 4 : 3).map((t) => (
-          <li key={t} className="meta text-muted">
-            #{t.replace(/\s+/g, "-")}
+          <li key={t}>
+            <Link to={`/styles?q=${encodeURIComponent(t)}`} className="meta relative z-10 text-muted underline-offset-2 hover:text-ink hover:underline">
+              {t}
+            </Link>
           </li>
         ))}
       </ul>
@@ -40,7 +46,7 @@ export function PaletteCard({ palette }: { palette: PaletteRecord }) {
     <article className="group flex h-full flex-col border-t border-ink pt-3">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <span className="meta text-muted">{palette.colours.length} colours</span>
-        <div className="flex gap-1.5">
+        <div className="reveal flex gap-1.5">
           <CopyButton text={hexes.join(", ")} what={`${palette.name} hex codes`} size="sm">
             Copy<span className="sr-only"> {palette.name} hex codes</span>
           </CopyButton>

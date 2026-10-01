@@ -4,10 +4,10 @@
   "format": "magazine",
   "name": "Swiss Asymmetric Grid",
   "notes": [
-   "A commanding full-width masthead underlined by a signal red structural rule establishes instant newsstand presence.",
-   "The asymmetric split divides the page between an unencumbered photographic field and a rigorous typographic column.",
-   "Strict flush-left alignment and extreme scale contrast between the display headers and micro-typographic notes create authentic Swiss hierarchy.",
-   "Generous negative space above the footer meta grounds the composition without overcrowding the editorial content."
+   "The masthead runs the full width with a red rule under it, so the title reads first from a distance.",
+   "The page splits into a clear image area and a narrow text column, so the photo is never covered by type.",
+   "Everything is set flush left, and the big headings are many times the size of the notes, so the order of reading is obvious.",
+   "Empty space above the footer keeps the small issue details apart from the cover lines."
   ],
   "background": "background",
   "blocks": [
@@ -268,10 +268,10 @@
   "format": "poster",
   "name": "Swiss Asymmetric Grid",
   "notes": [
-   "Grounds the entire poster in an exacting modular grid that balances high-density typography with active negative space.",
-   "Enforces absolute clarity by rendering all informational copy in deep ink black, achieving over 16:1 contrast against paper white.",
-   "Creates dramatic scale contrast between the monumental neo-grotesque display title and the three-column micro-typographic base.",
-   "Uses a solitary signal-red geometric bar to anchor the grid without resorting to decorative ornament."
+   "A modular grid holds a lot of small type and still leaves open space around the title.",
+   "All the information is in black on white, so it stays readable at any distance.",
+   "The large sans-serif title sits far above the three columns of small details in size, so you know where to start.",
+   "One red bar is the only colour; it marks the grid instead of decorating it."
   ],
   "background": "background",
   "blocks": [
@@ -448,10 +448,10 @@
   "format": "flyer",
   "name": "Swiss Asymmetric Grid Flyer",
   "notes": [
-   "Rigid two-column mathematical grid establishes clear asymmetric tension between photography and text.",
-   "Extreme scale contrast between the display headline and neo-grotesque body copy maintains authentic modernist hierarchy.",
-   "High-contrast solid ink plate isolates the call to action while an architectural red rule injects deliberate focal discipline.",
-   "Generous negative space functions actively to guide the eye in a clean Z-pattern from title to logistical metadata."
+   "A two-column grid puts the photo on one side and the words on the other, so neither crowds the other.",
+   "The headline is much larger than the body text, so the hierarchy is clear at a glance.",
+   "The call to action sits on a solid black plate, and a red rule marks where to look next.",
+   "Open space leads the eye from the title down to the date and venue."
   ],
   "background": "background",
   "blocks": [
@@ -543,7 +543,7 @@
     "y": 0.445,
     "w": 0.4,
     "h": 0.11,
-    "text": "Keynote presentations, workshops on mathematical grids, and curated case studies from international archives.",
+    "text": "Keynote presentations, workshops on mathematical grids, and selected case studies from international archives.",
     "label": "Body Paragraph 2",
     "font": "Inter",
     "weight": 400,
@@ -626,9 +626,9 @@
   "format": "thumbnail",
   "name": "Swiss Modular Grid",
   "notes": [
-   "The left-aligned modular text stack guarantees immediate reading flow and high legibility at tiny scale.",
-   "Keeping the right side dedicated to the visual subject naturally prevents YouTube duration badges from clipping vital typography.",
-   "Inter Tight with negative tracking evokes classic Zurich poster discipline while maximizing impact within thumbnail bounds."
+   "The words are stacked on the left, flush left, so they read in one pass even when tiny.",
+   "The subject takes the right side, which also keeps the text away from the video length in the corner.",
+   "Inter Tight with tight letter spacing fits big, bold words into a small frame, as Swiss posters do."
   ],
   "background": "background",
   "blocks": [
@@ -739,10 +739,10 @@
   "format": "magazine",
   "name": "Bauhaus Dessau Constructivist",
   "notes": [
-   "The iconic lowercase masthead anchors the top band alongside a solid blue dateline badge.",
-   "An enlarged asymmetric photo window intersects an elementary yellow circle to create quintessential Bauhaus pictorial tension.",
-   "A primary red grounding plate isolates the lead headline and subhead with uncompromising contrast.",
-   "Strict orthogonal columns eliminate clutter while honoring authentic Dessau typography in Jost and Josefin Sans."
+   "The lowercase masthead sits across the top, with the date on a small blue badge beside it.",
+   "A large off-centre photo overlaps a yellow circle, so the cover reads as shapes first, like a Bauhaus print.",
+   "The lead headline and subhead sit on a red plate, which keeps them readable whatever the photo shows.",
+   "Square-cornered columns and two geometric sans-serifs (Jost and Josefin Sans) keep the page plain and ordered."
   ],
   "background": "background",
   "blocks": [
@@ -1026,9 +1026,9 @@
   "format": "poster",
   "name": "Bauhaus Werkstatt",
   "notes": [
-   "A monumental Jost display headline in primary red commands immediate distance hierarchy against the unbleached cream ground.",
-   "The central photomontage layers a crisp photographic image over an elementary geometric yellow circle and an accent blue subtitle bar.",
-   "The lower section balances dual-column exhibition logistics and a high-contrast cobalt call-to-action block within a strict modernist grid."
+   "The red Jost headline is the biggest thing on the cream ground, so it reads from across a room.",
+   "The photo sits on a yellow circle with a blue subtitle bar, a simple photomontage in the three primaries.",
+   "The exhibition details sit in two columns at the foot, with the call to action on a blue block."
   ],
   "background": "background",
   "blocks": [
@@ -1216,17 +1216,17 @@
     "fill": "accent"
    }
   ],
-  "prompt": "Constructivist exhibition poster layout with institutional header {meta-header} and monumental title {headline} anchoring the top; the main image is positioned asymmetrically in the centre overlapping an elementary yellow circle with subtitle plate {subhead}, while event logistics {body-details}, call to action {cta}, and catalog reference {meta-footer} structure the lower grid."
+  "prompt": "Constructivist exhibition poster layout with institutional header {meta-header} and a very large title {headline} across the top; the main image is positioned asymmetrically in the centre overlapping an elementary yellow circle with subtitle plate {subhead}, while event logistics {body-details}, call to action {cta}, and catalog reference {meta-footer} structure the lower grid."
  },
  {
   "style": "bauhaus",
   "format": "flyer",
   "name": "Bauhaus Werkstatt Flyer",
   "notes": [
-   "The constructivist split places documentary imagery on the left balanced against structured editorial columns on the right for immediate clarity.",
-   "An accent blue plate anchors the call to action, delivering high contrast against the unbleached cream ground and meeting strict legibility guidelines.",
-   "The secondary yellow circular badge establishes classic Weimar asymmetry and dynamic counter-weight against the heavy red headline.",
-   "A disciplined single-family type system (Jost) across weights reinforces authentic Bauhaus geometric purity without ornamental clutter."
+   "The photo takes the left side and the text columns take the right, so each half has one job.",
+   "The call to action sits on a blue plate that stands out clearly against the cream ground.",
+   "A yellow circle balances the heavy red headline on the other side of the page.",
+   "One typeface (Jost) in several weights keeps the page consistent and geometric."
   ],
   "background": "background",
   "blocks": [
@@ -1534,10 +1534,10 @@
   "format": "thumbnail",
   "name": "Bauhaus Constructivist Split",
   "notes": [
-   "The solid cream constructivist panel isolates typography completely, ensuring maximum contrast and legibility regardless of the uploaded subject photo.",
-   "Reserving the entire right half keeps the subject silhouette clear and leaves the bottom-right corner unobstructed for platform video duration badges.",
-   "Kandinsky's primary triad of red, yellow, and blue geometric blocks reinforces authentic 1920s Weimar graphic language.",
-   "The ultra-bold Jost headline and single-line category tag meet strict thumbnail scale requirements for instant sub-second recognition on mobile screens."
+   "The words sit on a solid cream panel, so they stay readable whatever photo goes in.",
+   "The subject has the whole right half, which also keeps the bottom-right corner free for the video length.",
+   "Red, yellow and blue blocks give the frame the Bauhaus primaries at a glance.",
+   "A very bold headline and a one-line tag are large enough to read on a phone."
   ],
   "background": "background",
   "blocks": [
@@ -1663,10 +1663,10 @@
   "format": "magazine",
   "name": "Gilded Metropolis Cover",
   "notes": [
-   "Concentric geometric framing and stepped fillets establish strict bilateral symmetry true to Parisian interwar architecture.",
-   "Deep emerald lacquer backplates with metallic gold borders ensure flawless typographic contrast over any photographic background.",
-   "Positioning the radiating sunburst immediately above the feature plinth creates decorative upward energy without occluding the central portrait.",
-   "Broadway-style display capitals in Limelight paired with geometric Josefin Sans deliver authentic high-contrast 1920s editorial hierarchy."
+   "Frames inside frames and stepped corners make the cover symmetrical, like a 1920s building front.",
+   "Text sits on dark green plates with gold borders, so it stays readable over any photo.",
+   "The sunburst sits above the portrait, adding upward movement without covering the face.",
+   "Tall Limelight capitals for the masthead and Josefin Sans for the cover lines give a clear 1920s hierarchy."
   ],
   "background": "background",
   "blocks": [
@@ -1952,10 +1952,10 @@
   "format": "poster",
   "name": "Deco Arched Pavilion",
   "notes": [
-   "Strict bilateral symmetry anchored by a stepped double-frame evokes classic 1920s Art Deco architecture and exhibition pavilions.",
-   "The arched image window serves as the dominant visual focal point while leaving ample negative space for monumental typography.",
-   "Ivory and brushed gold lettering against a deep emerald-black ground delivers striking contrast and long-range poster legibility.",
-   "Grouped event logistics and a prominent call-to-action plate maintain clean poster hierarchy without cluttering the ornate frame."
+   "The layout is symmetrical inside a stepped double frame, like a 1920s exhibition pavilion.",
+   "The arched image window is the focal point, with room above and below it for large type.",
+   "Ivory and gold lettering on a near-black green ground has strong contrast and reads from far away.",
+   "The event details and the call to action are grouped at the foot, so the frame stays uncluttered."
   ],
   "background": "background",
   "blocks": [
@@ -2165,10 +2165,10 @@
   "format": "flyer",
   "name": "Gilded Era Soirée",
   "notes": [
-   "Strict bilateral symmetry and geometric framing evoke 1920s luxury hotel stationery and event programs.",
-   "An arched window shape naturally directs the reader's eye from the tall display headline down into the central artwork.",
-   "High-contrast ivory and brushed gold typography over deep emerald black ensures rapid legibility from pamphlet viewing distances.",
-   "A solid gold call-to-action plate anchored near the base creates an undeniable response path before the venue particulars."
+   "The symmetrical, framed layout looks like a 1920s hotel menu or event programme.",
+   "The arched window leads the eye from the tall headline down into the picture.",
+   "Ivory and gold type on dark green reads easily at hand-held distance.",
+   "A solid gold plate near the foot makes the call to action the obvious next step, above the venue details."
   ],
   "background": "background",
   "blocks": [
@@ -2359,10 +2359,10 @@
   "format": "thumbnail",
   "name": "Art Deco Premiere",
   "notes": [
-   "An asymmetric split layout combines bold mobile readability with 1920s stepped architectural discipline.",
-   "A solid emerald-black text plate guarantees uncompromising contrast for high-contrast Broadway-style typography.",
-   "Stepped gold divider bars and jade tag plates replace hairline rules with visible, iconic Art Deco geometry.",
-   "The composition leaves the entire right and bottom-right sectors clear for subject focus and platform duration badges."
+   "Text on one side and image on the other keeps the words large enough to read on a phone.",
+   "The words sit on a solid dark green plate, so contrast doesn't depend on the photo.",
+   "Stepped gold bars and green tag plates stand in for thin rules, which would disappear at this size.",
+   "The right side and the bottom-right corner are left for the subject and the video length."
   ],
   "background": "background",
   "blocks": [
@@ -2534,10 +2534,10 @@
   "format": "magazine",
   "name": "Art Nouveau Halo Cover",
   "notes": [
-   "The arched image aperture with an underlying ochre halo evokes the iconic decorative lithographs of Alphonse Mucha and the Vienna Secession.",
-   "Restricting text on vellum to deep madder accent guarantees flawless 6.5:1 contrast while maintaining period lithographic authenticity.",
-   "A two-line lead headline centered beneath the art aperture establishes a clear editorial apex without crowding lower columns.",
-   "Symmetrical bottom billing with twin feature columns anchors the layout solidly without encroaching on outer margins."
+   "The image sits in an arch with an ochre halo behind it, the frame Mucha used on his posters.",
+   "All text on the cream ground is deep madder brown, which reads well and matches lithograph inks.",
+   "The two-line lead headline is centred under the arch, so it's the first thing read after the image.",
+   "Two matching columns at the foot carry the features and keep the bottom of the page balanced."
   ],
   "background": "background",
   "blocks": [
@@ -2735,9 +2735,9 @@
   "format": "poster",
   "name": "Belle Époque Arched Poster",
   "notes": [
-   "The arched window reproduces the iconic organic vignette framing championed by Mucha and Paris Salon lithographs.",
-   "Federo provides authentic Jugendstil display lettering for the headline, while Cormorant Garamond ensures crisp classical readability for event details.",
-   "Deep madder brown typography on warm vellum provides high-contrast legibility, complemented by sage and ochre decorative framing rules."
+   "The image sits in an arched frame, the soft vignette used on Paris posters around 1900.",
+   "Federo gives the headline period Jugendstil lettering; Cormorant Garamond keeps the details easy to read.",
+   "Madder brown type on warm cream reads clearly, and sage and ochre rules frame it without competing."
   ],
   "background": "background",
   "blocks": [
@@ -2908,10 +2908,10 @@
   "format": "flyer",
   "name": "Jugendstil Arch Flyer",
   "notes": [
-   "The tall arched portal frame captures the iconic Jugendstil lithograph silhouette, providing an organic focal window for the artwork.",
-   "Madder brown text against the warm vellum canvas establishes high legibility and contrast while honoring historic lithographic pigments.",
-   "Calibrated block heights and generous vertical negative space prevent type clipping while maintaining an effortless top-to-bottom reading path.",
-   "Authentic pairing of Federo capitals with Cormorant Garamond serifs creates an unmistakably turn-of-the-century typographic hierarchy."
+   "A tall arched frame holds the image, giving the page the outline of a Jugendstil print.",
+   "Madder brown text on the warm cream ground is easy to read and matches old lithograph inks.",
+   "Each text block has room for its lines, and the gaps between them make the page read top to bottom.",
+   "Federo capitals with Cormorant Garamond serifs give a turn-of-the-century hierarchy: display on top, reading text below."
   ],
   "background": "background",
   "blocks": [
@@ -3099,10 +3099,10 @@
   "format": "thumbnail",
   "name": "Art Nouveau Halo",
   "notes": [
-   "Concentric ochre and sage halo discs intersect an arched portrait aperture to recreate authentic Mucha lithographic poster architecture.",
-   "Expanding the headline to size 0.21 in Federo capitals ensures instant readability at mobile thumbnail dimensions.",
-   "Capping the copy at four words across just two text blocks eliminates clutter and directs all focus to the subject and title.",
-   "Leaving the bottom-right corner completely vacant protects against interference from video player duration badges."
+   "Ochre and sage discs behind an arched portrait frame give the Mucha poster shape at small size.",
+   "The headline is set very large in Federo capitals, so it reads on a phone.",
+   "Four words in two blocks keep the frame uncluttered, so the subject and title do the work.",
+   "The bottom-right corner is empty, so the video length won't cover anything."
   ],
   "background": "background",
   "blocks": [
@@ -3201,17 +3201,17 @@
     "opacity": 0.4
    }
   ],
-  "prompt": "The main image of the subject is positioned inside an arched niche on the right side against a luminous circular halo, while the left side features category tag {tag} above the commanding headline {headline}."
+  "prompt": "The main image of the subject is positioned inside an arched niche on the right side against a luminous circular halo, while the left side features category tag {tag} above the large headline {headline}."
  },
  {
   "style": "brutalism",
   "format": "magazine",
   "name": "Monolith Issue",
   "notes": [
-   "A masthead set in blunt, heavy capitals the full width of the cover treats type as mass, the graphic cousin of poured concrete.",
-   "A thick black rule and a mono data line sit on the grid like exposed structure: nothing decorative, everything load-bearing.",
-   "The lead story sits on a dark recess cut into the image, echoing brutalism's deep voids and keeping the white type readable over grey.",
-   "Numbered cover lines in three equal columns give the foot of the page the repeated, modular rhythm of a concrete facade."
+   "The masthead is set in heavy capitals across the full width, so the type reads as a solid mass.",
+   "A thick black rule and a monospaced data line sit on the grid with no decoration.",
+   "The lead story sits on a dark block cut into the image, which keeps the white type readable over grey.",
+   "Numbered cover lines in three equal columns give the foot of the page a repeated, modular rhythm."
   ],
   "background": "secondary",
   "blocks": [
@@ -3454,10 +3454,10 @@
   "format": "poster",
   "name": "Low Angle Mass",
   "notes": [
-   "The image takes the top three-fifths like a building seen from the pavement; the headline below is set as heavy as a plinth.",
-   "Stacked black capitals on raw concrete grey read from across a room without needing any colour.",
-   "A hard rule and three mono columns of details form a strict grid, the graphic equivalent of repeated structural bays.",
-   "A small dark tag on the image carries the dates, keeping the one decorative gesture functional."
+   "The image takes the top three-fifths and the heavy headline sits under it like a base.",
+   "Black capitals on concrete grey read from across a room without any colour.",
+   "A hard rule and three monospaced columns of details sit on a strict grid.",
+   "A small dark tag on the image carries the dates, so the one extra element has a job."
   ],
   "background": "background",
   "blocks": [
@@ -3588,10 +3588,10 @@
   "format": "flyer",
   "name": "Modular Grid Flyer",
   "notes": [
-   "Everything sits in hard-edged boxes on a visible grid, the flat, structural honesty brutalism shares with brutalist web design.",
-   "The headline is set blunt and heavy at top-left and an index number anchors the top-right, like a building's plaque.",
-   "Details run in a single dark band, and the call to action is a solid black block: no rounded corners, no gradients.",
-   "Mono type for dates and addresses keeps the practical information precise and quiet."
+   "Everything sits in hard-edged boxes on a visible grid, with nothing rounded or decorative.",
+   "The heavy headline sits top left and an index number holds the top right, like a plaque on a building.",
+   "The details run in one dark band, and the call to action is a solid black block.",
+   "Monospaced type for dates and addresses keeps the practical details precise and quiet."
   ],
   "background": "secondary",
   "blocks": [
@@ -3775,10 +3775,10 @@
   "format": "thumbnail",
   "name": "Raw Slab",
   "notes": [
-   "Two words in blunt black capitals take the left half; the concrete subject takes the right, a split that reads instantly at 120 px.",
-   "A thick rule under the headline and a dark episode tag give the text the weight of a stamped slab.",
-   "No colour beyond the concrete greys, so contrast comes from mass and value, true to the style.",
-   "The bottom-right corner holds only image, leaving room for the duration badge."
+   "Two words in heavy black capitals take the left half and the subject takes the right, which reads at 120 px.",
+   "A thick rule under the headline and a dark episode tag add weight to the text.",
+   "There is no colour beyond the concrete greys, so contrast comes from dark against light.",
+   "The bottom-right corner holds only image, leaving room for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -3855,10 +3855,10 @@
   "format": "magazine",
   "name": "Atomic Living",
   "notes": [
-   "The image sits in an arched picture window against a mustard sun, the warm, optimistic framing of 1950s home magazines.",
-   "A lowercase geometric masthead with a brush-script tagline pairs the era's friendly sans with its hand-lettered accents.",
-   "A teal band at the foot carries the cover lines in cream, the classic mustard-and-teal pairing kept readable.",
-   "A small starburst adds the atomic-age sparkle without cluttering the calm, horizontal layout."
+   "The image sits in an arched window against a mustard sun, the warm framing of 1950s home magazines.",
+   "A lowercase geometric masthead with a brush-script tagline pairs the era's friendly sans with hand lettering.",
+   "A teal band at the foot carries the cover lines in cream, which keeps them readable.",
+   "A small starburst adds a 1950s detail without crowding the calm, horizontal layout."
   ],
   "background": "background",
   "blocks": [
@@ -4033,10 +4033,10 @@
   "format": "poster",
   "name": "Starburst Exhibition",
   "notes": [
-   "A round porthole image on a mustard sun, circled by atomic rays, is the era's space-age optimism in one focal point.",
-   "Boomerang shapes float at the edges, the signature motif of 1950s laminate and print.",
-   "A retro display face for the title and a brush script for the subtitle echo the hand-lettered exhibition posters of the period.",
-   "A teal-and-mustard stripe separates the picture from the grouped details below."
+   "A round image on a mustard sun with rays around it gives the poster one clear focal point.",
+   "Boomerang shapes at the edges add the motif from 1950s laminate and print.",
+   "A retro display face for the title and a brush script for the subtitle match the hand-lettered posters of the period.",
+   "A teal and mustard stripe separates the picture from the grouped details below."
   ],
   "background": "background",
   "blocks": [
@@ -4181,10 +4181,10 @@
   "format": "flyer",
   "name": "Open House Flyer",
   "notes": [
-   "A teal column holds all the words, so the page reads like a 1950s brochure: story on one side, picture window on the other.",
-   "The image sits in an arched window beside a mustard sun, the era's favourite way to frame a modern interior.",
+   "A teal column holds all the words and the picture sits beside it, like a 1950s brochure.",
+   "The image sits in an arched window next to a mustard sun, the era's way of framing a modern interior.",
    "The call to action is a mustard pill, the brightest thing in the teal column and easy to find.",
-   "Boomerangs and a striped strip at the foot add period charm without crowding the details."
+   "Boomerangs and a striped strip at the foot add period detail without crowding the details."
   ],
   "background": "background",
   "blocks": [
@@ -4392,9 +4392,9 @@
   "format": "thumbnail",
   "name": "Boomerang Split",
   "notes": [
-   "Two words in teal geometric capitals with a brush-script line under them read clearly at small sizes and feel instantly 1950s.",
-   "The subject sits in a round porthole on a mustard sun, a bold warm shape that separates it from the paper background.",
-   "A single boomerang adds period flavour without competing with the title.",
+   "Two words in teal geometric capitals, with a brush-script line under them, read clearly at small sizes.",
+   "The subject sits in a round frame on a mustard sun, which separates it from the paper background.",
+   "A single boomerang adds a period detail without competing with the title.",
    "The bottom-right corner stays clear for the video length."
   ],
   "background": "background",
@@ -4472,10 +4472,10 @@
   "format": "magazine",
   "name": "Stage Set Cover",
   "notes": [
-   "The cover is built like a post-modern stage set: a flat cut-out column, an ultramarine arch framing the image and blocks of salmon, sand and mint.",
-   "A fat classical display serif for the masthead meets a chunky geometric mono for the cover lines, the style's ironic mix of history and pop.",
-   "Colour zones are flat and bold, with type only in ultramarine or black where it needs to be read.",
-   "A mint 'floor' at the foot gives the cover lines their own stage in front of the set."
+   "The cover is built like a stage set: a flat column, a blue arch framing the image, and blocks of salmon, sand and mint.",
+   "A fat classical serif masthead with chunky monospaced cover lines mixes old and new, as post-modern design did.",
+   "The colour areas are flat, and type is only in blue or black where it needs to be read.",
+   "A mint strip at the foot gives the cover lines their own band in front of the set."
   ],
   "background": "background",
   "blocks": [
@@ -4704,10 +4704,10 @@
   "format": "poster",
   "name": "Grand Folly",
   "notes": [
-   "Two flat cut-out columns flank a salmon arch holding the image, a theatrical facade built from colour blocks.",
-   "Ultramarine as the ground makes the pastels pop and lets cream and sand type read strongly.",
-   "A fat classical display serif for the title is post-modernism's wink at history, set big for distance.",
-   "A striped floor and the grouped details below complete the stage without clutter."
+   "Two flat columns flank a salmon arch that holds the image, like a building front made of colour blocks.",
+   "The blue ground makes the pastels stand out and gives the cream and sand type strong contrast.",
+   "The title is a fat classical serif, set large so it reads from a distance.",
+   "A striped floor and the grouped details below finish the poster without clutter."
   ],
   "background": "secondary",
   "blocks": [
@@ -4862,10 +4862,10 @@
   "format": "flyer",
   "name": "Pattern Party",
   "notes": [
-   "The page is a collage of flat colour blocks (mint, sand and an ultramarine disc), post-modernism's playful answer to the grid.",
-   "Each block carries one job: headline on mint, details on sand, the call to action on the ultramarine circle.",
-   "A fat classical serif for the headline and a chunky mono for the details mix old and new with a wink.",
-   "A striped band along the foot finishes the page like laminate edging."
+   "The page is made of flat colour blocks (mint, sand and a blue disc) instead of a strict grid.",
+   "Each block has one job: the headline on mint, the details on sand, the call to action on the blue circle.",
+   "A fat classical serif headline with chunky monospaced details mixes old and new type.",
+   "A striped band along the foot finishes the page like the edge of a laminate counter."
   ],
   "background": "background",
   "blocks": [
@@ -5033,10 +5033,10 @@
   "format": "thumbnail",
   "name": "Folly Split",
   "notes": [
-   "A mint block holds two words in a fat classical serif: big, black and readable at thumbnail size.",
-   "The subject sits inside a flat ultramarine arch on sand, a post-modern frame that also separates it from the background.",
-   "An ultramarine sticker adds the style's playful energy without more words.",
-   "The bottom-right corner holds only the arch and image, leaving space for the duration badge."
+   "A mint block holds two words in a fat black serif, large enough to read as a thumbnail.",
+   "The subject sits in a flat blue arch on sand, which separates it from the background.",
+   "A blue sticker adds the style's playfulness without adding words.",
+   "The bottom-right corner holds only the arch and image, leaving space for the video length."
   ],
   "background": "accent",
   "blocks": [
@@ -5126,10 +5126,10 @@
   "format": "magazine",
   "name": "Fracture Cover",
   "notes": [
-   "The image is tilted off the grid and sliced by a single oxide-red diagonal, the fractured, unstable geometry the style is known for.",
-   "The masthead is cut by a steel line, as if the type itself were split, while staying fully legible.",
-   "Cover lines tilt against the frame at a controlled angle: off-balance, but carefully placed.",
-   "Carbon type on pale zinc keeps everything readable; red is used only for the slash and a tilted issue block."
+   "The image is tilted off the grid and cut by one red diagonal, so the page looks deliberately broken.",
+   "A steel line cuts through the masthead, but the letters stay fully readable.",
+   "Cover lines tilt against the frame at one fixed angle: off-balance, but carefully placed.",
+   "Dark type on pale zinc keeps everything readable; red is used only for the slash and a tilted issue block."
   ],
   "background": "background",
   "blocks": [
@@ -5295,10 +5295,10 @@
   "format": "poster",
   "name": "Collision Poster",
   "notes": [
-   "A tilted image and a tilted headline collide with a red diagonal: planes at conflicting angles, but every piece placed deliberately.",
-   "One oversized word carries the poster; its angle makes it dynamic without costing legibility at a distance.",
-   "A vertical red year and a strict block of details give the chaos an anchor, the controlled instability of the style.",
-   "Carbon, steel and zinc stay dominant; the single red cut is the only colour."
+   "A tilted image and a tilted headline meet a red diagonal, so the planes clash but each piece is placed on purpose.",
+   "One oversized word carries the poster; its angle adds movement and it still reads from a distance.",
+   "A vertical red year and a square block of details hold the tilted parts in place.",
+   "Black, steel and zinc dominate; the single red cut is the only colour."
   ],
   "background": "background",
   "blocks": [
@@ -5593,10 +5593,10 @@
   "format": "thumbnail",
   "name": "Split Frame",
   "notes": [
-   "Two tilted words in heavy zinc capitals on carbon hit hard at small sizes, with the tilt adding tension.",
-   "The subject is tilted the other way and cut by a red slash, so the whole frame feels deliberately off-balance.",
+   "Two tilted words in heavy zinc capitals on black read at small sizes, and the tilt adds tension.",
+   "The subject is tilted the other way and cut by a red slash, so the whole frame feels off-balance on purpose.",
    "A narrow label adds context without adding words to the headline.",
-   "The bottom-right corner keeps clear of text for the video length."
+   "The bottom-right corner is kept clear of text for the video length."
   ],
   "background": "secondary",
   "blocks": [
@@ -5668,10 +5668,10 @@
   "format": "magazine",
   "name": "Pop Art Panel Cover",
   "notes": [
-   "Process-blue, tomato-red, and comic-yellow caption plates isolate all text completely from complex halftone screen textures.",
-   "The top masthead plate commands newsstand visibility, while the expanded issue banner beneath it provides stable, uncrowded metadata.",
-   "A high-contrast circular burst and asymmetric narrative plates establish authentic Silver Age comic pacing around the central portrait.",
-   "All typography strictly respects safe margins and delivers high-contrast editorial hierarchy using Bangers and Comic Neue."
+   "Blue, red and yellow caption plates sit under all the text, so it stays readable over the halftone dots.",
+   "The masthead sits on its own plate at the top, with the issue details on a banner just below it.",
+   "A round burst and off-centre caption boxes around the portrait pace the cover like a comic page.",
+   "Bangers for the headlines and Comic Neue for the small lines give a clear comic-book hierarchy."
   ],
   "background": "background",
   "blocks": [
@@ -5960,10 +5960,10 @@
   "format": "poster",
   "name": "Pop Art Explosion",
   "notes": [
-   "A monumental hero comic panel framed in heavy ink borders anchors the composition as the undisputed visual focal point.",
-   "An offset, angled red-and-black title slab cuts across the center backed by dynamic comic rays, ensuring instant legibility from across a room.",
-   "Strict 5% outer margins and a solid ink border panel preserve the disciplined graphic containment characteristic of vintage comic book covers.",
-   "Event details are grouped cleanly in the lower left, offset by an angled circular callout badge in vibrant primary blue and yellow."
+   "One large comic panel with a heavy black border is the focal point.",
+   "An angled red-and-black title slab across the centre, with rays behind it, reads from across a room.",
+   "Wide margins and a solid black border keep everything inside the frame, like a comic cover.",
+   "The event details are grouped bottom left, next to a round blue and yellow badge."
   ],
   "background": "background",
   "blocks": [
@@ -6180,10 +6180,10 @@
   "format": "flyer",
   "name": "Pop Comic Panel",
   "notes": [
-   "Solid primary color plates isolate text blocks from the energetic sunburst background, guaranteeing instant readability.",
-   "The layout strictly follows comic storytelling flow: teaser banner, explosive title, central visual, narrative caption, and clear call to action.",
-   "Thick black comic borders and primary color blocking evoke classic 1960s silk-screen printing and comic book ephemera.",
-   "Two-column split at the bottom cleanly separates narrative exhibition details from the primary call to action."
+   "Solid primary-colour plates under each text block keep the words readable over the sunburst.",
+   "The page reads like a comic strip: teaser, title, picture, caption, then the call to action.",
+   "Thick black borders and flat primary blocks look like 1960s screen prints and comics.",
+   "Two columns at the foot separate the exhibition details from the call to action."
   ],
   "background": "background",
   "blocks": [
@@ -6311,7 +6311,7 @@
     "y": 0.695,
     "w": 0.48,
     "h": 0.145,
-    "text": "Marvel at monumental screenprints, electric Ben-Day dots, and everyday totems that shattered traditional fine art and ignited modern culture.",
+    "text": "Marvel at huge screenprints, electric Ben-Day dots, and everyday totems that shattered traditional fine art and ignited modern culture.",
     "label": "Body Text",
     "font": "Comic Neue",
     "weight": 700,
@@ -6392,10 +6392,10 @@
   "format": "thumbnail",
   "name": "Pop Comic Punch",
   "notes": [
-   "Full-saturation primary sunburst rays create immediate visual punch without washed-out opacities, honoring authentic Pop Art printmaking.",
-   "Asymmetric layout positions the main subject safely above the bottom-right timestamp zone to ensure key focal elements stay unobstructed.",
-   "Hard-edged black drop shadows behind vivid primary and secondary caption plates deliver maximum comic-book contrast and instant mobile legibility.",
-   "Massive Bangers display type scaled at 0.22 guarantees that the two-word headline punches through crowded video feeds even at tiny thumbnail sizes."
+   "Full-strength primary rays behind the subject make the frame stand out in a feed.",
+   "The subject sits high and off-centre, clear of the video length in the bottom-right corner.",
+   "Hard black drop shadows behind the bright caption plates keep the words sharp on a phone.",
+   "Two words of very large Bangers type stay readable at thumbnail size."
   ],
   "background": "background",
   "blocks": [
@@ -7144,9 +7144,9 @@
   "name": "Clash Split",
   "notes": [
    "Two words in a chunky black display face on aqua read clearly at 120 px.",
-   "The subject sits in a tilted black frame over a pink sun and yellow half-disc, instantly Memphis even when tiny.",
-   "A black tag and a small striped block add the style's graphic punch without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The subject sits in a tilted black frame over a pink sun and yellow half-disc, which reads as Memphis even when small.",
+   "A black tag and a small striped block add pattern without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "secondary",
   "blocks": [
@@ -7260,10 +7260,10 @@
   "format": "magazine",
   "name": "Chiaroscuro Quarterly",
   "notes": [
-   "The painting fills the cover and the type lives in its own darkness, as a tenebrist painter would place a figure against the void.",
-   "Wide-tracked classical capitals in candle gold and an italic serif give the masthead the gravity of an inscription.",
-   "Dark veils at the top and foot deepen the shadows just enough to keep gold and white type crisp over the painting.",
-   "A thin gold rule is the only ornament: restraint that lets the light in the image do the work."
+   "The painting fills the cover and the type sits in its dark areas, where a tenebrist painter leaves empty shadow.",
+   "Widely spaced classical capitals in gold, with an italic serif, make the masthead look carved.",
+   "Dark gradients at the top and foot deepen the shadows just enough to keep gold and white type sharp over the painting.",
+   "A thin gold rule is the only ornament, so the light in the image stays the focus."
   ],
   "background": "background",
   "blocks": [
@@ -7406,10 +7406,10 @@
   "format": "poster",
   "name": "Light from Darkness",
   "notes": [
-   "The image hangs in a thin gilt frame on a near-black wall, the way old masters are lit and hung in a gallery.",
-   "Roman capitals with generous tracking give the title the calm authority of a museum exhibition poster.",
-   "Cream for the title and candle gold for details keep contrast high while staying warm and candlelit.",
-   "Symmetry and wide margins let the drama come from the painting's own light, not from the layout."
+   "The image hangs in a thin gilt frame on a near-black ground, the way old paintings are hung and lit in a gallery.",
+   "Widely spaced Roman capitals give the title the calm look of a museum exhibition poster.",
+   "Cream for the title and gold for the details keep contrast high and the colours warm.",
+   "Symmetry and wide margins leave the drama to the light in the painting."
   ],
   "background": "background",
   "blocks": [
@@ -7637,10 +7637,10 @@
   "format": "thumbnail",
   "name": "Shadow Split",
   "notes": [
-   "Gold Roman capitals in the dark half of the frame read strongly at thumbnail size, like light falling on stone.",
-   "The subject fills the other half with its own hard light, so the split mirrors tenebrism's light-and-void contrast.",
-   "A thin gold rule and an italic line add refinement without more headline words.",
-   "The bottom-right corner holds only the painting, clear for the duration badge."
+   "Gold Roman capitals in the dark half of the frame read clearly at thumbnail size.",
+   "The subject fills the other half with its own hard light, so the frame splits into light and dark.",
+   "A thin gold rule and an italic line add detail without more headline words.",
+   "The bottom-right corner holds only the painting, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -7708,10 +7708,10 @@
   "format": "magazine",
   "name": "Sketchbook Issue",
   "notes": [
-   "Ruled notebook lines, a red margin, taped-on photo and highlighter swipes turn the cover into a sketchbook page.",
-   "A doodle-shadow display face for the masthead and bubble letters for the lead line are hand-lettering fonts, not hand-drawn, so they stay crisp and editable.",
-   "Black marker type on paper keeps everything readable, with coral and sky blue only as highlighter and tape.",
-   "A round coral sticker gives the cover a playful call-out without crowding the image."
+   "Ruled notebook lines, a red margin, a taped-on photo and highlighter swipes make the cover look like a sketchbook page.",
+   "The masthead and lead line use hand-lettering fonts, so they look drawn but stay crisp and editable.",
+   "Black marker-style type on paper keeps everything readable; coral and sky blue appear only as highlighter and tape.",
+   "A round coral sticker calls out one line without crowding the image."
   ],
   "background": "background",
   "blocks": [
@@ -8174,10 +8174,10 @@
   "format": "flyer",
   "name": "Lettering 101",
   "notes": [
-   "A bubble-letter headline stacked like a notebook title, with a highlighter swipe under the number, sets the hands-on tone.",
-   "A tilted sky-blue sticky note carries the reassurance ('beginner friendly'), just as a teacher would pin it.",
-   "The photo is taped on and slightly crooked, and the details are in handwriting, so the flyer reads as a sketchbook page.",
-   "The call to action is a solid black marker block, the strongest contrast on the page."
+   "A stacked bubble-letter headline with a highlighter swipe under the number sets a hands-on tone.",
+   "A tilted sky-blue sticky note carries the reassurance ('beginner friendly'), as if pinned there by a teacher.",
+   "The photo is taped on slightly crooked and the details are handwritten, so the flyer reads as a sketchbook page.",
+   "The call to action is a solid black block, the strongest contrast on the page."
   ],
   "background": "background",
   "blocks": [
@@ -8373,10 +8373,10 @@
   "format": "thumbnail",
   "name": "Scribble Split",
   "notes": [
-   "Doodled shadow capitals over a sky-blue highlighter swipe read loud and clear at small sizes.",
-   "The subject sits in a round coral blob, the bright shape a doodler draws around the thing that matters.",
-   "A handwritten line underneath adds personality without adding headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "Doodled shadow capitals over a sky-blue highlighter swipe read clearly at small sizes.",
+   "The subject sits in a round coral blob, the shape you'd draw around the thing that matters.",
+   "A handwritten line underneath adds a voice without adding headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -8459,9 +8459,9 @@
   "format": "magazine",
   "name": "Drafting Sheet",
   "notes": [
-   "A faint construction grid, a dimension line and a boxed title block turn the cover into a drawing sheet, the blueprint's own layout.",
-   "Chalk-white technical sans for the masthead and a mono for sheet details echo engineering lettering.",
-   "A hand-lettered annotation under the dimension line adds the draughtsman's touch.",
+   "A faint grid, a dimension line and a boxed title block make the cover look like a technical drawing sheet.",
+   "White technical sans for the masthead and a monospaced face for the sheet details match engineering lettering.",
+   "A hand-lettered note under the dimension line shows the drafter's hand.",
    "White on Prussian blue is high contrast, so every size stays readable."
   ],
   "background": "background",
@@ -8802,10 +8802,10 @@
   "format": "poster",
   "name": "Crosshair Sheet",
   "notes": [
-   "The image sits inside a circular crosshair on a construction grid, like a detail called out on a technical sheet.",
-   "A two-line title in white technical capitals reads from a distance against Prussian blue.",
-   "An engineering title block at the foot holds all the details in two tidy cells.",
-   "Only white linework on blue: the blueprint's single-ink discipline, with no extra colour."
+   "The image sits inside a circular crosshair on a grid, like a detail called out on a technical sheet.",
+   "A two-line title in white technical capitals reads from a distance against the blue.",
+   "A title block at the foot holds all the details in two cells, as on an engineering drawing.",
+   "Only white lines on blue, with no extra colour, as in a real blueprint."
   ],
   "background": "background",
   "blocks": [
@@ -8999,10 +8999,10 @@
   "format": "flyer",
   "name": "Workshop Sheet",
   "notes": [
-   "A deep-blue header band and a white title block frame the page like a drafting sheet ready to be filled in.",
-   "The image is boxed and captioned as 'fig. 1' in hand lettering, the draughtsman's annotation habit.",
-   "A white call-to-action block with deep-blue type is the one solid, filled shape, so it stands out immediately.",
-   "Technical sans, mono and hand lettering together give precision with a human hand."
+   "A deep-blue header band and a white title block frame the page like a drafting sheet.",
+   "The image is boxed and captioned 'fig. 1' in hand lettering, as a drafter would label it.",
+   "The white call-to-action block is the only filled shape, so it stands out at once.",
+   "Technical sans, monospaced type and hand lettering together look precise but hand-made."
   ],
   "background": "background",
   "blocks": [
@@ -9276,10 +9276,10 @@
   "format": "thumbnail",
   "name": "Sheet Split",
   "notes": [
-   "Three words in white technical capitals on Prussian blue stay sharp and readable at small sizes.",
+   "Three words in white technical capitals on Prussian blue stay sharp at small sizes.",
    "A dimension line under the title and a white-framed image make the thumbnail look like a drawing sheet.",
-   "A hand-lettered label adds the draughtsman's voice without adding headline words.",
-   "The bottom-right corner holds only the framed image, clear for the duration badge."
+   "A hand-lettered label adds context without adding headline words.",
+   "The bottom-right corner holds only the framed image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -9398,10 +9398,10 @@
   "format": "magazine",
   "name": "Scrapbook Review",
   "notes": [
-   "The photo is glued onto a tilted paper sheet beside a navy disc, the overlapping fragments and abrupt scale shifts of Dada collage.",
-   "Cover lines sit on their own scraps (yellow, brick red) as if cut from different printed sources.",
-   "A fat display serif masthead meets a condensed poster face and a typewriter face: found type from three worlds.",
-   "Navy on kraft, navy on yellow and cream on brick all keep strong contrast inside the aged palette."
+   "The photo is stuck onto a tilted paper sheet beside a navy disc: overlapping pieces at sudden changes of scale, as in Dada collage.",
+   "Cover lines sit on their own scraps (yellow, brick red), as if cut from different printed sources.",
+   "A fat display serif, a condensed poster face and a typewriter face look like type found in three places.",
+   "Navy on kraft, navy on yellow and cream on brick all keep strong contrast within the aged palette."
   ],
   "background": "background",
   "blocks": [
@@ -9970,10 +9970,10 @@
   "format": "thumbnail",
   "name": "Cut-Out Split",
   "notes": [
-   "Two words on separate cut-out scraps, a black serif on cream and cream capitals on navy, read boldly at 120 px.",
-   "The subject is glued at an angle over a navy disc with yellow tape: collage in one glance.",
+   "Two words on separate cut-out scraps, black serif on cream and cream capitals on navy, read at 120 px.",
+   "The subject is stuck on at an angle over a navy disc with yellow tape, which reads as collage at a glance.",
    "A typewriter label adds context without adding headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -10095,10 +10095,10 @@
   "format": "magazine",
   "name": "Basement Fuzz Zine",
   "notes": [
-   "Soot-black backing plates and a reversed cream sticker plate establish a guaranteed 9:1 contrast ratio over unpredictable background image noise.",
-   "Slight rotational offsets combined with rust and olive tape tabs authentically evoke 1990s cut-and-paste DIY Xerox gig flyers.",
-   "The typographic pairing combines degraded Rubik Distressed woodtype for dominant cover headlines with Special Elite typewriter type for editorial grit.",
-   "The editorial layout hugs the left flank and corners, preserving an open visual field for the subject's face in the center-right."
+   "Black plates and a cream sticker sit behind the text, so it stays readable over a noisy photo.",
+   "Slightly rotated blocks and rust and olive tape tabs look like a 1990s photocopied gig flyer.",
+   "Rubik Distressed for the headlines and Special Elite typewriter type for the small lines give a rough, worn texture.",
+   "The text keeps to the left side and corners, leaving the centre-right clear for the subject's face."
   ],
   "background": "background",
   "blocks": [
@@ -10477,9 +10477,9 @@
   "format": "poster",
   "name": "Underground Noise Gig Poster",
   "notes": [
-   "A high-contrast cream paper plate creates an unmissable anchor for the distressed headline against the gritty background.",
-   "Framing the logistical gig bill in a dedicated border respects the core poster principle of grouped supporting information.",
-   "Strict soot-and-cream text pairings ensure maximum distance legibility while channeling 1990s Xerox flyer culture."
+   "A cream paper plate behind the distressed headline makes it the first thing you read.",
+   "The gig details sit together inside one border, so they're easy to find.",
+   "Only black and cream are used for text, so it reads from a distance, like a photocopied flyer."
   ],
   "background": "background",
   "blocks": [
@@ -10667,10 +10667,10 @@
   "format": "flyer",
   "name": "Basement Xerox Flyer",
   "notes": [
-   "A disciplined 6% perimeter margin keeps distressed grunge elements organized and functional.",
-   "Weathered display lettering and typewriter body type capture authentic 1990s photocopied gig flyers.",
-   "A high-contrast cream tape plate makes urgent event logistics pop against the soot background.",
-   "Clear vertical segmentation leads the viewer effortlessly from the band headline down to venue coordinates."
+   "A wide margin all round keeps the rough elements tidy enough to read.",
+   "Worn display lettering and typewriter body text look like a photocopied 1990s gig flyer.",
+   "The event details sit on a cream tape strip, which stands out against the black ground.",
+   "The page is split into clear horizontal bands, from the band name down to the venue."
   ],
   "background": "background",
   "blocks": [
@@ -10832,9 +10832,9 @@
   "format": "thumbnail",
   "name": "Grunge Zine Cutout",
   "notes": [
-   "Aggressive distressed display typography set at 0.18 height delivers instant scannability on small screens.",
-   "Staggered rotational offsets mimic cut-and-paste gig flyers without disrupting eye-tracking or word legibility.",
-   "Text and paper plates are strictly anchored to the left 48% to guarantee clear visual separation from the subject and avoid the duration badge."
+   "Very large distressed type reads at a glance on a small screen.",
+   "Blocks are rotated by different small amounts, like pasted-up flyers, but each word stays readable.",
+   "All text and paper plates stay in the left half, apart from the subject and away from the video length."
   ],
   "background": "background",
   "blocks": [
@@ -10953,10 +10953,10 @@
   "format": "magazine",
   "name": "Scream Zine",
   "notes": [
-   "A roughed-up masthead on a taped paper scrap, fluoro-pink tape and a yellow sticker: the cut-and-paste zine at full volume.",
-   "The photo is crooked and framed in black like a photocopy slapped onto the page.",
-   "The lead line reverses out of a black bar, and the free flexi shouts from a pink scrap in marker.",
-   "Toner black on xerox white keeps every word readable; the fluoros stay as tape and stickers."
+   "A rough masthead on a taped paper scrap, pink tape and a yellow sticker make the cover look like a cut-and-paste zine.",
+   "The photo is crooked and framed in black, like a photocopy stuck onto the page.",
+   "The lead line is white on a black bar, and the free gift is written in marker on a pink scrap.",
+   "Black on white keeps every word readable; the fluorescent colours are only tape and stickers."
   ],
   "background": "background",
   "blocks": [
@@ -11541,10 +11541,10 @@
   "format": "thumbnail",
   "name": "Ransom Split",
   "notes": [
-   "Two ransom-note words, white on black and black on white, jump off fluoro yellow at any size.",
-   "The subject is crooked in a black photocopy frame with pink tape: instantly punk.",
-   "A scrawled marker aside adds attitude without adding headline words.",
-   "The bottom-right corner holds only the photo, clear for the duration badge."
+   "Two ransom-note words, white on black and black on white, stand out against fluorescent yellow at any size.",
+   "The subject is crooked in a black photocopy frame with pink tape.",
+   "A scrawled marker note adds attitude without adding headline words.",
+   "The bottom-right corner holds only the photo, clear for the video length."
   ],
   "background": "accent",
   "blocks": [
@@ -11678,10 +11678,10 @@
   "format": "magazine",
   "name": "Pulse Issue",
   "notes": [
-   "A rose square turned to a diamond and a cyan square behind the photo layer geometric shapes over a visible grid, the core New Wave move.",
-   "A tall condensed masthead with three stepped rules underneath nods to the era's stepped, repeated type.",
-   "Pixel-like squares and a striped foot band add the dot-screen and stripe texture of record sleeves.",
-   "Navy type on sleeve white keeps it crisp; the neon rose and cyan stay in the shapes."
+   "A rose diamond and a cyan square behind the photo layer flat shapes over a visible grid, as New Wave design did.",
+   "A tall condensed masthead with three stepped rules under it repeats the era's stepped type.",
+   "Small squares and a striped band at the foot add the dot and stripe patterns of record sleeves.",
+   "Navy type on white keeps the words sharp; the neon rose and cyan stay in the shapes."
   ],
   "background": "background",
   "blocks": [
@@ -12313,10 +12313,10 @@
   "format": "thumbnail",
   "name": "Cold Wave Split",
   "notes": [
-   "Two tall condensed words in white on deep navy are sharp and legible at 120 px.",
-   "A neon-rose diamond behind the subject gives instant New Wave geometry and silhouette separation.",
-   "Rose stripes and a cyan label finish the typographic block without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "Two tall condensed words in white on deep navy are sharp and readable at 120 px.",
+   "A neon-rose diamond behind the subject separates its outline from the background.",
+   "Rose stripes and a cyan label finish the text block without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "primary",
   "blocks": [
@@ -12397,10 +12397,10 @@
   "format": "magazine",
   "name": "70s Golden Groove",
   "notes": [
-   "A generous sunbleached cream header block guarantees immediate newsstand masthead recognition while honoring 1970s magazine trade dress.",
-   "Multi-tone warm stripes provide authentic period rhythm without encroaching on central photography space.",
-   "Deep olive brown typography on cream backing plates guarantees high contrast and effortless legibility across all editorial copy.",
-   "The asymmetric composition creates a clear reading sequence from the top masthead to the right-hand features and anchors the lead story in the lower left."
+   "A wide cream band at the top holds the masthead, as on 1970s magazines.",
+   "Warm stripes add the period pattern without cutting into the photo.",
+   "Olive-brown text on cream plates is easy to read everywhere on the cover.",
+   "The cover reads from the masthead, to the features on the right, to the lead story in the lower left."
   ],
   "background": "background",
   "blocks": [
@@ -12673,9 +12673,9 @@
   "format": "poster",
   "name": "70s Rainbow Arch Poster",
   "notes": [
-   "Concentric rust and burnt orange arches create an authentic 1970s rainbow framing device for the hero image.",
-   "Shrikhand provides maximum vintage personality and distance readability in a stacked two-line festival headline.",
-   "Event logistics and callouts are rendered in Bitter olive brown against the cream canvas to guarantee strong contrast and legibility."
+   "Rust and orange arches around the image make the 1970s rainbow frame.",
+   "A stacked two-line Shrikhand headline is full of character and reads from a distance.",
+   "Event details are set in olive-brown Bitter on cream for strong contrast."
   ],
   "background": "background",
   "blocks": [
@@ -12851,10 +12851,10 @@
   "format": "flyer",
   "name": "70s Golden Sun Flyer",
   "notes": [
-   "An arched photo cutout pays homage to classic 1970s psych-folk album jackets and festival posters.",
-   "Rendering the Shrikhand headline in rust red provides authentic period punch while comfortably exceeding contrast thresholds.",
-   "An olive-brown CTA plate and matching typography ground the composition and guarantee sharp readability against the warm cream paper tone.",
-   "Balanced horizontal stripe bands separate display typography from the central visual without heavy structural dividers."
+   "An arched photo cut-out recalls 1970s folk album covers and festival posters.",
+   "The Shrikhand headline in rust red has period character and enough contrast to read.",
+   "An olive-brown call-to-action plate and matching type stand out on the warm cream paper.",
+   "Horizontal stripe bands separate the headline from the picture without heavy dividers."
   ],
   "background": "background",
   "blocks": [
@@ -13033,10 +13033,10 @@
   "format": "thumbnail",
   "name": "70s Retro Groove Thumbnail",
   "notes": [
-   "Concentric curved arch bands frame the subject on the right, channeling iconic 1970s rainbow graphics while silhouette-cutting the visual focus.",
-   "Massive Shrikhand headline lettering paired with Righteous tags ensures immediate legibility on small mobile thumbnail screens.",
-   "The entire bottom-right quadrant is reserved for the base of the image cutout, keeping critical typography safe from platform duration stamps.",
-   "Earthy olive brown and rust red text blocks provide strong contrast against the sunbleached cream background without relying on harsh digital blacks."
+   "Curved rainbow bands frame the subject on the right and outline its shape.",
+   "Very large Shrikhand lettering with Righteous tags reads on a small phone screen.",
+   "The bottom-right quarter holds only the base of the image, so the video length covers no text.",
+   "Olive-brown and rust text contrast well with the cream ground, without harsh black."
   ],
   "background": "background",
   "blocks": [
@@ -13815,10 +13815,10 @@
   "format": "magazine",
   "name": "Outrun Issue",
   "notes": [
-   "The image becomes the striped setting sun, sliced by bands of night sky, over a magenta perspective grid: the genre's signature horizon.",
-   "A neon-outline masthead in laser cyan and a brush-script subtitle in hot magenta echo chrome-and-neon cassette covers.",
-   "A dark plate over the grid keeps the cover lines crisp against the glowing lines.",
-   "Every colour sits on midnight violet, so cyan, magenta and orange glow while staying readable."
+   "The image becomes a striped setting sun over a magenta grid, the horizon used on synthwave covers.",
+   "A neon-outline masthead in cyan and a brush-script subtitle in magenta match 1980s cassette covers.",
+   "A dark plate over the grid keeps the cover lines sharp against the glowing lines.",
+   "Every colour sits on dark violet, so cyan, magenta and orange glow and stay readable."
   ],
   "background": "background",
   "blocks": [
@@ -14159,10 +14159,10 @@
   "format": "poster",
   "name": "Night Drive",
   "notes": [
-   "A striped sunset disc framing the image over a magenta grid is the instantly recognisable synthwave horizon.",
-   "A two-line neon-outline title and a brush-script line give the chrome-and-neon type pairing of retrowave posters.",
-   "A dark plate behind the words keeps the glowing grid from fighting the type.",
-   "Details in orange and small white capitals stay grouped and readable at the foot."
+   "A striped sun framing the image over a magenta grid is the synthwave horizon.",
+   "A two-line neon-outline title with a brush-script line gives the neon-and-chrome type of retrowave posters.",
+   "A dark plate behind the words stops the glowing grid from competing with the type.",
+   "Details in orange and small white capitals are grouped at the foot."
   ],
   "background": "background",
   "blocks": [
@@ -14541,10 +14541,10 @@
   "format": "flyer",
   "name": "Retro Arcade",
   "notes": [
-   "A neon-outline title in hot magenta, a cyan brush-script line and a small striped sun set the retrowave mood at the top.",
-   "The image sits in a cyan-framed screen, like an arcade cabinet glowing in the dark.",
-   "The magenta grid runs along the foot and the call to action is a solid cyan block on top of it, the brightest thing on the page.",
-   "Orbitron for details keeps the futuristic, techno feel while staying legible at small sizes."
+   "A neon-outline title in magenta, a cyan brush-script line and a small striped sun set the mood at the top.",
+   "The image sits in a cyan-framed screen, like an arcade cabinet in the dark.",
+   "The magenta grid runs along the foot with the call to action on a solid cyan block, the brightest thing on the page.",
+   "Orbitron for the details keeps a futuristic feel and still reads at small sizes."
   ],
   "background": "background",
   "blocks": [
@@ -14891,10 +14891,10 @@
   "format": "thumbnail",
   "name": "Sunset Split",
   "notes": [
-   "A neon-outline title in laser cyan reads clearly at 120 px against midnight violet.",
-   "The subject sits inside a striped orange sun over a magenta grid: the whole genre in one silhouette.",
-   "A brush-script volume number adds flavour without adding headline words.",
-   "The grid fills the bottom-right, leaving no text where the duration badge sits."
+   "A neon-outline title in cyan reads clearly at 120 px against dark violet.",
+   "The subject sits inside a striped orange sun over a magenta grid.",
+   "A brush-script volume number adds detail without adding headline words.",
+   "The grid fills the bottom-right, so no text sits where the video length appears."
   ],
   "background": "background",
   "blocks": [
@@ -15139,10 +15139,10 @@
   "format": "magazine",
   "name": "Spectra Monthly",
   "notes": [
-   "Laser beams in pink and chrome blue cross behind a round, mirror-ball-like image: the centred emblem of Italo record sleeves.",
-   "A chrome-blue techno masthead with a laser-pink neon script under it is straight from airbrushed 1980s sleeve lettering.",
-   "Star glints scatter across deep space navy, and gold picks out the lead line like a spotlight.",
-   "Every colour glows on the dark navy ground, keeping small type readable."
+   "Pink and blue laser beams cross behind a round, mirror-ball-like image, the centred emblem of Italo record sleeves.",
+   "A chrome-blue masthead with a pink neon script under it copies airbrushed 1980s sleeve lettering.",
+   "Star glints are scattered over dark navy, and gold picks out the lead line like a spotlight.",
+   "Every colour stands out on the dark navy ground, so small type stays readable."
   ],
   "background": "background",
   "blocks": [
@@ -15378,10 +15378,10 @@
   "format": "poster",
   "name": "Stardust Roller",
   "notes": [
-   "Spotlight beams fan down from the top onto a gold-ringed emblem, the dramatic, centred staging of Italo sleeves.",
-   "A neon-outline title in laser pink and a chrome-blue script line give the airbrushed lettering of the era.",
-   "A pink-and-blue striped floor evokes the lit dance floor at the foot.",
-   "Gold details on navy stay crisp and easy to find."
+   "Spotlight beams fan down onto a gold-ringed emblem, centred like an Italo sleeve.",
+   "A neon-outline title in pink and a chrome-blue script line give the airbrushed lettering of the era.",
+   "A pink and blue striped floor at the foot suggests a lit dance floor.",
+   "Gold details on navy stay sharp and easy to find."
   ],
   "background": "background",
   "blocks": [
@@ -15577,10 +15577,10 @@
   "format": "flyer",
   "name": "Chrome Heart",
   "notes": [
-   "A chrome-blue techno title with laser-pink script and a gold star glint open the flyer like a 12-inch sleeve.",
-   "The image is framed in laser pink with beams crossing behind it, the club's light show made graphic.",
-   "The call to action is a solid pink block with dark type, clear and punchy.",
-   "Details run in gold and the body in soft white, both high contrast on navy."
+   "A chrome-blue title with pink script and a gold star open the flyer like a 12-inch sleeve.",
+   "The image is framed in pink with beams crossing behind it, like a club light show.",
+   "The call to action is a solid pink block with dark type, easy to spot.",
+   "Details are in gold and body text in soft white, both high contrast on navy."
   ],
   "background": "background",
   "blocks": [
@@ -15808,10 +15808,10 @@
   "format": "thumbnail",
   "name": "Laser Split",
   "notes": [
-   "Chrome-blue techno capitals on deep navy read clearly at small sizes.",
-   "The subject sits in a round pink-ringed emblem with lasers crossing behind, instantly Italo.",
-   "A laser-pink script line adds the airbrushed-sleeve flavour without extra headline words.",
-   "The bottom-right corner holds only lasers and stars, clear for the duration badge."
+   "Chrome-blue capitals on deep navy read clearly at small sizes.",
+   "The subject sits in a round pink-ringed emblem with lasers crossing behind it.",
+   "A pink script line adds the airbrushed-sleeve look without extra headline words.",
+   "The bottom-right corner holds only lasers and stars, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -16525,10 +16525,10 @@
   "format": "thumbnail",
   "name": "Sky Split",
   "notes": [
-   "Bubbly black display letters on summer-sky blue are bold and legible at thumbnail size.",
-   "The subject sits in a big lemon sun, the sunny city-pop framing in one shape.",
-   "A katakana line and a pink stripe add future-funk flavour without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "Bubbly black display letters on sky blue are bold and readable at thumbnail size.",
+   "The subject sits in a big lemon sun, the sunny framing of city-pop sleeves.",
+   "A katakana line and a pink stripe add detail without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "secondary",
   "blocks": [
@@ -16607,10 +16607,10 @@
   "format": "magazine",
   "name": "Floating Window Cover",
   "notes": [
-   "The cover image sits inside a floating early-OS window, vaporwave's signature frame, so any picture instantly reads as the aesthetic.",
-   "A violet band carries the wide-tracked italic serif masthead in lavender, with spaced katakana under it for the genre's Japanese signage.",
-   "Pastels are too close in lightness for small type, so cover lines and the sticker set in ink, keeping the palette soft but readable.",
-   "A round teal sticker and a terminal-style loading line add the ironic, retro-computer humour the style is known for."
+   "The image sits inside a floating early-computer window, the frame vaporwave uses most, so any picture reads as the style.",
+   "A violet band carries the widely spaced italic serif masthead in lavender, with spaced katakana under it.",
+   "The pastels are too close in lightness for small type, so the cover lines and sticker are set in dark ink.",
+   "A round teal sticker and a fake loading line add the style's retro-computer joke."
   ],
   "background": "background",
   "blocks": [
@@ -16833,10 +16833,10 @@
   "format": "poster",
   "name": "Sunset Arch Poster",
   "notes": [
-   "A teal-edged arch over a pink sunburst frames the image like a mall-atrium shrine, the genre's surreal still life turned into a focal point.",
-   "The pink-and-teal striped floor echoes vaporwave's receding checker tiles and grounds the arch.",
-   "The headline is set big in wide italic serif, so it reads across a room while staying true to the style's early-desktop type.",
-   "All the practical details sit in one small lavender window at the foot, grouped and quiet."
+   "A teal-edged arch over a pink sunburst frames the image like a shrine in a shopping-mall atrium.",
+   "The pink and teal striped floor echoes vaporwave's receding checker tiles and grounds the arch.",
+   "The headline is a large, wide italic serif, so it reads across a room in the style's early-desktop type.",
+   "All the practical details sit in one small lavender window at the foot."
   ],
   "background": "secondary",
   "blocks": [
@@ -16972,10 +16972,10 @@
   "format": "flyer",
   "name": "Desktop Windows Flyer",
   "notes": [
-   "The flyer is laid out as an early desktop of overlapping windows, so the reading order (welcome, picture, info, button) feels like browsing an old PC.",
-   "Pink title bars and violet window edges carry the palette while ink type keeps every line readable on the pastels.",
-   "The call to action is a chunky violet button, instantly clickable-looking and the strongest contrast on the page.",
-   "A striped floor along the foot nods to vaporwave's checker tiles without competing with the details."
+   "The flyer is laid out as overlapping windows on an old desktop, read in order: welcome, picture, info, button.",
+   "Pink title bars and violet window edges carry the colours, while dark type keeps every line readable on the pastels.",
+   "The call to action is a chunky violet button, which looks clickable and has the strongest contrast on the page.",
+   "A striped floor along the foot echoes vaporwave's checker tiles without competing with the details."
   ],
   "background": "primary",
   "blocks": [
@@ -17245,10 +17245,10 @@
   "format": "thumbnail",
   "name": "Vapor OS Portal",
   "notes": [
-   "The pool teal operating system window creates immediate nostalgic focal grounding while shielding typography from ambient gradient textures.",
-   "Asymmetric split balances a high-impact classical arch portal on the right against high-contrast retro desktop typography on the left.",
-   "The visual portal terminates at 0.80 canvas height to ensure video player duration timestamps never obstruct the focal subject.",
-   "Vibrant interplay between dusk violet, pool teal, and vapor pink captures the hallmark surrealism of early internet aesthetics."
+   "A teal computer window holds the words, so they read cleanly over the gradient.",
+   "Text on the left and a classical arch with the subject on the right split the frame clearly.",
+   "The arch stops at 80% of the height, so the video length never covers the subject.",
+   "Violet, teal and pink together give the early-internet colours of the style."
   ],
   "background": "secondary",
   "blocks": [
@@ -17387,10 +17387,10 @@
   "format": "magazine",
   "name": "Frost Issue",
   "notes": [
-   "The hazy image fills the cover and the masthead stays small, wide and lowercase, the quiet confidence of late-90s club and fashion titles.",
-   "A frosted translucent panel holds the cover lines, like type printed on a clear plastic sleeve.",
+   "The hazy image fills the cover and the masthead stays small, wide and lowercase, like late-90s club and fashion titles.",
+   "A frosted see-through panel holds the cover lines, like type printed on a clear plastic sleeve.",
    "A dot-matrix typeface for the issue line and track time borrows from minidisc and CD-player displays.",
-   "Lots of hazy negative space and an off-centre subject keep the mood calm and airy."
+   "Plenty of hazy empty space and an off-centre subject keep the mood calm."
   ],
   "background": "background",
   "blocks": [
@@ -17774,10 +17774,10 @@
   "format": "thumbnail",
   "name": "Soft Split",
   "notes": [
-   "Wide lowercase type, set large for once, stays legible at 120 px while keeping the soft-club tone.",
-   "The hazy subject fills the right half; the left stays airy, frosted blue-white.",
-   "A dot-matrix label and a thin rule add the portable-player detail without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "Wide lowercase type, set large, stays readable at 120 px and keeps the soft-club tone.",
+   "The hazy subject fills the right half; the left stays empty and pale blue-white.",
+   "A dot-matrix label and a thin rule add a portable-player detail without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -17844,10 +17844,10 @@
   "format": "magazine",
   "name": "Electric Haze Psychedelic",
   "notes": [
-   "The concentric arched halo window evokes 1960s Fillmore and Avalon concert posters while creating a dedicated focal frame for the central subject.",
-   "High-contrast color-blocked plates pairing marigold with deep purple haze ensure all cover lines pass accessibility thresholds despite the vibrating palette.",
-   "Shrikhand delivers authentic swelling counterculture masthead forms, balanced by Righteous for punchy and legible secondary editorial blurbs.",
-   "Offset tangerine drop plates behind marigold panels produce optical resonance without interfering with typography."
+   "Rings of colour around an arched window frame the subject, as on 1960s Fillmore and Avalon concert posters.",
+   "Cover lines sit on marigold and deep purple plates, so they stay readable against the clashing colours.",
+   "Shrikhand gives the masthead swelling 1960s letterforms; Righteous keeps the smaller lines easy to read.",
+   "Tangerine plates offset behind the marigold panels add a printed, doubled edge without touching the type."
   ],
   "background": "primary",
   "blocks": [
@@ -18203,9 +18203,9 @@
   "format": "poster",
   "name": "Electric Odyssey Poster",
   "notes": [
-   "Grounding the poster in a deep purple haze canvas allows marigold typography to achieve high optical contrast while tangerine and electric green framing elements vibrate energetically.",
-   "The central arched portal crop evokes classic Victor Moscoso concert art, framed by optical sunburst rays that fill negative space without cluttering the typography.",
-   "Logistical dates and venue information are neatly grouped into an expanded lower-third zone with generous line height to guarantee effortless legibility."
+   "On the deep purple ground, marigold type has strong contrast, while tangerine and green frames add movement.",
+   "The arched image crop and the sunburst rays around it fill the space like 1960s concert art, away from the type.",
+   "Dates and venue sit together in the lower third with generous line spacing, so they're easy to read."
   ],
   "background": "primary",
   "blocks": [
@@ -18397,10 +18397,10 @@
   "format": "flyer",
   "name": "Cosmic Solstice Flyer",
   "notes": [
-   "Deep purple haze as the canvas foundation allows marigold typography to reach 4.86:1 contrast for effortless readability.",
-   "The sunburst radiating behind the central arched image creates authentic 1960s poster optical vibration without interfering with text blocks.",
-   "A dedicated marigold plate isolates the call-to-action button, fulfilling flyer principles with commanding contrast.",
-   "Concentric borders in electric green and tangerine anchor the composition and echo the psychedelic concert flyers of the Avalon and Fillmore."
+   "Marigold type on the deep purple ground has enough contrast to read comfortably.",
+   "The sunburst behind the arched image adds 1960s optical movement and stays clear of the text.",
+   "The call to action sits on its own marigold plate, so it stands out.",
+   "Green and tangerine borders frame the page like the Avalon and Fillmore concert flyers."
   ],
   "background": "primary",
   "blocks": [
@@ -18582,10 +18582,10 @@
   "format": "thumbnail",
   "name": "Psychedelic Arch Portal",
   "notes": [
-   "Concentric psychedelic arch rings frame the main subject cleanly while steering well clear of the bottom-right video duration overlay.",
-   "Offset silkscreen shadow plates provide authentic 1960s poster misregistration and eliminate empty space without adding clutter.",
-   "Restricting copy to three bold words maximizes immediate legibility on mobile thumbnail feeds.",
-   "Vibrating complementary pairs deliver high contrast and unmistakable counterculture punch."
+   "Rings of colour around an arch frame the subject and stay clear of the video length in the bottom-right.",
+   "Offset shadow plates look like misprinted 1960s screen prints and fill empty space.",
+   "Only three bold words, so they read straight away in a feed.",
+   "Clashing complementary colours give strong contrast at small sizes."
   ],
   "background": "background",
   "blocks": [
@@ -18741,10 +18741,10 @@
   "format": "magazine",
   "name": "Hyper Issue",
   "notes": [
-   "Concentric acid-green and ultraviolet rings radiate from a round image, the mirrored, tunnel-like symmetry of acid rave graphics.",
-   "A heavy, wide chrome masthead and a warped-feeling display face for the lead line give the liquid-chrome type energy.",
-   "Faint wireframe cross-lines hold the composition on a strict centre axis.",
-   "Acid green, chrome and ultraviolet all glow on rave black while staying readable."
+   "Green and ultraviolet rings radiate from a round image, the symmetrical tunnel shape of acid rave graphics.",
+   "A heavy, wide chrome masthead and a warped display face for the lead line give the liquid-chrome type.",
+   "Faint wireframe lines hold the layout on a centre axis.",
+   "Acid green, chrome and ultraviolet all stand out on black and stay readable."
   ],
   "background": "background",
   "blocks": [
@@ -18911,10 +18911,10 @@
   "format": "poster",
   "name": "Hyperspace Rave",
   "notes": [
-   "The image sits at the centre of glowing rings like a portal, the symmetrical, tunnelling composition of rave flyers.",
-   "A two-line, heavy chrome title dominates the lower half, readable across a dark room.",
-   "Acid-green date and ultraviolet web address keep the practical details distinct but on-palette.",
-   "A dark band behind the words keeps the glow from swallowing the type."
+   "The image sits at the centre of glowing rings like a portal, the symmetrical layout of rave flyers.",
+   "A heavy two-line chrome title fills the lower half and reads across a dark room.",
+   "The date in acid green and the web address in ultraviolet keep the details distinct.",
+   "A dark band behind the words stops the glow from swallowing the type."
   ],
   "background": "background",
   "blocks": [
@@ -19225,10 +19225,10 @@
   "format": "thumbnail",
   "name": "Liquid Split",
   "notes": [
-   "Heavy acid-green capitals on black are bold and legible at 120 px.",
-   "The subject sits in a circle ringed by green and ultraviolet, a portal that separates it from the void.",
-   "A techno label in chrome adds context without extra headline words.",
-   "The bottom-right corner holds only rings and image, clear for the duration badge."
+   "Heavy acid-green capitals on black are bold and readable at 120 px.",
+   "The subject sits in a circle ringed by green and ultraviolet, which separates it from the black.",
+   "A small chrome label adds context without extra headline words.",
+   "The bottom-right corner holds only rings and image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -19307,9 +19307,9 @@
   "format": "magazine",
   "name": "Y2K Cyber Glass",
   "notes": [
-   "Translucent frosted backing plates emulate early-2000s iMac and cyber gadget casing while keeping editorial typography crisp.",
-   "Michroma and Orbitron deliver the quintessential wide, rounded space-age look of Y2K tech culture.",
-   "The side-weighted editorial layout leaves the centre and upper thirds open for dynamic chrome and iridescent 3D subjects."
+   "See-through frosted plates behind the text look like early-2000s iMac casing and keep the type sharp.",
+   "Michroma and Orbitron give the wide, rounded space-age lettering of Y2K tech design.",
+   "The text keeps to one side, leaving the centre and top open for chrome or glossy 3D subjects."
   ],
   "background": "background",
   "blocks": [
@@ -19555,10 +19555,10 @@
   "format": "poster",
   "name": "Orbit Ring Poster",
   "notes": [
-   "A big glossy aqua circle holds the image, crossed by a tilted orbit ring: the blobby, orbiting forms that define millennium tech graphics.",
-   "Y2K's pastels and chrome are too light for type, so all lettering is black; the colour lives in the shapes, as on period rave flyers.",
-   "Wide Michroma capitals for the headline and Orbitron for details give the techno-optimistic, extended type the style is known for.",
-   "Details are grouped under the image and a pill-shaped button carries the call to action, keeping one clear focal point."
+   "A large glossy aqua circle holds the image, crossed by a tilted orbit ring, the bubble-and-orbit forms of millennium tech graphics.",
+   "Y2K pastels and chrome are too light for type, so all lettering is black and the colour stays in the shapes.",
+   "Wide Michroma capitals for the headline and Orbitron for details give the extended type of the period.",
+   "The details sit under the image and a pill-shaped button carries the call to action, so there is one focal point."
   ],
   "background": "background",
   "blocks": [
@@ -19922,10 +19922,10 @@
   "format": "thumbnail",
   "name": "Chrome Split Thumbnail",
   "notes": [
-   "Three words of huge black extended capitals on the left stay readable at 120 px, with the subject large on the right: the fastest-reading thumbnail split.",
-   "A glossy aqua circle behind the subject and a pink orbit ring give instant Y2K colour and silhouette separation, even when tiny.",
-   "A pink NEW! sticker adds the period's shouty web-banner energy without adding more words to the headline.",
-   "The bottom-right corner stays clear for the video player's duration badge."
+   "Three words of very large black extended capitals on the left stay readable at 120 px, with the subject large on the right.",
+   "A glossy aqua circle behind the subject and a pink orbit ring separate it from the background, even when small.",
+   "A pink NEW! sticker adds the loud web-banner look of the period without adding words to the headline.",
+   "The bottom-right corner stays clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -20043,10 +20043,10 @@
   "format": "magazine",
   "name": "Glossy Issue",
   "notes": [
-   "The image sits in a big glossy bubble with pink, lilac and champagne balloons floating around it, the puffy, clustered look of bubbleglam.",
+   "The image sits in a large glossy bubble with pink, lilac and champagne balloons around it.",
    "A bubble-letter masthead and a chunky display face for the lead line are the inflated lettering the style is named for.",
-   "A hot-pink pill carries the lead line like a balloon tag; all type is black so the candy colours stay readable.",
-   "Tiny white sparkles add rhinestone shine without clutter."
+   "A hot-pink pill carries the lead line like a balloon tag; all type is black so it reads on the candy colours.",
+   "Tiny white sparkles add shine without clutter."
   ],
   "background": "background",
   "blocks": [
@@ -20633,9 +20633,9 @@
   "name": "Bubble Split",
   "notes": [
    "Puffy black bubble letters on lilac read clearly at thumbnail size.",
-   "The subject floats in a glossy bubble with pink and champagne balloons, instantly bubbleglam.",
+   "The subject floats in a glossy bubble with pink and champagne balloons around it.",
    "A rounded label adds context without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "secondary",
   "blocks": [
@@ -20723,10 +20723,10 @@
   "format": "magazine",
   "name": "Homepage Weekly",
   "notes": [
-   "The cover is a browser window, with a navy title bar, an address bar and a starry navy page, the way a 90s homepage looked on a CRT.",
-   "A Comic-style masthead in highlight yellow and a default serif for everything else are the web's first typography.",
-   "A bevelled grey button carries the lead line and a black visitor counter sits at the foot, pure early-web furniture.",
-   "Yellow, blue and white on navy keep every line crisp and readable."
+   "The cover is a browser window, with a navy title bar, an address bar and a starry navy page, like a 90s homepage on a CRT.",
+   "A Comic-style masthead in yellow and a default serif for everything else are the web's first typefaces.",
+   "A bevelled grey button carries the lead line and a black visitor counter sits at the foot, both standard early-web parts.",
+   "Yellow, blue and white on navy keep every line sharp and readable."
   ],
   "background": "background",
   "blocks": [
@@ -21129,10 +21129,10 @@
   "format": "poster",
   "name": "Welcome Party",
   "notes": [
-   "A starry navy page with a Comic-style welcome headline is the 'welcome to my homepage' of every 90s personal site.",
-   "Under-construction stripes and two bevelled grey buttons turn the event details into clickable early-web furniture.",
-   "Blue serif on grey buttons, yellow on navy and pixel type for the date keep the look authentic and readable.",
-   "Everything is centred and stacked, the way table-built pages were."
+   "A starry navy page with a Comic-style welcome headline copies the 90s personal homepage.",
+   "Under-construction stripes and two bevelled grey buttons turn the event details into early-web buttons.",
+   "Blue serif on grey buttons, yellow on navy and pixel type for the date keep it period-correct and readable.",
+   "Everything is centred and stacked, the way pages built with tables were."
   ],
   "background": "secondary",
   "blocks": [
@@ -21394,10 +21394,10 @@
   "format": "flyer",
   "name": "HTML Class",
   "notes": [
-   "The flyer is a system dialog window, with a navy title bar, grey face and bevelled buttons, so it reads as early-web at a glance.",
-   "A Comic-style headline in navy, default serif body and pixel-font details are the period's type palette.",
-   "The call to action is a blue bevelled button with white type, and a visitor counter shows who has signed up.",
-   "Hazard stripes mark the page as permanently under construction."
+   "The flyer is a system dialog window, with a navy title bar, grey face and bevelled buttons, so it reads as early web at a glance.",
+   "A Comic-style headline in navy, default serif body and pixel-font details are the period's typefaces.",
+   "The call to action is a blue bevelled button with white type, and a visitor counter shows how many have signed up.",
+   "Hazard stripes mark the page as under construction."
   ],
   "background": "background",
   "blocks": [
@@ -21658,10 +21658,10 @@
   "format": "thumbnail",
   "name": "Retro Web Split",
   "notes": [
-   "A yellow Comic-style title on a starry navy page reads clearly at small sizes and says 90s web instantly.",
-   "The subject sits in a little browser window with a grey title strip, early-web framing in one shape.",
+   "A yellow Comic-style title on a starry navy page reads clearly at small sizes and looks like 90s web at once.",
+   "The subject sits in a small browser window with a grey title strip.",
    "Under-construction stripes and a pixel-font label add detail without extra headline words.",
-   "The bottom-right corner holds only the window, clear for the duration badge."
+   "The bottom-right corner holds only the window, clear for the video length."
   ],
   "background": "secondary",
   "blocks": [
@@ -21825,10 +21825,10 @@
   "format": "magazine",
   "name": "Beta Magazine",
   "notes": [
-   "Glossy gel pills with white highlight bands and a tilted 'BETA' badge are the signature details of mid-2000s web design.",
-   "A rounded, friendly sans for the masthead and cover lines matches the period's wordmarks.",
-   "A soft blue reflection under the image hints at the mirrored floors of Web 2.0 logos.",
-   "Clean white with candy blue, lime and tangerine keeps it bright; all type is black for legibility."
+   "Glossy gel pills with white highlight bands and a tilted 'BETA' badge are the typical details of mid-2000s web design.",
+   "A rounded, friendly sans for the masthead and cover lines matches the period's logos.",
+   "A soft blue reflection under the image copies the mirrored floors under Web 2.0 logos.",
+   "White with candy blue, lime and orange keeps it bright; all type is black so it reads."
   ],
   "background": "background",
   "blocks": [
@@ -22014,10 +22014,10 @@
   "format": "poster",
   "name": "Launch Party",
   "notes": [
-   "Two glossy gel buttons for RSVP and calendar are the unmistakable mid-2000s call to action, highlight bands and all.",
-   "A rounded display face and a Lobster script line give the friendly wordmark feel of Web 2.0 launches.",
+   "Two glossy gel buttons for RSVP and calendar, with highlight bands, are the mid-2000s call to action.",
+   "A rounded display face and a Lobster script line give the friendly logo look of Web 2.0 launches.",
    "A faint blue reflection under the image and a tilted 'BETA' badge finish the period look.",
-   "Clean white space around everything keeps it bright and uncluttered."
+   "White space around everything keeps it bright and uncluttered."
   ],
   "background": "background",
   "blocks": [
@@ -22220,10 +22220,10 @@
   "format": "flyer",
   "name": "Gloss Workshop",
   "notes": [
-   "A glossy gel-blue header bar with a white highlight band sets the Web 2.0 tone before a word is read.",
-   "The call to action is a tangerine gel pill, and a lime 'FREE' badge draws the eye to the price.",
-   "Rounded friendly type and generous white space keep the page clean, like a 2006 landing page.",
-   "A soft reflection under the image and a gel footer bar finish the period gloss."
+   "A glossy blue header bar with a white highlight band sets the Web 2.0 look before a word is read.",
+   "The call to action is an orange gel pill, and a lime 'FREE' badge draws the eye to the price.",
+   "Rounded type and plenty of white space keep the page clean, like a 2006 landing page.",
+   "A soft reflection under the image and a gel footer bar finish the glossy look."
   ],
   "background": "background",
   "blocks": [
@@ -22464,10 +22464,10 @@
   "format": "thumbnail",
   "name": "Gel Split",
   "notes": [
-   "Rounded black type on white is clean and legible at 120 px, like a 2006 wordmark.",
-   "The subject sits in a gel-blue frame with a soft reflection beneath it.",
-   "A glossy lime pill carries the label, the Web 2.0 button in miniature.",
-   "The bottom-right holds only the reflection, clear for the duration badge."
+   "Rounded black type on white is clean and readable at 120 px, like a 2006 logo.",
+   "The subject sits in a blue gel frame with a soft reflection beneath it.",
+   "A glossy lime pill carries the label, a Web 2.0 button in miniature.",
+   "The bottom-right holds only the reflection, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -22568,10 +22568,10 @@
   "format": "magazine",
   "name": "Online Now",
   "notes": [
-   "The cover image sits in a candy UI window surrounded by smaller windows and sticker badges, the interface-as-decoration look of cyberpop.",
-   "Heavy blocky capitals and a Japanese gothic face give the anime-sticker-sheet energy.",
-   "Everything readable is black: the pink, cyan and lime brights stay in title bars, stickers and sparkles.",
-   "Scattered sparkle dots add holographic shine without a texture file."
+   "The image sits in a candy-coloured app window among smaller windows and sticker badges, interface parts used as decoration.",
+   "Heavy blocky capitals and a Japanese gothic face look like an anime sticker sheet.",
+   "Everything readable is black; the pink, cyan and lime stay in title bars, stickers and sparkles.",
+   "Scattered sparkle dots add a holographic shine without a texture image."
   ],
   "background": "background",
   "blocks": [
@@ -22834,10 +22834,10 @@
   "format": "poster",
   "name": "Sticker Party",
   "notes": [
-   "The image is framed as a big UI window on a pink ground, with cyan and lime stickers slapped around it like a decorated laptop.",
-   "Heavy blocky capitals for the headline keep the poster loud and readable across a room.",
-   "Black type on bright colour means the palette can be as candy as it likes without losing legibility.",
-   "A lime details tag and scattered sparkles finish the sticker-sheet feel."
+   "The image is framed as a large app window on pink, with cyan and lime stickers around it like a decorated laptop.",
+   "Heavy blocky capitals keep the headline loud and readable across a room.",
+   "Black type on bright colour means the palette can be as bright as it likes and still read.",
+   "A lime details tag and scattered sparkles finish the sticker-sheet look."
   ],
   "background": "primary",
   "blocks": [
@@ -23021,8 +23021,8 @@
   "format": "flyer",
   "name": "Pixel Café",
   "notes": [
-   "The flyer is a desktop of candy windows: picture, info and a pop-up, each with a coloured title bar.",
-   "Heavy blocky and rounded techno faces keep the anime-game-UI voice.",
+   "The flyer is a desktop of candy-coloured windows: picture, info and a pop-up, each with a coloured title bar.",
+   "Heavy blocky and rounded techno faces look like an anime game interface.",
    "The call to action is a cyan button with a black outline, easy to find among the pastels.",
    "Sparkles and a pink sticker add energy without crowding the details."
   ],
@@ -23265,10 +23265,10 @@
   "format": "thumbnail",
   "name": "Sticker Split",
   "notes": [
-   "Heavy black blocky capitals on lime flash are loud and readable at 120 px.",
-   "The subject sits in a candy UI window with a pink title bar, cyberpop framing in one glance.",
+   "Heavy black blocky capitals on lime are loud and readable at 120 px.",
+   "The subject sits in a candy-coloured app window with a pink title bar.",
    "A cyan sticker and sparkles add energy without extra headline words.",
-   "The bottom-right corner holds only the window, clear for the duration badge."
+   "The bottom-right corner holds only the window, clear for the video length."
   ],
   "background": "accent",
   "blocks": [
@@ -23360,10 +23360,10 @@
   "format": "magazine",
   "name": "Mercury Issue",
   "notes": [
-   "One liquid-chrome form floats on void black with almost nothing else, the sparse, single-object staging of chromecore.",
-   "A wide, extended masthead in mirror white gives type the broad surfaces chrome lettering needs.",
-   "A single reflected-sky blue accent and a thin reflection line keep the palette cold and metallic.",
-   "Small extended labels at the foot keep the calm, gallery-like restraint."
+   "One liquid-chrome form floats on black with almost nothing else, the single-object staging of chromecore.",
+   "A wide, extended masthead in bright white gives the letters broad surfaces, like chrome lettering.",
+   "One sky-blue accent and a thin reflection line keep the palette cold and metallic.",
+   "Small extended labels at the foot keep the cover quiet, like a gallery wall."
   ],
   "background": "background",
   "blocks": [
@@ -23486,10 +23486,10 @@
   "format": "poster",
   "name": "Liquid Form",
   "notes": [
-   "The image floats in a tall arch of darkness, the single-object focus that lets chrome reflections carry the poster.",
-   "An extra-wide title in mirror white spans the width like a polished metal plate.",
-   "A reflected-sky blue rule and small extended capitals keep details quiet and cold.",
-   "Generous black space around everything makes the metal feel precious."
+   "The image floats in a tall dark arch, so the chrome reflections are the only thing to look at.",
+   "An extra-wide white title spans the width like a polished metal plate.",
+   "A sky-blue rule and small extended capitals keep the details quiet.",
+   "Wide black space around everything makes the metal object the focus."
   ],
   "background": "background",
   "blocks": [
@@ -23587,9 +23587,9 @@
   "format": "flyer",
   "name": "Chrome Lab",
   "notes": [
-   "A wide, reflective title and a single framed chrome image keep the flyer sparse and sculptural.",
-   "Thin chrome-grey hairlines divide the page like the edges of polished panels.",
-   "The call to action is a mirror-white block with black type, the brightest surface on the page.",
+   "A wide, reflective title and one framed chrome image keep the flyer sparse.",
+   "Thin grey hairlines divide the page like the edges of polished panels.",
+   "The call to action is a bright white block with black type, the lightest surface on the page.",
    "Sky blue is used once, for the date, like a reflection catching the light."
   ],
   "background": "background",
@@ -23751,10 +23751,10 @@
   "format": "thumbnail",
   "name": "Mirror Split",
   "notes": [
-   "Heavy, wide mirror-white capitals on black read cleanly at 120 px.",
-   "The chrome subject fills the right half against the void, a single reflective form.",
-   "A sky-blue rule and small extended label add polish without extra headline words.",
-   "The bottom-right corner holds only the image, clear for the duration badge."
+   "Heavy, wide white capitals on black read cleanly at 120 px.",
+   "The chrome subject fills the right half against black, a single reflective form.",
+   "A sky-blue rule and a small extended label add detail without extra headline words.",
+   "The bottom-right corner holds only the image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -24077,9 +24077,9 @@
   "format": "poster",
   "name": "Cyberpunk Neon Nexus",
   "notes": [
-   "The massive Rajdhani headline commands the upper third with instant legibility while staying faithful to the megacity neon aesthetic.",
-   "A high-opacity terminal console groups all logistics and metadata into a coherent HUD module that protects text contrast from the busy image.",
-   "All technical monospace readouts and hazard elements respect a strict 5% margin grid while leaving the central vertical core completely unobstructed for the subject."
+   "A very large Rajdhani headline fills the top third and reads at once.",
+   "A dark, nearly opaque console panel groups all the details, so the busy image can't hurt their contrast.",
+   "The monospaced readouts and hazard stripes keep to the margins, leaving the centre clear for the subject."
   ],
   "background": "background",
   "blocks": [
@@ -24365,10 +24365,10 @@
   "format": "flyer",
   "name": "Cyberpunk Neural Terminal",
   "notes": [
-   "Rajdhani provides imposing architectural header typography reminiscent of high-rise neon skyscraper signage.",
-   "Share Tech Mono delivers authentic command-line telemetry and HUD data readout aesthetics across event details.",
-   "High-contrast secondary magenta plate anchors the primary call to action, drawing the viewer's eye straight to conversion.",
-   "Rigid column split in the lower half lets complex logistical specs coexist comfortably beside atmospheric narrative copy."
+   "Tall Rajdhani capitals for the header look like neon signs on high-rise buildings.",
+   "Share Tech Mono for the event details looks like a terminal readout.",
+   "A magenta plate behind the call to action makes it the first thing you look for.",
+   "Two columns in the lower half put the practical details beside the description, so neither is crowded."
   ],
   "background": "background",
   "blocks": [
@@ -24558,10 +24558,10 @@
   "format": "thumbnail",
   "name": "Cyber Terminal Thumbnail",
   "notes": [
-   "The high-opacity dark scrim on the left guarantees peak contrast and instant readability against complex urban backgrounds.",
-   "Rajdhani condensed capitals at 0.18 scale provide unmistakable headline legibility even at standard mobile thumbnail dimensions.",
-   "Confining all typography to the left half preserves the right side for the subject and keeps the bottom-right corner clear for player duration overlays.",
-   "The neon cyan title paired with a neon magenta status tag reinforces an authentic cyberpunk interface aesthetic."
+   "A dark, nearly opaque panel on the left keeps the words readable over a busy city image.",
+   "Large condensed Rajdhani capitals stay readable at phone thumbnail size.",
+   "All text stays in the left half, leaving the right for the subject and the corner for the video length.",
+   "A cyan title with a magenta status tag looks like a heads-up display."
   ],
   "background": "background",
   "blocks": [
@@ -24668,10 +24668,10 @@
   "format": "magazine",
   "name": "Signal Issue",
   "notes": [
-   "Hairline rules, measurement ticks and tiny mono labels frame a single object in deep darkness, the precision-over-clutter of cyberminimalism.",
-   "A thin grotesque masthead in cold white and one ice-cyan accent keep the palette almost monochrome.",
-   "Every element sits on a strict grid with generous empty space.",
-   "Small monospace data lines give the feeling of a calm, well-made interface."
+   "Hairline rules, measurement ticks and tiny monospaced labels frame one object in darkness.",
+   "A thin sans-serif masthead in cold white and one ice-cyan accent keep the palette almost black and white.",
+   "Every element sits on a strict grid with plenty of empty space.",
+   "Small monospaced data lines make the cover feel like a calm, well-made interface."
   ],
   "background": "background",
   "blocks": [
@@ -25068,10 +25068,10 @@
   "format": "poster",
   "name": "Null Space",
   "notes": [
-   "The image floats in a large field of darkness bracketed by hairline corner marks, a HUD-like frame with almost nothing inside it.",
-   "A thin, light title and tiny monospace details keep the poster calm and expensive.",
+   "The image floats in a large dark field with thin corner marks, like a heads-up display frame.",
+   "A thin, light title and tiny monospaced details keep the poster quiet.",
    "One ice-cyan line is the only colour, used like a status light.",
-   "Everything aligns to the same left edge for a precise, engineered feel."
+   "Everything lines up on the same left edge, so the poster looks engineered."
   ],
   "background": "background",
   "blocks": [
@@ -25194,10 +25194,10 @@
   "format": "flyer",
   "name": "Interface Talk",
   "notes": [
-   "A strict two-column grid with hairline dividers keeps the flyer as precise as a well-built interface.",
-   "Measurement ticks under the image and monospace coordinates add quiet technical detail.",
-   "The call to action is an ice-cyan outlined button: the one bright element, like a focused control.",
-   "Thin grotesque headings and small mono details give calm, readable hierarchy."
+   "A strict two-column grid with hairline dividers keeps the flyer precise.",
+   "Measurement ticks under the image and monospaced coordinates add small technical details.",
+   "The call to action is an ice-cyan outlined button, the one bright element on the page.",
+   "Thin sans-serif headings and small monospaced details give a calm, readable hierarchy."
   ],
   "background": "background",
   "blocks": [
@@ -25538,10 +25538,10 @@
   "format": "thumbnail",
   "name": "Hairline Split",
   "notes": [
-   "A light, thin grotesque set large still reads at 120 px thanks to cold white on carbon black.",
-   "The single object sits in darkness on the right, bracketed by nothing but space.",
-   "Hairline ticks and an ice-cyan mono label add precision without extra headline words.",
-   "The bottom-right corner holds only the image, clear for the duration badge."
+   "A thin sans-serif set large still reads at 120 px because it is cold white on near-black.",
+   "The single object sits in darkness on the right, with nothing around it.",
+   "Hairline ticks and an ice-cyan monospaced label add detail without extra headline words.",
+   "The bottom-right corner holds only the image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -25718,10 +25718,10 @@
   "format": "magazine",
   "name": "Corrupt Issue",
   "notes": [
-   "A masthead in a sliced glitch face, cut again by red and cyan displacement bars, turns type into corrupted data.",
-   "Horizontal bars in the two channel colours slice across the image, the displacement banding of glitch art.",
+   "The masthead is set in a sliced glitch face and cut again by red and cyan bars, so the type looks like corrupted data.",
+   "Horizontal bars in the two channel colours slice across the image, the banding of glitch art.",
    "Faint scan lines run over the whole cover like a failing screen.",
-   "Blown white and cyan text on dead-pixel black keep every line readable through the noise."
+   "Bright white and cyan text on black keep every line readable through the noise."
   ],
   "background": "background",
   "blocks": [
@@ -26231,10 +26231,10 @@
   "format": "poster",
   "name": "Error 404",
   "notes": [
-   "A giant sliced '404' dominates the poster, with red and cyan channel bars cutting through it: a broken signal made heroic.",
-   "The image sits in a band torn by displacement bars, the corrupted-screen look in one strip.",
-   "Scan lines over everything and terminal type for details keep the CRT feel.",
-   "Blown white and cyan on black stay readable despite the deliberate damage."
+   "A giant sliced '404' fills the poster, with red and cyan bars cutting through it.",
+   "The image sits in a band torn by displacement bars, like a corrupted screen.",
+   "Scan lines over everything and terminal type for the details keep the CRT feel.",
+   "Bright white and cyan on black stay readable despite the deliberate damage."
   ],
   "background": "background",
   "blocks": [
@@ -26733,10 +26733,10 @@
   "format": "flyer",
   "name": "Datamosh Club",
   "notes": [
-   "A sliced glitch headline and a torn image band set the corrupted-signal tone immediately.",
-   "Red and cyan displacement bars are the only decoration, used like the RGB split they come from.",
-   "The call to action is a solid cyan block with black type, the clearest signal on the page.",
-   "Terminal and mono faces for details keep the machine-made feel and stay readable."
+   "A sliced glitch headline and a torn image band set the broken-signal look straight away.",
+   "Red and cyan displacement bars are the only decoration, like the RGB split they come from.",
+   "The call to action is a solid cyan block with black type, the clearest thing on the page.",
+   "Terminal and monospaced faces for the details look machine-made and stay readable."
   ],
   "background": "background",
   "blocks": [
@@ -27253,10 +27253,10 @@
   "format": "thumbnail",
   "name": "Broken Split",
   "notes": [
-   "Sliced glitch capitals in blown white are bold enough to read at 120 px, damage and all.",
-   "The subject is cut by red and cyan displacement bars, instantly glitch.",
+   "Sliced glitch capitals in bright white are bold enough to read at 120 px.",
+   "The subject is cut by red and cyan displacement bars.",
    "A terminal-type label adds context without extra headline words.",
-   "The bottom-right corner holds only the image, clear for the duration badge."
+   "The bottom-right corner holds only the image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -28621,10 +28621,10 @@
   "format": "thumbnail",
   "name": "Tracked Split",
   "notes": [
-   "Grey mono capitals on monitor-dark read clearly at 120 px.",
-   "The subject sits inside green corner brackets with a red REC dot, instantly CCTV.",
+   "Grey monospaced capitals on near-black read clearly at 120 px.",
+   "The subject sits inside green corner brackets with a red REC dot, like CCTV footage.",
    "A bitmap timestamp adds context without extra headline words.",
-   "The bottom-right corner is left to the footage for the duration badge."
+   "The bottom-right corner is left to the footage for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -29227,9 +29227,9 @@
   "name": "Clay Split",
   "notes": [
    "Round, chunky black letters on peach read clearly at small sizes.",
-   "The subject sits in a round window on a coral clay disc, instantly handmade.",
+   "The subject sits in a round window on a coral clay disc, which looks handmade.",
    "A powder-blue pill label adds context without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -29715,10 +29715,10 @@
   "format": "thumbnail",
   "name": "Uncanny Split",
   "notes": [
-   "A tall italic serif on dream-sky blue reads clearly at small sizes and stays calm and literary.",
-   "The subject stands across a single horizon line, the surreal stage in one frame.",
+   "A tall italic serif on pale sky blue reads clearly at small sizes and keeps a calm tone.",
+   "The subject stands across a single horizon line, an empty dream landscape in one frame.",
    "A small red disc adds the unexpected accent without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "primary",
   "blocks": [
@@ -29805,10 +29805,10 @@
   "format": "magazine",
   "name": "Quiet Issue",
   "notes": [
-   "A single hero object on travertine with vast calm space above it is the restraint of quiet-luxury editorial.",
-   "Widely spaced, thin capitals for the masthead and a refined serif italic for lines read like a fashion house wordmark.",
-   "Espresso type on travertine keeps contrast while staying warm; brushed brass appears only as a thin rule.",
-   "Very few words, very small, very well placed."
+   "One object on travertine with a lot of empty space above it keeps the cover quiet, like a luxury fashion magazine.",
+   "Thin, widely spaced capitals for the masthead and a serif italic for the lines look like a fashion-house logo.",
+   "Espresso type on travertine has good contrast and stays warm; brass appears only as a thin rule.",
+   "Very few words, set small and carefully placed."
   ],
   "background": "background",
   "blocks": [
@@ -29930,10 +29930,10 @@
   "format": "poster",
   "name": "Stillness",
   "notes": [
-   "The image sits high and centred with a large field of travertine beneath, calm and expensive.",
-   "A single italic serif word as the title, with spaced capitals for details, mirrors luxury brand campaigns.",
+   "The image sits high and centred with a large area of travertine below it.",
+   "A single italic serif word as the title, with spaced capitals for details, follows luxury brand campaigns.",
    "A thin brass rule is the only ornament.",
-   "Espresso on stone keeps it readable without breaking the soft, warm palette."
+   "Espresso on stone stays readable within the soft, warm palette."
   ],
   "background": "background",
   "blocks": [
@@ -30020,9 +30020,9 @@
   "name": "Private Viewing",
   "notes": [
    "A spare two-column layout with wide margins, thin brass rules and small spaced capitals reads like an invitation card.",
-   "The call to action is an espresso plate with travertine type, understated but unmistakable.",
-   "A refined serif for the title and a geometric sans for details keep the hierarchy quiet.",
-   "The image carries the warmth; everything else steps back."
+   "The call to action is an espresso plate with travertine type, quiet but easy to find.",
+   "A serif for the title and a geometric sans for details keep the hierarchy quiet.",
+   "The image carries the warmth; everything else stays in the background."
   ],
   "background": "background",
   "blocks": [
@@ -30182,10 +30182,10 @@
   "format": "thumbnail",
   "name": "Refined Split",
   "notes": [
-   "A refined italic serif set large in espresso reads well at thumbnail size while staying elegant.",
-   "The hero object fills the right half in soft light; the left stays calm travertine.",
-   "A thin brass rule and spaced capitals add polish without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "A large italic serif in espresso reads well at thumbnail size.",
+   "The object fills the right half in soft light; the left stays plain travertine.",
+   "A thin brass rule and spaced capitals add detail without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -30748,10 +30748,10 @@
   "format": "thumbnail",
   "name": "Clash Split",
   "notes": [
-   "Towering saffron capitals on bottle green shout clearly at 120 px.",
-   "The subject sits on a raspberry disc and sapphire block, the layered clash of maximalism in one shape.",
+   "Very tall saffron capitals on bottle green read clearly at 120 px.",
+   "The subject sits on a raspberry disc and a sapphire block, layered and clashing.",
    "A marker scrawl adds personality without extra headline words.",
-   "The bottom-right corner holds only pattern and image, clear for the duration badge."
+   "The bottom-right corner holds only pattern and image, clear for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -30851,10 +30851,10 @@
   "format": "magazine",
   "name": "Nocturne",
   "notes": [
-   "A gold-framed arch holds the image like a cathedral window, with blackletter above: the vertical, candlelit drama of Gothic.",
-   "A true Fraktur masthead in aged gold and an old printing type for cover lines give authentic period texture.",
-   "An oxblood plate carries the lead story, the style's deep red used as a velvet band.",
-   "Gold and cream on raven black keep everything readable in the dark."
+   "A gold-framed arch holds the image like a cathedral window, with blackletter above it, giving the cover a tall, vertical shape.",
+   "A Fraktur masthead in aged gold and an old printing type for the cover lines give period texture.",
+   "An oxblood plate carries the lead story, the style's deep red used as a band.",
+   "Gold and cream on black keep everything readable on the dark ground."
   ],
   "background": "background",
   "blocks": [
@@ -31285,10 +31285,10 @@
   "format": "thumbnail",
   "name": "Blackletter Split",
   "notes": [
-   "A condensed gothic display face in aged gold stays readable at 120 px while feeling unmistakably dark-romantic.",
-   "The subject sits in an arched window on oxblood, the cathedral frame in one shape.",
-   "An old-type italic label adds atmosphere without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "A condensed gothic display face in aged gold stays readable at 120 px.",
+   "The subject sits in an arched window on oxblood, like a cathedral window.",
+   "An old-style italic label adds atmosphere without extra headline words.",
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [
@@ -31837,7 +31837,7 @@
   "notes": [
    "Riveted brass plates hold the headline and the call to action, like labels bolted onto a machine.",
    "A gauge-like porthole frames the image and gear rings fill the corners.",
-   "A fat slab and engraved capitals for headings, with old printing type for text, give a convincing Victorian voice.",
+   "A fat slab and engraved capitals for headings, with old printing type for text, give a Victorian voice.",
    "Parchment body text on walnut keeps longer lines comfortable to read."
   ],
   "background": "background",
@@ -32071,10 +32071,10 @@
   "format": "thumbnail",
   "name": "Gearworks Split",
   "notes": [
-   "A fat brass slab on smoked walnut reads clearly at 120 px and feels cast in metal.",
-   "The subject sits in a brass-and-copper porthole, Victorian machinery in one shape.",
+   "A fat brass slab on dark walnut reads clearly at 120 px and looks cast in metal.",
+   "The subject sits in a brass and copper porthole.",
    "An engraved-capitals label and a gear ring add detail without extra headline words.",
-   "The bottom-right corner is left to the image for the duration badge."
+   "The bottom-right corner is left to the image for the video length."
   ],
   "background": "background",
   "blocks": [

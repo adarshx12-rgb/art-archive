@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleArt } from "../art/StyleArt";
-import { formatInfo, styleColours, type RoleColours } from "../content/templates";
+import { covers, similarCovers } from "../content/covers";
+import { formatInfo, styleColours, TEMPLATE_FORMATS, type RoleColours } from "../content/templates";
 import type { StyleRecord, StyleTemplate } from "../content/types";
 import { TemplatePreview, useTemplateFonts } from "./TemplatePreview";
 
@@ -46,16 +47,43 @@ export function TemplateStage({ template, style, colours, texts, ratio, classNam
   );
 }
 
+/**
+ * Default crop for image areas, per format, so a style's four templates don't
+ * all show the same picture framed the same way. A block's own focus and zoom
+ * (set on the block) still win, since these are inherited CSS variables.
+ */
+const CROPS: Record<string, { focus: string; zoom: number }> = {
+  magazine: { focus: "50% 35%", zoom: 1 },
+  poster: { focus: "50% 50%", zoom: 1 },
+  flyer: { focus: "35% 45%", zoom: 1.25 },
+  thumbnail: { focus: "65% 40%", zoom: 1.4 },
+};
+
+/** The illustration for a template: formats take turns through the style's illustrations, when it has more than one. */
+function imageFor(style: StyleRecord, format: StyleTemplate["format"]) {
+  const main = covers[style.slug];
+  if (!main) return { cover: undefined, crop: CROPS[format] };
+  const all = [main, ...similarCovers(style.slug)];
+  const i = TEMPLATE_FORMATS.findIndex((f) => f.id === format);
+  const cover = all[i % all.length]!;
+  // A repeated illustration gets this format's crop; a fresh one is shown whole.
+  const repeated = all.length === 1 || i >= all.length;
+  return { cover, crop: repeated ? CROPS[format] : CROPS.poster };
+}
+
 function Piece({ template, style, colours, texts, label }: Pick<TemplateStageProps, "template" | "style" | "colours" | "texts" | "label">) {
   useTemplateFonts([template]);
+  const { cover, crop } = imageFor(style, template.format);
   return (
-    <TemplatePreview
-      template={template}
-      colours={colours ?? styleColours(style)}
-      texts={texts}
-      image={<StyleArt style={style} aspect="h-full w-full" label={false} />}
-      label={label}
-      className="h-full w-full"
-    />
+    <div className="h-full w-full" style={{ ["--focus" as string]: crop?.focus, ["--zoom" as string]: crop?.zoom }}>
+      <TemplatePreview
+        template={template}
+        colours={colours ?? styleColours(style)}
+        texts={texts}
+        image={<StyleArt style={style} aspect="h-full w-full" image={cover} />}
+        label={label}
+        className="h-full w-full"
+      />
+    </div>
   );
 }

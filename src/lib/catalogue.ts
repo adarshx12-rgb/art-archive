@@ -110,8 +110,34 @@ export function stylesForPalette(p: PaletteRecord): StyleRecord[] {
   return p.suits.map((slug) => getStyle(slug)).filter((s): s is StyleRecord => Boolean(s));
 }
 
-export function relatedStyles(style: StyleRecord): StyleRecord[] {
-  return style.related.map((slug) => getStyle(slug)).filter((s): s is StyleRecord => Boolean(s));
+/** How much two styles have in common: shared tags, facets, kind and density. */
+function likeness(a: StyleRecord, b: StyleRecord): number {
+  const shared = <T,>(x: T[], y: T[]) => x.filter((v) => y.includes(v)).length;
+  return (
+    shared(a.tags, b.tags) * 3 +
+    shared(a.formFacets, b.formFacets) * 2 +
+    shared(a.colourFacets, b.colourFacets) * 2 +
+    (a.kind === b.kind ? 1 : 0) +
+    (a.density === b.density ? 1 : 0)
+  );
+}
+
+/**
+ * The style's own related styles, then the closest matches by likeness, so
+ * the list fills whole rows of `row` (a row with gaps looks unfinished).
+ */
+export function relatedStyles(style: StyleRecord, row = 4): StyleRecord[] {
+  const listed = style.related.map((slug) => getStyle(slug)).filter((s): s is StyleRecord => Boolean(s));
+  const want = Math.max(row, Math.ceil(listed.length / row) * row);
+  if (listed.length >= want) return listed;
+  const taken = new Set([style.slug, ...listed.map((s) => s.slug)]);
+  const fill = styles
+    .filter((s) => !taken.has(s.slug))
+    .map((s) => ({ s, score: likeness(style, s) }))
+    .sort((a, b) => b.score - a.score || (a.s.featured ?? 999) - (b.s.featured ?? 999))
+    .slice(0, want - listed.length)
+    .map(({ s }) => s);
+  return [...listed, ...fill];
 }
 
 /** Suggestions for unknown slugs: closest names by shared words / prefix. */

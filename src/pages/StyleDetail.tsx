@@ -1,9 +1,9 @@
-import { ArrowRight, LayoutTemplate, Wand2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { PaletteArt } from "../art/PaletteArt";
 import { ReferenceFigure } from "../art/ReferenceFigure";
-import { StyleArt } from "../art/StyleArt";
+import { artLabel, StyleArt } from "../art/StyleArt";
 import { CopyButton, SaveButton } from "../components/actions";
 import { FontSuggestions } from "../components/FontSuggestions";
 import { StyleCard } from "../components/cards";
@@ -64,7 +64,6 @@ function PromptBlock({ text, what, builderHref, children }: { text: string; what
         </CopyButton>
         {builderHref && (
           <Link to={builderHref} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-ghost">
-            <Wand2 size={16} aria-hidden />
             Customise in builder
           </Link>
         )}
@@ -89,17 +88,16 @@ function HeaderArt({ style }: { style: StyleRecord }) {
             src={current.src}
             width={current.width}
             height={current.height}
-            alt={`Similar cover image ${shown + 1} of ${all.length} for ${style.name}.`}
+            alt={`AI-generated illustration ${shown + 1} of ${all.length} for ${style.name}.`}
             className="h-full w-full object-cover"
           />
-          <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">Similar cover</span>
         </div>
       ) : (
         <StyleArt style={style} eager />
       )}
       {all.length > 1 && (
         <div className="mt-3">
-          <p className="meta text-muted">Similar covers</p>
+          <p className="meta text-muted">More illustrations in this style</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {all.map((c, i) => (
               <li key={c.src}>
@@ -107,7 +105,7 @@ function HeaderArt({ style }: { style: StyleRecord }) {
                   type="button"
                   onClick={() => setShown(i)}
                   aria-pressed={i === shown}
-                  aria-label={i === 0 ? "Show main cover" : `Show similar cover ${i + 1}`}
+                  aria-label={i === 0 ? "Show the main illustration" : `Show illustration ${i + 1}`}
                   className={`block size-16 overflow-hidden border-2 ${i === shown ? "border-ink" : "border-transparent opacity-80 hover:opacity-100"}`}
                 >
                   <img src={c.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
@@ -117,8 +115,9 @@ function HeaderArt({ style }: { style: StyleRecord }) {
           </ul>
         </div>
       )}
+      {/* The label sits under the image, never over it. */}
       <p className="meta mt-2 text-muted">
-        {main ? "Cover image" : "Original study"} made for this library to show the look’s ingredients. Not a historical artwork.
+        <span className="text-ink">{artLabel(style)}</span> made for this library to show the look. Not a historical artwork.
       </p>
     </>
   );
@@ -175,17 +174,16 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Header ——— */}
       <header className="wrap grid gap-8 pt-8 pb-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7 lg:pr-6">
-          <h1 className="text-h1 font-bold [overflow-wrap:anywhere]">{style.name}</h1>
+          <h1 className="font-display text-h1 font-normal [overflow-wrap:anywhere]">{style.name}</h1>
           {/* A short description; the details are in the sections below. */}
           <p className="mt-5 max-w-2xl text-lg leading-relaxed sm:text-xl">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
             <Link to={builder} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
-              <Wand2 size={16} aria-hidden />
               Use in builder
+              <ArrowRight size={16} aria-hidden />
             </Link>
             {templatesFor(style.slug).length > 0 && (
               <a href="#templates" className="btn btn-ghost">
-                <LayoutTemplate size={16} aria-hidden />
                 Choose template
               </a>
             )}
@@ -198,7 +196,7 @@ function StyleView({ style }: { style: StyleRecord }) {
             {style.tags.map((t) => (
               <li key={t}>
                 <Link to={`/styles?q=${encodeURIComponent(t)}`} className="meta text-muted underline-offset-2 hover:text-ink hover:underline">
-                  #{t.replace(/\s+/g, "-")}
+                  {t}
                 </Link>
               </li>
             ))}
@@ -216,13 +214,13 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="refs-title">
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="refs-title" className="text-h2 font-bold">
+            <h2 id="refs-title" className="font-display text-h2 font-normal">
               References
             </h2>
             <p className="mt-3 max-w-sm text-muted">
               {refs.length
                 ? "Openly licensed works that show part of this look. Each is credited with its source and licence."
-                : "No openly licensed photographic reference has been added for this style yet. The study above shows its ingredients."}
+                : "No openly licensed reference has been added for this style yet. The AI-generated illustration above shows the look; it is not a historical work."}
             </p>
           </div>
           {refs.length > 0 && (
@@ -239,7 +237,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="ingredients-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="ingredients-title" className="text-h2 font-bold">
+            <h2 id="ingredients-title" className="font-display text-h2 font-normal">
               Visual ingredients
             </h2>
             <p className="mt-3 max-w-sm text-muted">What to look for, and what the prompts below describe.</p>
@@ -270,7 +268,7 @@ function StyleView({ style }: { style: StyleRecord }) {
         <section className="wrap border-t border-ink py-12" aria-labelledby="fonts-title">
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <h2 id="fonts-title" className="text-h2 font-bold">
+              <h2 id="fonts-title" className="font-display text-h2 font-normal">
                 Suggested fonts
               </h2>
               <p className="mt-3 max-w-sm text-muted">
@@ -288,7 +286,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="prompts-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="prompts-title" className="text-h2 font-bold">
+            <h2 id="prompts-title" className="font-display text-h2 font-normal">
               Prompts
             </h2>
             <p className="mt-3 max-w-sm text-muted">
@@ -318,17 +316,18 @@ function StyleView({ style }: { style: StyleRecord }) {
                   ? [
                       {
                         id: "cover",
-                        label: "Cover image",
+                        label: "Illustration",
                         content: (
                           <div>
-                            <CoverPromptBlock prompt={cover} what="cover image prompt" />
+                            <p className="mb-4 max-w-2xl text-[0.9375rem] text-muted">The prompt the AI-generated illustration above was made from.</p>
+                            <CoverPromptBlock prompt={cover} what="illustration prompt" />
                             {similar.map(({ image, prompt }, i) => (
                               <div key={image.src} className="mt-10 border-t border-rule-strong pt-6">
                                 <div className="mb-3 flex items-center gap-3">
                                   <img src={image.src} alt="" loading="lazy" decoding="async" className="size-14 object-cover" />
-                                  <p className="font-semibold">Similar cover {i + 2}</p>
+                                  <p className="font-semibold">Illustration {i + 2}</p>
                                 </div>
-                                <CoverPromptBlock prompt={prompt} what={`similar cover ${i + 2} prompt`} />
+                                <CoverPromptBlock prompt={prompt} what={`illustration ${i + 2} prompt`} />
                               </div>
                             ))}
                           </div>
@@ -345,8 +344,8 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Palettes ——— */}
       <section className="wrap border-t border-ink py-12" aria-labelledby="pal-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="pal-title" className="text-h2 font-bold">
-            Compatible palettes
+          <h2 id="pal-title" className="font-display text-h2 font-normal">
+            Palettes that suit it
           </h2>
           <Link to="/palettes" className="inline-flex items-center gap-1.5 text-[0.9375rem] hover:underline">
             All palettes <ArrowRight size={15} aria-hidden />
@@ -360,7 +359,7 @@ function StyleView({ style }: { style: StyleRecord }) {
                 <p className="mt-2 font-semibold group-hover:underline">{palette.name}</p>
               </Link>
               <p className="meta text-muted">
-                {palette.colours.length} colours · {reason === "curated" ? "curated pairing" : "close colour match"}
+                {palette.colours.length} colours · {reason === "curated" ? "chosen for this style" : "close colour match"}
               </p>
               <Link to={`/builder?s=${style.slug}&p=${palette.slug}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="mt-2 inline-flex items-center gap-1 text-sm underline underline-offset-2">
                 Use with {style.name.split(" / ")[0]}
@@ -373,7 +372,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Related ——— */}
       {related.length > 0 && (
         <section className="wrap border-t border-ink py-12" aria-labelledby="related-title">
-          <h2 id="related-title" className="text-h2 font-bold">
+          <h2 id="related-title" className="font-display text-h2 font-normal">
             Related styles
           </h2>
           <ul className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">

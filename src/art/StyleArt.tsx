@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { covers } from "../content/covers";
+import { covers, type Cover } from "../content/covers";
 import type { StyleRecord } from "../content/types";
 import { renderers } from "./studies";
 import { H, W, type Colours } from "./util";
@@ -11,11 +11,11 @@ interface Props {
   className?: string;
   /** Render immediately instead of waiting until near the viewport. */
   eager?: boolean;
-  /** Show the "Illustrative study" label. */
-  label?: boolean;
   zoom?: boolean;
   /** Tailwind aspect class(es); the SVG crops to fit. */
   aspect?: string;
+  /** Which of the style's illustrations to show; defaults to the main one. */
+  image?: Cover;
 }
 
 function toFour(list: string[]): Colours {
@@ -24,18 +24,28 @@ function toFour(list: string[]): Colours {
 }
 
 /**
+ * What a style's artwork is, for captions: an AI-generated cover from
+ * public/covers, or the original SVG study (always shown when recoloured).
+ * Labels sit below the artwork, never over it, so they can't hide its text.
+ */
+export function artLabel(style: StyleRecord, recoloured = false): string {
+  if (recoloured) return "Illustrative study, recoloured";
+  return covers[style.slug] ? "AI-generated illustration" : "Illustrative study";
+}
+
+/**
  * An original SVG study for a style. Studies below the fold are mounted
  * when they approach the viewport; until then a flat block in the style's
  * ground colour holds their space (no spinner, nothing simulated).
  */
-export function StyleArt({ style, colours, className = "", eager = false, label = true, zoom = false, aspect = "aspect-[4/5]" }: Props) {
+export function StyleArt({ style, colours, className = "", eager = false, zoom = false, aspect = "aspect-[4/5]", image }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(eager);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const k = toFour(colours ?? style.swatches.map((s) => s.hex));
   const render = renderers[style.art.renderer ?? style.slug];
   const recoloured = Boolean(colours);
-  const cover = recoloured ? undefined : covers[style.slug];
+  const cover = recoloured ? undefined : (image ?? covers[style.slug]);
 
   useEffect(() => {
     if (visible || !ref.current) return;
@@ -63,13 +73,12 @@ export function StyleArt({ style, colours, className = "", eager = false, label 
           src={cover.src}
           width={cover.width}
           height={cover.height}
-          alt={`Cover image for ${style.name}: ${style.look.composition}.`}
+          alt={`AI-generated illustration for ${style.name}: ${style.look.composition}.`}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           className={`h-full w-full object-cover ${zoom ? "art-zoom" : ""}`}
           style={{ objectPosition: "var(--focus, 50% 50%)", transformOrigin: "var(--focus, 50% 50%)", scale: "var(--zoom, 1)" }}
         />
-        {label && <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">Cover image</span>}
       </div>
     );
   }
@@ -92,11 +101,6 @@ export function StyleArt({ style, colours, className = "", eager = false, label 
         </svg>
       ) : (
         <span className="sr-only">{alt}</span>
-      )}
-      {label && (
-        <span className="meta absolute bottom-2 left-2 rounded-[2px] bg-paper/90 px-1.5 py-0.5 text-ink">
-          {recoloured ? "Illustrative study · recoloured" : "Illustrative study"}
-        </span>
       )}
     </div>
   );

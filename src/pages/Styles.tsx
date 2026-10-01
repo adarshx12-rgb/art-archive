@@ -96,10 +96,10 @@ export function Styles() {
   return (
     <div className="wrap pt-10 sm:pt-14">
       <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="text-h1 font-bold lg:col-span-7">Styles</h1>
+        <h1 className="font-display text-h1 font-normal lg:col-span-7">Styles</h1>
         <p className="max-w-xl self-end text-muted lg:col-span-5">
-          Movements, period looks, aesthetics, techniques and interface styles. Each is described by what you can see: colour, texture,
-          lighting, composition and type.
+          From the Bauhaus to Y2K. Each style is described by what you can actually see in it: colour, texture, light, composition and
+          type.
         </p>
       </header>
 
@@ -174,7 +174,7 @@ export function Styles() {
 
       {results.length === 0 ? (
         <div className="border-t border-ink py-16">
-          <h2 className="text-h2 font-bold">No styles match.</h2>
+          <h2 className="font-display text-h2 font-normal">No styles match.</h2>
           <p className="mt-3 max-w-lg text-muted">
             {query.q ? <>Nothing matches “{query.q}” with these filters. </> : "No style has every selected characteristic. "}
             Remove a filter or try a broader word such as “geometric”, “neon” or “paper”.

@@ -19,9 +19,9 @@ export function Saved() {
   return (
     <div className="wrap pt-10 sm:pt-14">
       <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="text-h1 font-bold lg:col-span-7">Saved</h1>
+        <h1 className="font-display text-h1 font-normal lg:col-span-7">Saved</h1>
         <p className="max-w-xl self-end text-muted lg:col-span-5">
-          Saved items live only in this browser; there’s no account. Clearing site data removes them.
+          Your own shortlist. It lives in this browser, so there’s no account to make; clearing site data removes it.
         </p>
       </header>
 
@@ -34,7 +34,7 @@ export function Saved() {
 
       <section className="py-10" aria-labelledby="saved-styles">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
-          <h2 id="saved-styles" className="text-h2 font-bold">
+          <h2 id="saved-styles" className="font-display text-h2 font-normal">
             Styles <span className="meta align-middle text-muted">{savedStyles.length}</span>
           </h2>
           {savedStyles.length > 0 && (
@@ -47,7 +47,7 @@ export function Saved() {
         {savedStyles.length === 0 ? (
           <div className="py-10">
             <p className="text-lg">No saved styles yet.</p>
-            <p className="mt-1 text-muted">Use “Save” on any style to keep it here for later.</p>
+            <p className="mt-1 text-muted">Nothing here yet. Save a style you want to come back to and it will wait for you here.</p>
             <Link to="/styles" className="btn btn-primary mt-5">
               Browse styles
             </Link>
@@ -68,7 +68,7 @@ export function Saved() {
 
       <section className="py-10" aria-labelledby="saved-palettes">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
-          <h2 id="saved-palettes" className="text-h2 font-bold">
+          <h2 id="saved-palettes" className="font-display text-h2 font-normal">
             Palettes <span className="meta align-middle text-muted">{savedPalettes.length}</span>
           </h2>
           {savedPalettes.length > 0 && (
@@ -81,7 +81,7 @@ export function Saved() {
         {savedPalettes.length === 0 ? (
           <div className="py-10">
             <p className="text-lg">No saved palettes yet.</p>
-            <p className="mt-1 text-muted">Save a palette to compare it against styles later.</p>
+            <p className="mt-1 text-muted">Nothing here yet. Save a palette to try it against different styles later.</p>
             <Link to="/palettes" className="btn btn-primary mt-5">
               Browse palettes
             </Link>

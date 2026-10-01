@@ -3,8 +3,7 @@ import { createRoot } from "react-dom/client";
 import "@fontsource-variable/schibsted-grotesk";
 import "@fontsource/dm-mono/400.css";
 import "@fontsource/dm-mono/500.css";
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/source-serif-4/opsz.css";
 import "./index.css";
 import { App } from "./App";
 

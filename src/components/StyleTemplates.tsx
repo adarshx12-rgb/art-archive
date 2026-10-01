@@ -37,7 +37,7 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
     <section ref={sectionRef} id="templates" className="wrap scroll-mt-16 border-t border-ink py-12" aria-labelledby="templates-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="templates-title" className="font-display text-h2 font-normal">
+          <h2 id="templates-title" className="font-display text-h2 font-semibold">
             Templates
           </h2>
           <p className="mt-3 max-w-2xl text-muted">

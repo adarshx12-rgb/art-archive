@@ -14,7 +14,7 @@ export function Credits() {
   return (
     <div className="wrap pt-10 sm:pt-14">
       <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="font-display text-h1 font-normal lg:col-span-7">Image credits</h1>
+        <h1 className="font-display text-h1 font-semibold lg:col-span-7">Image credits</h1>
         <p className="max-w-xl self-end text-muted lg:col-span-5">
           Three kinds of artwork appear on this site, and each is labelled so you can tell them apart.
         </p>
@@ -56,7 +56,7 @@ export function Credits() {
       </ul>
 
       <section className="border-t border-ink py-10" aria-labelledby="missing-title">
-        <h2 id="missing-title" className="font-display text-h2 font-normal">
+        <h2 id="missing-title" className="font-display text-h2 font-semibold">
           Styles without a licensed reference yet
         </h2>
         <p className="mt-2 max-w-2xl text-muted">

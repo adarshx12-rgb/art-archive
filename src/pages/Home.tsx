@@ -42,12 +42,17 @@ export function Home() {
       {/* ——— Hero ——— */}
       <section className="wrap grid gap-10 pt-10 pb-16 sm:pt-14 lg:grid-cols-12 lg:gap-8 lg:pt-16 lg:pb-24" aria-labelledby="hero-title">
         <div className="flex flex-col lg:col-span-7 lg:pt-6">
-          <h1 id="hero-title" className="enter font-display text-display font-normal tracking-[-0.02em]">
-            Every style leaves <em>clues.</em>
+          {/* Two lines: the first recognises the visitor's eye, the second offers what the site gives them. Sized so each sentence stays on one line. */}
+          <h1
+            id="hero-title"
+            className="enter font-display text-[min(calc((100vw-3.5rem)/12),4.2rem)] leading-[1.05] font-semibold tracking-[-0.03em] lg:text-[min(4.6vw,4.3rem)]"
+          >
+            <span className="block">You know it when you see it.</span>
+            <span className="block text-muted">Now you can name it.</span>
           </h1>
           <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-muted sm:text-xl">
-            Here they are, written down: the colours, type, textures and light behind art movements, past decades and internet
-            aesthetics, ready to carry into your own images and video.
+            The colours, type, textures and light behind art movements, past decades and internet aesthetics, put into words you can
+            use in your own prompts, briefs and designs.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link to="/styles" className="btn btn-primary">
@@ -124,7 +129,7 @@ export function Home() {
       {/* ——— Featured aesthetics ——— */}
       <section className="wrap pb-20" aria-labelledby="featured-title">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
-          <h2 id="featured-title" className="font-display text-h2 font-normal">
+          <h2 id="featured-title" className="font-display text-h2 font-semibold">
             Start with these
           </h2>
           <Link to="/styles" className="inline-flex items-center gap-1.5 text-[0.9375rem] underline-offset-4 hover:underline">
@@ -146,7 +151,7 @@ export function Home() {
         <div className="wrap">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
             <div>
-              <h2 id="palette-title" className="font-display text-h2 font-normal">
+              <h2 id="palette-title" className="font-display text-h2 font-semibold">
                 Two, three or four colours
               </h2>
               <p className="mt-2 max-w-xl text-muted">
@@ -169,7 +174,7 @@ export function Home() {
       <section className="wrap pt-16 pb-20" aria-labelledby="templates-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="templates-title" className="font-display text-h2 font-normal">
+            <h2 id="templates-title" className="font-display text-h2 font-semibold">
               Templates
             </h2>
             <p className="mt-3 max-w-xl text-muted">Magazine covers, posters, flyers and thumbnails, laid out in the manner of each style. Put your own words in, then take one to the builder.</p>

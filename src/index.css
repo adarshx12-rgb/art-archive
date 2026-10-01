@@ -18,18 +18,18 @@
 
   --font-sans: "Schibsted Grotesk Variable", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  /* Page and section headings: an editorial serif, set at its single regular weight. */
-  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  /* Page and section headings: an editorial serif whose optical size tightens it at large sizes. */
+  --font-display: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-display: clamp(2.9rem, 6.6vw, 7.5rem);
   --text-display--line-height: 0.9;
   --text-display--letter-spacing: -0.045em;
   --text-h1: clamp(2.75rem, 6vw, 5.75rem);
   --text-h1--line-height: 1;
-  --text-h1--letter-spacing: -0.015em;
+  --text-h1--letter-spacing: -0.025em;
   --text-h2: clamp(2rem, 3.4vw, 3rem);
   --text-h2--line-height: 1.05;
-  --text-h2--letter-spacing: -0.01em;
+  --text-h2--letter-spacing: -0.02em;
   --text-meta: 0.75rem;
   --text-meta--line-height: 1.35;
 

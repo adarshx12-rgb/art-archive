@@ -63,7 +63,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <header className="wrap grid gap-8 pt-8 pb-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-5">
           <p className="meta text-muted">{palette.colours.length}-colour palette</p>
-          <h1 className="mt-3 font-display text-h1 font-normal">{palette.name}</h1>
+          <h1 className="mt-3 font-display text-h1 font-semibold">{palette.name}</h1>
           <p className="mt-3 text-xl">{palette.mood}</p>
           <p className="mt-5 max-w-lg text-muted">{palette.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="roles-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="roles-title" className="font-display text-h2 font-normal">
+            <h2 id="roles-title" className="font-display text-h2 font-semibold">
               Roles and proportions
             </h2>
             <p className="mt-3 max-w-sm text-muted">
@@ -124,7 +124,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="dominant-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="dominant-title" className="font-display text-h2 font-normal">
+            <h2 id="dominant-title" className="font-display text-h2 font-semibold">
               Dominant vs. strict
             </h2>
           </div>
@@ -143,7 +143,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
 
       {suits.length > 0 && (
         <section className="wrap border-t border-ink py-12" aria-labelledby="suits-title">
-          <h2 id="suits-title" className="font-display text-h2 font-normal">
+          <h2 id="suits-title" className="font-display text-h2 font-semibold">
             Styles it suits
           </h2>
           <p className="mt-2 max-w-xl text-muted">The styles this palette was chosen for, first redrawn in its colours.</p>

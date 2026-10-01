@@ -174,7 +174,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Header ——— */}
       <header className="wrap grid gap-8 pt-8 pb-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7 lg:pr-6">
-          <h1 className="font-display text-h1 font-normal [overflow-wrap:anywhere]">{style.name}</h1>
+          <h1 className="font-display text-h1 font-semibold [overflow-wrap:anywhere]">{style.name}</h1>
           {/* A short description; the details are in the sections below. */}
           <p className="mt-5 max-w-2xl text-lg leading-relaxed sm:text-xl">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -214,7 +214,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="refs-title">
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="refs-title" className="font-display text-h2 font-normal">
+            <h2 id="refs-title" className="font-display text-h2 font-semibold">
               References
             </h2>
             <p className="mt-3 max-w-sm text-muted">
@@ -237,7 +237,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="ingredients-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="ingredients-title" className="font-display text-h2 font-normal">
+            <h2 id="ingredients-title" className="font-display text-h2 font-semibold">
               Visual ingredients
             </h2>
             <p className="mt-3 max-w-sm text-muted">What to look for, and what the prompts below describe.</p>
@@ -268,7 +268,7 @@ function StyleView({ style }: { style: StyleRecord }) {
         <section className="wrap border-t border-ink py-12" aria-labelledby="fonts-title">
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <h2 id="fonts-title" className="font-display text-h2 font-normal">
+              <h2 id="fonts-title" className="font-display text-h2 font-semibold">
                 Suggested fonts
               </h2>
               <p className="mt-3 max-w-sm text-muted">
@@ -286,7 +286,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       <section className="wrap border-t border-ink py-12" aria-labelledby="prompts-title">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <h2 id="prompts-title" className="font-display text-h2 font-normal">
+            <h2 id="prompts-title" className="font-display text-h2 font-semibold">
               Prompts
             </h2>
             <p className="mt-3 max-w-sm text-muted">
@@ -344,7 +344,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Palettes ——— */}
       <section className="wrap border-t border-ink py-12" aria-labelledby="pal-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="pal-title" className="font-display text-h2 font-normal">
+          <h2 id="pal-title" className="font-display text-h2 font-semibold">
             Palettes that suit it
           </h2>
           <Link to="/palettes" className="inline-flex items-center gap-1.5 text-[0.9375rem] hover:underline">
@@ -372,7 +372,7 @@ function StyleView({ style }: { style: StyleRecord }) {
       {/* ——— Related ——— */}
       {related.length > 0 && (
         <section className="wrap border-t border-ink py-12" aria-labelledby="related-title">
-          <h2 id="related-title" className="font-display text-h2 font-normal">
+          <h2 id="related-title" className="font-display text-h2 font-semibold">
             Related styles
           </h2>
           <ul className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">

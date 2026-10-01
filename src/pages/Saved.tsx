@@ -19,7 +19,7 @@ export function Saved() {
   return (
     <div className="wrap pt-10 sm:pt-14">
       <header className="grid gap-4 border-b border-ink pb-6 lg:grid-cols-12">
-        <h1 className="font-display text-h1 font-normal lg:col-span-7">Saved</h1>
+        <h1 className="font-display text-h1 font-semibold lg:col-span-7">Saved</h1>
         <p className="max-w-xl self-end text-muted lg:col-span-5">
           Your own shortlist. It lives in this browser, so there’s no account to make; clearing site data removes it.
         </p>
@@ -34,7 +34,7 @@ export function Saved() {
 
       <section className="py-10" aria-labelledby="saved-styles">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
-          <h2 id="saved-styles" className="font-display text-h2 font-normal">
+          <h2 id="saved-styles" className="font-display text-h2 font-semibold">
             Styles <span className="meta align-middle text-muted">{savedStyles.length}</span>
           </h2>
           {savedStyles.length > 0 && (
@@ -68,7 +68,7 @@ export function Saved() {
 
       <section className="py-10" aria-labelledby="saved-palettes">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
-          <h2 id="saved-palettes" className="font-display text-h2 font-normal">
+          <h2 id="saved-palettes" className="font-display text-h2 font-semibold">
             Palettes <span className="meta align-middle text-muted">{savedPalettes.length}</span>
           </h2>
           {savedPalettes.length > 0 && (

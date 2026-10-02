@@ -5,7 +5,7 @@ import { applyLayerEdit, placeInFrame } from "./convert";
 import { describeScene } from "./describe";
 import { actorFromText, decodeActors, encodeActors, newActor, textActor, type Actor, type Vec3 } from "./model";
 
-const cam = (patch = {}) => shotCamera({ ...defaultState(), ...patch });
+const cam = (patch = {}) => shotCamera({ ...defaultState(), view: "3d", ...patch });
 const person = (patch: Partial<Actor> = {}): Actor => ({ ...newActor("person", "woman", []), ...patch });
 
 describe("shot camera", () => {
@@ -50,7 +50,7 @@ describe("shot camera", () => {
 
 describe("looking around the 3D view", () => {
   const view = (orbit: Partial<ReturnType<typeof defaultState>["orbit"]>, patch = {}) =>
-    shotCamera({ ...defaultState(), ...patch, orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0, ...orbit } });
+    shotCamera({ ...defaultState(), view: "3d", ...patch, orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0, ...orbit } });
 
   it("turning around the set shows a subject that faces forward in profile", () => {
     expect(projectActor(view({ yaw: 90 }), person()).facing).toBe("left");
@@ -60,8 +60,8 @@ describe("looking around the 3D view", () => {
   it("tilting moves the horizon and changes the angle the prompt describes", () => {
     const level = horizonAt(view({}))!;
     expect(horizonAt(view({ tilt: 30 }))!).toBeLessThan(level);
-    expect(effectiveAngle({ ...defaultState(), orbit: { yaw: 0, tilt: 40, panX: 0, panY: 0 } })).toBe("high");
-    expect(effectiveAngle({ ...defaultState(), orbit: { yaw: 0, tilt: -20, panX: 0, panY: 0 } })).toBe("low");
+    expect(effectiveAngle({ ...defaultState(), view: "3d", orbit: { yaw: 0, tilt: 40, panX: 0, panY: 0 } })).toBe("high");
+    expect(effectiveAngle({ ...defaultState(), view: "3d", orbit: { yaw: 0, tilt: -20, panX: 0, panY: 0 } })).toBe("low");
     expect(effectiveAngle(defaultState())).toBe("auto");
   });
 
@@ -150,7 +150,7 @@ describe("adding typed subjects", () => {
       ["a tree", "tree"], ["a palm tree", "palm"], ["a flower", "flower"], ["a mountain", "mountain"], ["a hill", "hill"],
       ["the sun", "sun"], ["the moon", "moon"], ["a planet", "planet"], ["a cloud", "cloud"], ["a star", "star"],
       ["a wooden table", "table"], ["a chair", "chair"], ["a bed", "bed"], ["a lamp", "lamp"], ["a book", "book"], ["a cup", "cup"],
-      ["a candle", "candle"], ["a sword", "sword"], ["a guitar", "guitar"], ["a phone", "device"], ["a bottle", "bottle"],
+      ["a candle", "candle"], ["a sword", "sword"], ["a guitar", "guitar"], ["a phone", "thing"], ["a bottle", "bottle"],
     ];
     for (const [text, glyph] of cases) expect(actorFromText(text, [])?.glyph, text).toBe(glyph);
   });
@@ -189,5 +189,27 @@ describe("text placed on the sketch", () => {
         expect(p.y).toBeLessThan(0.4);
       }
     }
+  });
+});
+
+describe("actorFromText", () => {
+  const glyph = (text: string) => actorFromText(text, [])!.glyph;
+
+  it("uses a built-in shape only when it's what the subject is", () => {
+    expect(glyph("a glass of wine")).toBe("cup");
+    expect(glyph("old wooden chair by the window")).toBe("chair");
+    expect(glyph("a lighthouse keeper reading")).toBe("person");
+    expect(glyph("a red sports car")).toBe("car");
+    expect(glyph("castles on a hill")).toBe("castle");
+  });
+
+  it("leaves subjects named after a material or detail to an AI drawing", () => {
+    expect(glyph("sharp cantilevered glass and steel truss")).toBe("thing");
+    expect(glyph("a tower crane")).toBe("thing");
+  });
+
+  it("draws devices as AI icons, not one shared rectangle", () => {
+    expect(glyph("a laptop")).toBe("thing");
+    expect(glyph("an old radio")).toBe("thing");
   });
 });

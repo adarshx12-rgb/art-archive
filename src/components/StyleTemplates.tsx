@@ -30,6 +30,8 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
   const info = formatInfo(template.format);
   const state = templateState(style, template.format, words);
   const prompt = composePrompt(state).prompt;
+  // The builder starts from scratch: the style and the format, not the layout.
+  const scratch = encodeState({ ...state, template: null, templateText: {}, format: template.format });
   const setWord = (id: string, value: string) => setTexts((all) => ({ ...all, [template.format]: { ...words, [id]: value } }));
   const edited = Object.values(words).some((w) => w.trim());
 
@@ -41,7 +43,7 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
             Templates
           </h2>
           <p className="mt-3 max-w-2xl text-muted">
-            Starting layouts in the {style.name} look. Pick a format, change the words, then open it in the builder to add your image.
+            Layouts in the {style.name} look. Pick a format and change the words to copy its prompt, or build your own from scratch in the builder.
           </p>
         </div>
         <p className="meta text-muted">
@@ -127,8 +129,8 @@ export function StyleTemplates({ style }: { style: StyleRecord }) {
           </fieldset>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <Link to={`/builder?${encodeState(state)}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
-              Use template
+            <Link to={`/builder?${scratch}`} target="_blank" rel="noopener" aria-describedby="new-tab-note" className="btn btn-primary">
+              Build from scratch
               <ArrowRight size={16} aria-hidden />
             </Link>
             <CopyButton text={prompt} what={`${info.label.toLowerCase()} template prompt`}>

@@ -103,3 +103,23 @@ export function describeScene(projected: Projected[], aspect: number): string {
     })
     .join("; ");
 }
+
+/** What a point of the frame lands on: the nearest subject covering it, or else the part of the frame. */
+function pointAt(x: number, y: number, projected: Projected[], aspect: number): string {
+  const hit = [...projected]
+    .filter((p) => p.outside < 0.5)
+    .sort((a, b) => a.depth - b.depth)
+    .find((p) => {
+      const b = box(p, aspect);
+      return x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1;
+    });
+  if (hit) return isText(hit.glyph) ? `the text "${hit.label}"` : `the ${hit.label.replace(/^(a|an|the|one)\s+/i, "")}`;
+  const h = x < 0.34 ? "left" : x > 0.66 ? "right" : "";
+  const v = y < 0.34 ? "upper" : y > 0.66 ? "lower" : "";
+  return h && v ? `the ${v} ${h} of the frame` : h ? `the ${h} of the frame` : v ? `the ${v} centre of the frame` : "the centre of the frame";
+}
+
+/** Comments pinned to the preview, numbered: "1) the boat: make it an old pirate ship". */
+export function describeComments(comments: { x: number; y: number; text: string }[], projected: Projected[], aspect: number): string[] {
+  return comments.map((c, i) => `${i + 1}) ${pointAt(c.x, c.y, projected, aspect)}: ${c.text}`);
+}

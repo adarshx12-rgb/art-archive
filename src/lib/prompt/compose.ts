@@ -21,9 +21,9 @@ import {
   type PreserveId,
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
-import { describeScene } from "../scene/describe";
+import { describeComments, describeScene } from "../scene/describe";
 import { withArticle } from "../sketch/layers";
-import { cleanSubject, cleanText, type BuilderState } from "./state";
+import { cleanComment, cleanSubject, cleanText, MAX_COMMENTS, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
   1: ["background"],
@@ -256,7 +256,13 @@ export function composePrompt(state: BuilderState): ComposeResult {
     add("Shot", `${parts.join(", ")}.`);
   }
 
-  // 5b2. Design template: where the masthead, headline and image go
+  // 5b2. Format: what the image is for, when there's no template to say so
+  if (state.format && !template && !isRestyle) {
+    const f = formatInfo(state.format);
+    add("Format", `a ${f.label.toLowerCase()}, ${f.blurb.charAt(0).toLowerCase()}${f.blurb.slice(1)}`);
+  }
+
+  // 5b3. Design template: where the masthead, headline and image go
   if (template && !keepComposition) {
     add("Design", `a ${formatInfo(template.format).label.toLowerCase()} layout. ${fillPrompt(template, state.templateText)}`);
   }
@@ -267,6 +273,10 @@ export function composePrompt(state: BuilderState): ComposeResult {
   } else if (state.actors.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
+
+  // 5d. Comments pinned to the preview, tied to whatever is under each one
+  const comments = state.comments.map((c) => ({ ...c, text: cleanComment(c.text) })).filter((c) => c.text).slice(0, MAX_COMMENTS);
+  if (comments.length) add("Notes", `${describeComments(comments, projected, aspectOf(state.aspect)).join("; ")}.`);
 
   // 6. Lighting
   const lighting =
@@ -347,8 +357,10 @@ export function themeState(style: StyleRecord, output: "image" | "video"): Build
     camera: "push-in",
     movement: "subtle",
     actors: [],
-    view: "3d",
+    view: "2d",
     orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
+    comments: [],
+    format: null,
     template: null,
     templateText: {},
   };

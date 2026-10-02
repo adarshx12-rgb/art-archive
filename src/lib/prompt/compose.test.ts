@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { composePrompt, resolvePalette, themePrompt } from "./compose";
-import { decodeState, defaultState, encodeState, type BuilderState } from "./state";
+import { decodeState, defaultState, encodeState, MAX_COMMENTS, type BuilderState } from "./state";
+import { projectScene, shotCamera } from "../scene/camera";
 import { getStyle } from "../../content/styles";
 import { newActor, type Vec3 } from "../scene/model";
 
@@ -115,6 +116,51 @@ describe("composePrompt", () => {
     const r = composePrompt(state({ task: "restyle", preserve: ["composition"], shot: "close-up" }));
     expect(r.prompt).not.toContain("Shot:");
     expect(r.notes.join(" ")).toMatch(/camera settings are not used/);
+  });
+
+  it("opens on the 2D board and keeps a chosen 3D view in the share link", () => {
+    expect(defaultState().view).toBe("2d");
+    expect(decodeState(new URLSearchParams("s=swiss")).state.view).toBe("2d");
+    const back = decodeState(new URLSearchParams(encodeState(state({ view: "3d" })).toString())).state;
+    expect(back.view).toBe("3d");
+  });
+
+  it("names the chosen format in the prompt and keeps it in the share link", () => {
+    const s = state({ format: "poster", aspect: "2:3" });
+    expect(composePrompt(s).prompt).toContain("Format: a poster, one big idea, readable from across a room.");
+    expect(composePrompt(state()).prompt).not.toContain("Format:");
+    const back = decodeState(new URLSearchParams(encodeState(s).toString()));
+    expect(back.issues).toEqual([]);
+    expect(back.state.format).toBe("poster");
+    expect(decodeState(new URLSearchParams("s=swiss&fm=banana")).state.format).toBeNull();
+  });
+
+  it("turns comments into notes tied to what's under them", () => {
+    const boat = { ...newActor("boat", "boat", []), position: [0.5, 0, -6] as Vec3 };
+    const s = state({ subject: "", actors: [boat] });
+    const on = projectScene(shotCamera(s), [boat])[0]!;
+    const withNotes = state({
+      subject: "",
+      actors: [boat],
+      comments: [
+        { id: "a", x: on.x, y: on.y, text: "make the boat old pirate type" },
+        { id: "b", x: 0.1, y: 0.1, text: "a stormy sky here" },
+        { id: "c", x: 0.5, y: 0.5, text: "   " },
+      ],
+    });
+    const { prompt } = composePrompt(withNotes);
+    expect(prompt).toContain("Notes: 1) the boat: make the boat old pirate type; 2) the upper left of the frame: a stormy sky here.");
+    expect(composePrompt(s).prompt).not.toContain("Notes:");
+  });
+
+  it("keeps comments in the share link, cleaned and capped", () => {
+    const comments = Array.from({ length: 15 }, (_, i) => ({ id: String(i), x: 0.25, y: 0.75, text: `note ${i} ~ with | marks` }));
+    const back = decodeState(new URLSearchParams(encodeState(state({ comments })).toString()));
+    expect(back.issues).toEqual([]);
+    expect(back.state.comments).toHaveLength(MAX_COMMENTS);
+    expect(back.state.comments[0]).toMatchObject({ x: 0.25, y: 0.75, text: "note 0 with marks" });
+    expect(decodeState(new URLSearchParams("s=swiss&nt=0.5~0.5~")).state.comments).toEqual([]);
+    expect(decodeState(new URLSearchParams("s=swiss&nt=9~-3~hello")).state.comments[0]).toMatchObject({ x: 1, y: 0, text: "hello" });
   });
 
   it("maps old framing links to the new camera settings", () => {

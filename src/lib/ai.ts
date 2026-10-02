@@ -3,6 +3,7 @@ import type { BuilderState } from "./prompt/state";
 import { encodeState } from "./prompt/state";
 import type { ShotCamera } from "./scene/camera";
 import type { Actor } from "./scene/model";
+import type { Drawing } from "./sketch/drawing";
 
 /**
  * Browser side of the /api Worker. Every call returns either data or a
@@ -81,4 +82,9 @@ export type Idea = { title: string; why: string } & ({ kind: "scene"; instructio
 /** Ideas for the template design in progress; the server reads everything from the settings. */
 export function aiGuide(state: BuilderState) {
   return post<{ ideas: Idea[] }>("/api/guide", { query: encodeState(state).toString() });
+}
+
+/** A storyboard line drawing for a subject the sketch has no shape for. */
+export function aiDraw(label: string) {
+  return post<{ strokes: Drawing | null }>("/api/draw", { label });
 }

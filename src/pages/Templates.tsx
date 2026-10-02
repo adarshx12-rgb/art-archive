@@ -63,7 +63,7 @@ export function Templates() {
         <h1 className="font-display text-h1 font-semibold lg:col-span-7">Templates</h1>
         <p className="max-w-xl self-end text-muted lg:col-span-5">
           Starting layouts for magazine covers, posters, flyers and thumbnails, each designed in the look of its style. Open one to change the
-          words, then take it to the builder.
+          words and copy its prompt.
         </p>
       </header>
 

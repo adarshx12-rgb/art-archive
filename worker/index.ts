@@ -3,6 +3,7 @@ import { angleOptions, compositionOptions, lensOptions, lightingOptions, shotOpt
 import { AiError } from "./ai";
 import type { Env } from "./env";
 import { SchemesRequest, suggestSchemes } from "./palette";
+import { draw, DrawRequest } from "./draw";
 import { guide, GuideRequest } from "./guide";
 import { perfectPrompt, PromptRequest } from "./prompt";
 import { buildScene, SceneRequest } from "./scene";
@@ -15,6 +16,7 @@ import { buildScene, SceneRequest } from "./scene";
  *   POST /api/schemes  style (+ mood)       -> a 2, 3 and 4-colour scheme
  *   POST /api/prompt   builder settings     -> checked, polished prompt
  *   POST /api/guide    builder settings     -> ideas for the template design
+ *   POST /api/draw     a subject's name     -> a storyboard line drawing of it
  */
 
 const MAX_BODY = 32_000;
@@ -82,6 +84,11 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const body = GuideRequest.safeParse(raw);
       if (!body.success) return fail("That request isn’t valid.", 400);
       return json(await guide(env, body.data, override));
+    }
+    case "/api/draw": {
+      const body = DrawRequest.safeParse(raw);
+      if (!body.success) return fail("That drawing request isn’t valid.", 400);
+      return json(await draw(env, body.data, override));
     }
     default:
       return fail("Not found.", 404);

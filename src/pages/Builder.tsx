@@ -1,22 +1,21 @@
-import { AlertTriangle, Download, Link2, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Link2, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
 
 import { CopyButton } from "../components/actions";
+import { CommentLayer } from "../components/CommentLayer";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PresetBar } from "../components/PresetBar";
 import { SubjectLayers } from "../components/SubjectLayers";
-import { TemplateIdeas } from "../components/TemplateIdeas";
-import { TemplatePreview, useTemplateFonts } from "../components/TemplatePreview";
 import { TransformPanel } from "../components/TransformPanel";
 import { site } from "../config/site";
 import { kindLabels } from "../content/facets";
 import { palettes, getPalette } from "../content/palettes";
 import { getStyle, styles } from "../content/styles";
-import { formatInfo, getTemplate, roleColours, styleColours, templatesFor, textSlots } from "../content/templates";
+import { formatInfo, TEMPLATE_FORMATS } from "../content/templates";
 import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/types";
-import { aiGuide, aiPrompt, aiScene, aiSchemes, type Idea } from "../lib/ai";
+import { aiPrompt, aiScene, aiSchemes } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
@@ -34,6 +33,8 @@ import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
 import { fillText, needsLayout } from "../lib/scene/instruction";
 import { actorFromText, MAX_ACTORS, newActor, textActor, type Actor } from "../lib/scene/model";
 import type { Layer } from "../lib/sketch/layers";
+import { AI_DRAWN } from "../lib/sketch/drawing";
+import { useDrawings } from "../lib/sketch/useDrawings";
 import { useMeta } from "../lib/useMeta";
 import { ThemeToggle } from "../state/theme";
 import { useToast } from "../state/toast";
@@ -179,8 +180,9 @@ const byKind = (Object.keys(kindLabels) as StyleKind[]).map((k) => ({
   items: styles.filter((s) => s.kind === k).sort((a, b) => a.name.localeCompare(b.name)),
 }));
 
-/** The builder makes image prompts for now; video links open as images. */
-function imageOnly(r: ReturnType<typeof decodeState>): ReturnType<typeof decodeState> {
+/** The builder makes image prompts from scratch for now: video links open as images, and older links lose their layout template. */
+function imageOnly(decoded: ReturnType<typeof decodeState>): ReturnType<typeof decodeState> {
+  const r = { ...decoded, state: { ...decoded.state, template: null, templateText: {} } };
   if (r.state.output !== "video") return r;
   const aspect = r.state.aspect === "16:9" ? "4:5" : r.state.aspect;
   return {
@@ -231,9 +233,6 @@ export function Builder() {
   const composed = useMemo(() => composePrompt(state), [state]);
   const palette = resolvePalette(state, style);
   // A 1-colour palette is the background only; the sketch fills the other roles with the style's colours.
-  const template = state.template ? getTemplate(style.slug, state.template) : undefined;
-  const styleTemplates = templatesFor(style.slug);
-  useTemplateFonts(template ? [template] : []);
   const sketchColours = palette.colours.length === 1 ? [palette.colours[0]!, ...resolvePalette({ ...state, paletteMode: "style", count: 4 }, style).colours.slice(1)] : palette.colours;
   const prompt = edited ? text : composed.prompt;
   const staleEdit = edited && basis !== composed.prompt;
@@ -316,12 +315,11 @@ export function Builder() {
       const st = getStyle(slug)!;
       // Custom colours stay yours; only reseed them if you haven't customised.
       const custom = s.paletteMode === "custom" ? s.custom : (st.swatches.map((w) => w.hex) as BuilderState["custom"]);
-      // Keep the layout if the new style has the same format; its words carry over only if the blocks match.
-      const next = s.template ? getTemplate(slug, s.template) : undefined;
-      const slots = new Set(next ? textSlots(next).map((b) => b.id) : []);
-      const templateText = Object.fromEntries(Object.entries(s.templateText).filter(([id]) => slots.has(id)));
-      return { ...s, style: slug, custom, template: next ? s.template : null, templateText };
+      return { ...s, style: slug, custom };
     });
+
+  /** A poster, thumbnail…: the frame takes the format's shape. */
+  const chooseFormat = (format: TemplateFormat | null) => setState((s) => ({ ...s, format, ...(format ? { aspect: formatInfo(format).aspect } : {}) }));
 
   /** Copy the colours currently in use into editable custom slots. Curated entries are never modified. */
   const customise = () =>
@@ -358,6 +356,17 @@ export function Builder() {
 
   // Subjects in the 3D scene
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** The comment tool: while it's on, clicks on the preview place, open and move comments. */
+  const [commenting, setCommenting] = useState(false);
+  useEffect(() => {
+    if (!commenting) return;
+    const off = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) setCommenting(false);
+    };
+    window.addEventListener("keydown", off);
+    return () => window.removeEventListener("keydown", off);
+  }, [commenting]);
+
   /** What a plain drag on the 3D view's background does. */
   const [viewTool, setViewTool] = useState<"orbit" | "pan">("orbit");
   const setActors = (fn: (actors: Actor[]) => Actor[]) => setState((s) => ({ ...s, actors: fn(s.actors) }));
@@ -460,47 +469,11 @@ export function Builder() {
     return true;
   };
 
-  // ——— Design templates ———
-  /** Use one of the style's layouts (or none); the frame takes the format's aspect ratio. */
-  const chooseTemplate = (format: TemplateFormat | null) =>
-    setState((s) => ({ ...s, template: format, templateText: {}, ...(format ? { aspect: formatInfo(format).aspect } : {}) }));
-  const [ideas, setIdeas] = useState<{ list: Idea[]; key: string } | null>(null);
-  const [ideasBusy, setIdeasBusy] = useState(false);
-  /** Changes whenever the design does, so ideas can say they're out of date. */
-  const designKey = template ? encodeState(state).toString() : "";
-  const loadIdeas = async () => {
-    if (!template) return;
-    const key = designKey;
-    setIdeasBusy(true);
-    const res = await aiGuide(state);
-    setIdeasBusy(false);
-    if (res.ok) setIdeas({ list: res.data.ideas, key });
-    else toast(res.error, "error");
-  };
-  // Fresh ideas each time a layout is picked.
-  const templateKey = template ? `${style.slug}/${template.format}` : "";
-  const ideasFor = useRef("");
-  useEffect(() => {
-    // Once per layout, even when effects run twice in development.
-    if (ideasFor.current === templateKey) return;
-    ideasFor.current = templateKey;
-    setIdeas(null);
-    if (templateKey) void loadIdeas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templateKey]);
-  const applyIdea = async (idea: Idea) => {
-    const drop = () => setIdeas((i) => (i ? { ...i, list: i.list.filter((x) => x !== idea) } : i));
-    if (idea.kind === "words") {
-      setState((s) => ({ ...s, templateText: { ...s.templateText, [idea.slot]: idea.words } }));
-      drop();
-      return;
-    }
-    if (await runScene(state.actors.length ? "edit" : "new", idea.instruction)) drop();
-  };
-
   // The flat sketch is the scene seen through the shot camera.
   const camera = shotCamera(state);
   const projected = projectScene(camera, state.actors);
+  // Subjects with no built-in shape get an AI line drawing once it arrives.
+  const drawings = useDrawings(state.actors.filter((a) => AI_DRAWN.has(a.glyph)).map((a) => a.label));
   const orbited = Boolean(state.orbit.yaw || state.orbit.tilt || state.orbit.panX || state.orbit.panY);
   /** Dragging the 3D view: turn around the set, or slide the camera. */
   const lookAround = (kind: "orbit" | "pan", dx: number, dy: number) =>
@@ -583,17 +556,34 @@ export function Builder() {
             <label htmlFor="style-select" className="sr-only">
               Style
             </label>
-            <select id="style-select" className="field" value={state.style} onChange={(e) => setStyle(e.target.value)}>
-              {byKind.map((g) => (
-                <optgroup key={g.kind} label={kindLabels[g.kind]}>
-                  {g.items.map((s) => (
-                    <option key={s.slug} value={s.slug}>
-                      {s.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select id="style-select" className="field min-w-0 flex-1" value={state.style} onChange={(e) => setStyle(e.target.value)}>
+                {byKind.map((g) => (
+                  <optgroup key={g.kind} label={kindLabels[g.kind]}>
+                    {g.items.map((s) => (
+                      <option key={s.slug} value={s.slug}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {!isRestyle && (
+                <>
+                  <label htmlFor="format-select" className="sr-only">
+                    Format
+                  </label>
+                  <select id="format-select" className="field w-auto shrink-0" value={state.format ?? ""} onChange={(e) => chooseFormat((e.target.value || null) as TemplateFormat | null)}>
+                    <option value="">Any format</option>
+                    {TEMPLATE_FORMATS.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
             <p className="mt-2 text-sm text-muted">
               {style.summary}{" "}
               <Link to={`/styles/${style.slug}`} className="underline underline-offset-2">
@@ -605,42 +595,6 @@ export function Builder() {
           <Group legend="Task">
             <Segmented<Task> name="task" value={state.task} onChange={(v) => set("task", v)} options={[{ id: "create", label: "Create new image" }, { id: "restyle", label: "Restyle an image" }]} />
           </Group>
-
-          {styleTemplates.length > 0 && !isRestyle && (
-            <Group legend="Layout" hint={template ? `${template.name}. ${formatInfo(template.format).blurb}` : `Start from a ${style.name} cover, poster, flyer or thumbnail layout.`}>
-              <label htmlFor="layout" className="sr-only">
-                Layout template
-              </label>
-              <select id="layout" className="field" value={template?.format ?? ""} onChange={(e) => chooseTemplate((e.target.value || null) as TemplateFormat | null)}>
-                <option value="">None</option>
-                {styleTemplates.map((t) => (
-                  <option key={t.format} value={t.format}>
-                    {formatInfo(t.format).label}: {t.name}
-                  </option>
-                ))}
-              </select>
-              {template && (
-                <div className="mt-3 space-y-2">
-                  {textSlots(template).map((b) => (
-                    <div key={b.id}>
-                      <label htmlFor={`slot-${b.id}`} className="meta mb-1 block text-muted">
-                        {b.label ?? b.kind}
-                      </label>
-                      <input
-                        id={`slot-${b.id}`}
-                        className="field w-full"
-                        maxLength={TEXT_MAX}
-                        placeholder={b.text?.replace(/\s*\n\s*/g, " / ")}
-                        autoComplete="off"
-                        value={state.templateText[b.id] ?? ""}
-                        onChange={(e) => setState((s) => ({ ...s, templateText: { ...s.templateText, [b.id]: e.target.value } }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Group>
-          )}
 
           <Group legend={isRestyle ? "What’s in your source? (optional)" : "Subject"} hint={`${state.subject.length}/${SUBJECT_MAX} characters`}>
             <label htmlFor="subject" className="sr-only">
@@ -677,17 +631,6 @@ export function Builder() {
               onDelete={deleteActor}
               busy={aiBusy === "scene"}
             />
-            {template && (
-              <TemplateIdeas
-                format={formatInfo(template.format).label.toLowerCase()}
-                ideas={ideas?.list ?? null}
-                loading={ideasBusy}
-                stale={Boolean(ideas && ideas.key !== designKey)}
-                busy={aiBusy !== null}
-                onRefresh={() => void loadIdeas()}
-                onApply={(idea) => void applyIdea(idea)}
-              />
-            )}
           </Group>
 
           <Group legend={isRestyle ? "New text (optional)" : "Text in the image (optional)"} hint={state.text ? `${state.text.length}/${TEXT_MAX} characters. Spelled exactly as typed; + places it on the sketch.` : "A title, sign or slogan to letter in the style’s type. + places it on the sketch."}>
@@ -812,7 +755,13 @@ export function Builder() {
             {keepComposition ? (
               <p className="border-l-2 border-ink pl-3 text-sm text-muted">Composition and aspect ratio are preserved from your source.</p>
             ) : (
-              <Select label="Aspect ratio" value={state.aspect} options={aspectOptions} onChange={(v) => set("aspect", v)} />
+              <Select
+                label="Aspect ratio"
+                value={state.aspect}
+                options={aspectOptions}
+                // A different shape no longer fits the chosen format.
+                onChange={(v) => setState((s) => ({ ...s, aspect: v, format: s.format && formatInfo(s.format).aspect !== v ? null : s.format }))}
+              />
             )}
           </Group>
 
@@ -896,7 +845,23 @@ export function Builder() {
               )}
             </div>
             <div ref={stageRef} className="relative">
-            <div ref={boardRef} className="mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+            <div ref={boardRef} className="relative mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
+              {/* Tools: a slim bar on the board's right edge (inside its corner on small screens) */}
+              <div role="toolbar" aria-label="Preview tools" aria-orientation="vertical" className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg border border-rule bg-paper p-1 shadow-sm sm:top-0 sm:right-auto sm:left-full sm:ml-2">
+                <button
+                  type="button"
+                  aria-pressed={commenting}
+                  title={commenting ? "Comment tool on (Esc to leave)" : "Comment: click the preview to pin a note"}
+                  className={`flex size-8 items-center justify-center rounded-md transition-colors ${commenting ? "bg-ink text-paper" : "text-ink hover:bg-rule"}`}
+                  onClick={() => {
+                    setCommenting((on) => !on);
+                    setSelectedId(null);
+                  }}
+                >
+                  <MessageSquarePlus size={17} aria-hidden />
+                  <span className="sr-only">Comment</span>
+                </button>
+              </div>
               <div className="relative overflow-hidden rounded-xl border border-rule">
                 <Storyboard
                   state={state}
@@ -911,18 +876,10 @@ export function Builder() {
                   onLayerDelete={deleteActor}
                   onView={lookAround}
                   viewTool={viewTool}
+                  drawings={drawings}
                 />
-                {template && state.aspect === formatInfo(template.format).aspect && (
-                  <TemplatePreview
-                    overlay
-                    template={template}
-                    colours={roleColours(sketchColours, styleColours(style))}
-                    texts={state.templateText}
-                    className="pointer-events-none opacity-90"
-                    label={`${formatInfo(template.format).label} layout over the sketch`}
-                  />
-                )}
               </div>
+              <CommentLayer comments={state.comments} active={commenting} onChange={(c) => set("comments", c)} />
             </div>
             {selectedActor && side && (
               <div className="absolute top-0 overflow-y-auto" style={{ right: `calc(50% + ${side.board / 2 + 16}px)`, width: side.width, maxHeight: side.height }}>
@@ -931,18 +888,14 @@ export function Builder() {
             )}
             </div>
             <p className="meta mt-2 text-center text-muted">
-              {state.view === "3d"
-                ? "Drag the background to look around; Shift-drag or Pan to slide the view. What you see is the shot. "
-                : "A flat board: subjects move, resize and tilt only within the picture. "}
-              {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : "Click a subject to move, scale or rotate it."}
-              {template && state.aspect !== formatInfo(template.format).aspect && (
+              {commenting ? (
+                "Comment tool: click the preview to pin a note; drag a dot to move it, click it to edit, × to delete. Esc to finish."
+              ) : (
                 <>
-                  {" "}
-                  The {formatInfo(template.format).label.toLowerCase()} layout is {formatInfo(template.format).aspect};{" "}
-                  <button type="button" className="underline underline-offset-2 hover:text-ink" onClick={() => set("aspect", formatInfo(template.format).aspect)}>
-                    switch back
-                  </button>{" "}
-                  to see it over the sketch.
+                  {state.view === "3d"
+                    ? "Drag the background to look around; Shift-drag or Pan to slide the view. What you see is the shot. "
+                    : "A flat board: subjects move, resize and tilt only within the picture. "}
+                  {state.actors.length === 0 ? "Use ADD + under Subject to place subjects." : "Click a subject to move, scale or rotate it."}
                 </>
               )}
             </p>

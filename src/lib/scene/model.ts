@@ -1,3 +1,4 @@
+import { AI_DRAWN } from "../sketch/drawing";
 import { cleanLabel, clamp, LAYER_TYPES } from "../sketch/layers";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../sketch/parse";
 
@@ -109,12 +110,30 @@ export function textActor(text: string, existing: Actor[]): Actor | null {
   return cleanLabel(text) ? newActor("text", text, existing) : null;
 }
 
+/** Words that end the subject's own name: "chair by the window", "glass of wine". */
+const CONNECTORS = new Set(["in", "on", "with", "by", "under", "over", "at", "of", "near", "beside", "behind", "above", "below", "from", "inside", "through", "against", "for", "into", "onto", "holding", "wearing"]);
+
+/** The noun the subject is named by, singular: "glass and steel truss" -> "truss". */
+function headNoun(label: string): string | undefined {
+  const words = label.toLowerCase().split(/[^a-z0-9àâäéèêëïîôöùûüç]+/).filter(Boolean);
+  const cut = words.findIndex((w) => CONNECTORS.has(w));
+  const name = (cut > 0 ? words.slice(0, cut) : words).filter((w) => !w.endsWith("ing"));
+  const last = name.at(-1);
+  // The word list draws "palm trees" as palms.
+  if ((last === "tree" || last === "trees") && name.at(-2) === "palm") return "palm";
+  return last && (parseSubject(last).items[0]?.label ?? last);
+}
+
 /** A subject for whatever the user typed: "two old dogs running" draws two running dogs and keeps the wording. */
 export function actorFromText(text: string, existing: Actor[]): Actor | null {
   const label = cleanLabel(text);
   if (!label) return null;
   const parsed = parseSubject(label);
-  const item = mainItem(parsed.items);
+  // A built-in shape only when it's what the subject is: people, animals and vehicles, or the subject's own noun.
+  // "glass and steel truss" isn't a cup, and a laptop deserves better than the generic device box: both get an AI drawing.
+  const head = headNoun(label);
+  const fits = parsed.items.filter((i) => (PICK_ORDER.includes(i.glyph) || i.label === head) && !AI_DRAWN.has(i.glyph));
+  const item = mainItem(fits);
   return newActor(item?.glyph ?? "thing", label, existing, item?.count ?? 1, parsed.pose);
 }
 

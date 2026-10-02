@@ -75,11 +75,26 @@ export interface BuilderState {
   view: "3d" | "2d";
   /** Where the 3D view has been turned (degrees), tilted (degrees) and panned (metres). */
   orbit: { yaw: number; tilt: number; panX: number; panY: number };
+  /** Numbered notes pinned to the preview ("make the boat an old pirate ship"), in order. */
+  comments: Comment[];
+  /** What the image is for (a poster, a thumbnail…), or none; sets the frame and a line in the prompt. */
+  format: TemplateFormat | null;
   /** A design template of the style (content/templates.ts), or none. */
   template: TemplateFormat | null;
   /** The visitor's words for the template's text blocks, by block id; missing ones use the sample. */
   templateText: Record<string, string>;
 }
+
+/** A note pinned to a point of the preview; x and y are fractions of the frame from the top left. */
+export interface Comment {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+}
+
+export const MAX_COMMENTS = 12;
+export const COMMENT_MAX = 200;
 
 export const SUBJECT_MAX = 400;
 /** Matches the longest name a subject on the sketch can have, so placed text is never cut. */
@@ -112,8 +127,10 @@ export function defaultState(): BuilderState {
     camera: "push-in",
     movement: "subtle",
     actors: [],
-    view: "3d",
+    view: "2d",
     orbit: { yaw: 0, tilt: 0, panX: 0, panY: 0 },
+    comments: [],
+    format: null,
     template: null,
     templateText: {},
   };
@@ -131,10 +148,15 @@ export function cleanSubject(input: string, max = SUBJECT_MAX): string {
 /** Words for a template's text block; ~ and | separate share-link fields. */
 export const cleanSlot = (input: string) => cleanSubject(input.replace(/[~|]/g, " "), TEXT_MAX);
 
+/** A comment's words; ~ and | separate share-link fields. */
+export const cleanComment = (input: string) => cleanSubject(input.replace(/[~|]/g, " "), COMMENT_MAX);
+
 /** The same cleaning for the text to letter, with its own cap. */
 export const cleanText = (input: string) => cleanSubject(input, TEXT_MAX);
 
 // ——— URL codec ———
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
 const KEYS = {
   style: "s",
@@ -164,6 +186,8 @@ const KEYS = {
   orbit: "ob",
   /** Older links: flat 2D layers, converted to the 3D scene on load. */
   layers: "ly",
+  format: "fm",
+  comments: "nt",
   template: "tp",
   templateText: "tt",
 } as const;
@@ -196,7 +220,10 @@ export function encodeState(state: BuilderState): URLSearchParams {
   put(KEYS.lighting, state.lighting, d.lighting);
   if (state.task === "restyle") put(KEYS.preserve, state.preserve.join("-"), d.preserve.join("-"));
   if (state.actors.length) q.set(KEYS.actors, encodeActors(state.actors));
-  if (state.view === "2d") q.set(KEYS.view, "2d");
+  if (state.view === "3d") q.set(KEYS.view, "3d");
+  if (state.format) q.set(KEYS.format, state.format);
+  const notes = state.comments.map((c) => ({ ...c, text: cleanComment(c.text) })).filter((c) => c.text).slice(0, MAX_COMMENTS);
+  if (notes.length) q.set(KEYS.comments, notes.map((c) => `${round3(c.x)}~${round3(c.y)}~${c.text}`).join("|"));
   if (state.template) {
     q.set(KEYS.template, state.template);
     const words = Object.entries(state.templateText).filter(([, v]) => v.trim());
@@ -311,6 +338,12 @@ export function decodeState(params: URLSearchParams): DecodeResult {
     state.preserve = [...new Set(valid)];
   }
 
+  const format = params.get(KEYS.format);
+  if (format !== null) {
+    if (isTemplateFormat(format)) state.format = format;
+    else issues.push("The format in this link wasn’t recognised, so none is used.");
+  }
+
   const template = params.get(KEYS.template);
   if (template !== null) {
     const t = isTemplateFormat(template) ? getTemplate(state.style, template) : undefined;
@@ -330,7 +363,7 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   state.camera = pick<CameraId>(KEYS.camera, ids(cameraOptions), "Camera movement") ?? state.camera;
   state.movement = pick<MovementId>(KEYS.movement, ids(movementOptions), "Subject movement") ?? state.movement;
 
-  if (params.get(KEYS.view) === "2d") state.view = "2d";
+  if (params.get(KEYS.view) === "3d") state.view = "3d";
   const orbit = params.get(KEYS.orbit);
   if (orbit !== null) {
     const n = orbit.split("~").map(Number);
@@ -351,6 +384,19 @@ export function decodeState(params: URLSearchParams): DecodeResult {
     const cam = shotCamera(state);
     state.actors = decoded.layers.map((l) => actorFromLayer(cam, l));
     if (decoded.bad) issues.push("Some subjects in the scene couldn’t be restored.");
+  }
+
+  const notes = params.get(KEYS.comments);
+  if (notes) {
+    const unit = (n: number) => Math.min(Math.max(n, 0), 1);
+    state.comments = notes
+      .split("|")
+      .map((part) => part.split("~"))
+      .filter(([x, y]) => Number.isFinite(Number(x)) && Number.isFinite(Number(y)))
+      .map(([x, y, ...words]) => ({ x: unit(Number(x)), y: unit(Number(y)), text: cleanComment(words.join(" ")) }))
+      .filter((c) => c.text)
+      .slice(0, MAX_COMMENTS)
+      .map((c, i) => ({ id: `n${i}`, ...c }));
   }
 
   return { state, issues };

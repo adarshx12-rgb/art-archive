@@ -6,6 +6,7 @@ import type { BuilderState } from "../lib/prompt/state";
 import { horizonAt, project, type ShotCamera } from "../lib/scene/camera";
 import type { Vec3 } from "../lib/scene/model";
 import { clamp, LAYER_HEIGHT, layerAspect, type Layer } from "../lib/sketch/layers";
+import { AI_DRAWN, DRAW_H, drawingKey, type Drawing } from "../lib/sketch/drawing";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../lib/sketch/parse";
 import { rng } from "./util";
 
@@ -580,8 +581,21 @@ function topGlyph(g: Glyph, x: number, y: number, u: number, c: Ctx, main: boole
  * A placed subject drawn around its own centre (0, 0) at height `hh`, so a
  * transform can move, scale and rotate it like a layer.
  */
-function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, facing?: Layer["facing"]): ReactNode {
+function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, facing?: Layer["facing"], drawing?: Drawing): ReactNode {
   const b = hh / 2;
+  if (drawing) {
+    // The AI's outline icon, scaled from its box to the placeholder's, drawn with one even, bold pen.
+    const w = hh * 1.2;
+    const k = hh / DRAW_H;
+    const pen = Math.min(Math.max(hh * 0.04, 2.5), 10);
+    return (
+      <g transform={`translate(${-w / 2} ${-hh / 2}) scale(${k})`} stroke={c.ink} strokeWidth={pen / k} strokeLinejoin="round" strokeLinecap="round" fill="none">
+        {drawing.map((s, i) => (
+          <path key={i} d={s.d} />
+        ))}
+      </g>
+    );
+  }
   switch (g) {
     case "person":
     case "child":
@@ -636,9 +650,9 @@ function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, fac
     case "plane":
       return skyGlyph(g, 0, 0, hh / 0.9, c, 0);
     case "thing": {
-      // A storyboard placeholder: a box with a cross, labelled below.
       const w = hh * 1.2;
       const sw = Math.min(Math.max(hh * 0.02, 2.5), 6);
+      // Until a drawing arrives (or if none can be made): a box with a cross, labelled below.
       return (
         <g stroke={c.ink} strokeWidth={sw} fill={main ? c.accent : c.secondary} fillOpacity={0.55} strokeLinejoin="round">
           <rect x={-w / 2} y={-hh / 2} width={w} height={hh} rx={hh * 0.08} />
@@ -672,6 +686,8 @@ export interface StoryboardProps {
   onView?: (kind: "orbit" | "pan", dx: number, dy: number) => void;
   /** What a plain drag does; Shift or the right button always pans. */
   viewTool?: "orbit" | "pan";
+  /** AI line drawings for subjects with no built-in shape, by drawingKey(label). */
+  drawings?: Record<string, Drawing>;
 }
 
 type Drag = { mode: "move" | "scale" | "rotate"; id: string; start: { x: number; y: number }; layer: Layer };
@@ -715,6 +731,7 @@ export function Storyboard({
   camera,
   onView,
   viewTool = "orbit",
+  drawings = {},
 }: StoryboardProps) {
   const layersRef = useRef<SVGGElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -1161,7 +1178,7 @@ export function Storyboard({
                     </text>
                   ) : Array.from({ length: n }, (_, k) => (
                     <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
-                      {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing)}
+                      {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing, AI_DRAWN.has(l.glyph) ? drawings[drawingKey(l.label)] : undefined)}
                     </g>
                   ))}
                 </g>

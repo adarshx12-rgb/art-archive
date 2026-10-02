@@ -48,7 +48,9 @@ export type Glyph =
   /** Words placed on the sketch from the text field; drawn as the words themselves. */
   | "text"
   /** Anything the word list doesn't know: drawn as a labelled placeholder. */
-  | "thing";
+  | "thing"
+  /** A picture the visitor added and cropped; drawn as the picture itself. */
+  | "image";
 
 /** Where an item lives in the frame. */
 export type Layer = "sky" | "back" | "front";
@@ -74,7 +76,7 @@ const LAYER: Record<Glyph, Layer> = {
   person: "front", child: "front", robot: "front", animal: "front", "big-animal": "front", fish: "front",
   car: "front", bike: "front", boat: "front", train: "front",
   table: "front", chair: "front", book: "front", cup: "front", candle: "front", lamp: "front", sword: "front",
-  guitar: "front", device: "front", bottle: "front", bed: "front", flower: "front", thing: "front", text: "front",
+  guitar: "front", device: "front", bottle: "front", bed: "front", flower: "front", thing: "front", text: "front", image: "front",
   house: "back", tower: "back", lighthouse: "back", castle: "back", city: "back", tree: "back", palm: "back",
   mountain: "back", hill: "back", window: "back", door: "back",
   sun: "sky", moon: "sky", star: "sky", planet: "sky", cloud: "sky", bird: "sky", plane: "sky",

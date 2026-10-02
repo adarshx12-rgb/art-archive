@@ -688,6 +688,8 @@ export interface StoryboardProps {
   viewTool?: "orbit" | "pan";
   /** AI line drawings for subjects with no built-in shape, by drawingKey(label). */
   drawings?: Record<string, Drawing>;
+  /** Added pictures (data: URLs) by key; a missing one is drawn as a labelled placeholder. */
+  images?: Record<string, string>;
 }
 
 type Drag = { mode: "move" | "scale" | "rotate"; id: string; start: { x: number; y: number }; layer: Layer };
@@ -732,6 +734,7 @@ export function Storyboard({
   onView,
   viewTool = "orbit",
   drawings = {},
+  images = {},
 }: StoryboardProps) {
   const layersRef = useRef<SVGGElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -976,7 +979,7 @@ export function Storyboard({
   const copies = (l: Layer) => Math.max(1, l.count ?? 1);
   const sizeOf = (l: Layer) => {
     const hh = LAYER_HEIGHT[l.glyph] * l.scale * H;
-    const one = hh * layerAspect(l.glyph, l.label);
+    const one = hh * layerAspect(l.glyph, l.label, l.image?.ratio);
     return { hh, one, ww: one * copies(l) + one * 0.15 * (copies(l) - 1) };
   };
   const begin = (e: PointerEvent, mode: Drag["mode"], l: Layer) => {
@@ -1149,6 +1152,7 @@ export function Storyboard({
               const n = copies(l);
               const front = i === layers.length - 1;
               const isText = l.glyph === "text";
+              const picture = l.image ? images[l.image.key] : undefined;
               return (
                 <g
                   key={l.id}
@@ -1176,6 +1180,21 @@ export function Storyboard({
                     >
                       {l.label}
                     </text>
+                  ) : l.glyph === "image" ? (
+                    picture ? (
+                      <g>
+                        <image href={picture} x={-ww / 2} y={-hh / 2} width={ww} height={hh} preserveAspectRatio="none" />
+                        <rect x={-ww / 2} y={-hh / 2} width={ww} height={hh} fill="none" stroke={c.ink} strokeWidth={2} />
+                      </g>
+                    ) : (
+                      // A link opened in another browser: the picture isn't here, only where it goes.
+                      <g>
+                        <rect x={-ww / 2} y={-hh / 2} width={ww} height={hh} fill={pal.bg} fillOpacity={0.6} stroke={c.ink} strokeWidth={3} strokeDasharray="14 10" />
+                        <text textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono)" fontSize={Math.max(Math.min(ww / 14, hh / 6), 14)} fill={c.ink}>
+                          not in this link
+                        </text>
+                      </g>
+                    )
                   ) : Array.from({ length: n }, (_, k) => (
                     <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
                       {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing, AI_DRAWN.has(l.glyph) ? drawings[drawingKey(l.label)] : undefined)}

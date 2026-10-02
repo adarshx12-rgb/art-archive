@@ -3,7 +3,7 @@ import { composePrompt, resolvePalette, themePrompt } from "./compose";
 import { decodeState, defaultState, encodeState, MAX_COMMENTS, type BuilderState } from "./state";
 import { projectScene, shotCamera } from "../scene/camera";
 import { getStyle } from "../../content/styles";
-import { newActor, type Vec3 } from "../scene/model";
+import { imageActor, newActor, type Vec3 } from "../scene/model";
 
 const state = (patch: Partial<BuilderState> = {}): BuilderState => ({
   ...defaultState(),
@@ -161,6 +161,15 @@ describe("composePrompt", () => {
     expect(back.state.comments[0]).toMatchObject({ x: 0.25, y: 0.75, text: "note 0 with marks" });
     expect(decodeState(new URLSearchParams("s=swiss&nt=0.5~0.5~")).state.comments).toEqual([]);
     expect(decodeState(new URLSearchParams("s=swiss&nt=9~-3~hello")).state.comments[0]).toMatchObject({ x: 1, y: 0, text: "hello" });
+  });
+
+  it("refers to placed images as references to attach, not as subjects", () => {
+    const boat = { ...newActor("boat", "boat", []), position: [0.5, 0, -6] as Vec3 };
+    const img = { ...imageActor({ key: "k", ratio: 1 }, [boat]), position: [-0.5, 0, 0] as Vec3 };
+    const { prompt } = composePrompt(state({ subject: "", actors: [boat, img] }));
+    expect(prompt.startsWith("An image of a boat,")).toBe(true);
+    expect(prompt).toMatch(/Reference images \(attach them with this prompt\): image 1 [^.]*left[^.]*\./);
+    expect(prompt).not.toMatch(/Layout:[^\n]*image 1/);
   });
 
   it("maps old framing links to the new camera settings", () => {

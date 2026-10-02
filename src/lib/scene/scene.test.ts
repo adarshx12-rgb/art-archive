@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { defaultState, decodeState } from "../prompt/state";
 import { effectiveAngle, horizonAt, projectActor, projectScene, shotCamera, unproject } from "./camera";
 import { applyLayerEdit, placeInFrame } from "./convert";
-import { describeScene } from "./describe";
-import { actorFromText, decodeActors, encodeActors, newActor, textActor, type Actor, type Vec3 } from "./model";
+import { describeScene, subjectAt } from "./describe";
+import { actorFromText, decodeActors, encodeActors, imageActor, newActor, textActor, widthRatio, type Actor, type Vec3 } from "./model";
 
 const cam = (patch = {}) => shotCamera({ ...defaultState(), view: "3d", ...patch });
 const person = (patch: Partial<Actor> = {}): Actor => ({ ...newActor("person", "woman", []), ...patch });
@@ -211,5 +211,51 @@ describe("actorFromText", () => {
   it("draws devices as AI icons, not one shared rectangle", () => {
     expect(glyph("a laptop")).toBe("thing");
     expect(glyph("an old radio")).toBe("thing");
+  });
+});
+
+describe("subjectAt", () => {
+  const c = cam({ aspect: "1:1" });
+  const near = { ...newActor("person", "sailor", []), id: "near", position: [0, 0, 2] as Vec3 };
+  const far = { ...newActor("boat", "boat", []), id: "far", position: [0, 0, -4] as Vec3 };
+  const projected = projectScene(c, [far, near]);
+  const onNear = projected.find((p) => p.actor.id === "near")!;
+
+  it("picks the nearest subject under the point, the one drawn on top", () => {
+    expect(subjectAt(onNear.x, onNear.y, projected, 1)?.actor.id).toBe("near");
+  });
+
+  it("at the same distance, picks the one added last, which is drawn on top", () => {
+    const a = { ...newActor("boat", "boat", []), id: "a", position: [0, 0, 0] as Vec3 };
+    const b = { ...newActor("boat", "raft", []), id: "b", position: [0, 0, 0] as Vec3 };
+    const both = projectScene(c, [a, b]);
+    expect(subjectAt(0.5, both[0]!.y, both, 1)?.actor.id).toBe(both[both.length - 1]!.actor.id);
+  });
+
+  it("finds nothing on empty space", () => {
+    expect(subjectAt(0.02, 0.02, projected, 1)).toBeUndefined();
+  });
+});
+
+describe("images on the sketch", () => {
+  it("keeps the picture's key and shape through a share link", () => {
+    const img = imageActor({ key: "k123", ratio: 1.5 }, []);
+    expect(img.glyph).toBe("image");
+    expect(img.label).toBe("image 1");
+    const { actors, bad } = decodeActors(encodeActors([img]));
+    expect(bad).toBe(false);
+    expect(actors[0]).toMatchObject({ glyph: "image", label: "image 1", image: { key: "k123", ratio: 1.5 } });
+  });
+
+  it("numbers images in order and is as wide as its crop", () => {
+    const a = imageActor({ key: "a", ratio: 2 }, []);
+    const b = imageActor({ key: "b", ratio: 0.5 }, [a]);
+    expect(b.label).toBe("image 2");
+    expect(widthRatio("image", "image 1", 2)).toBe(2);
+  });
+
+  it("rejects a bad shape in a link", () => {
+    const raw = encodeActors([imageActor({ key: "k", ratio: 1 }, [])]).replace(/~1$/, "~-4");
+    expect(decodeActors(raw).actors[0]!.image!.ratio).toBeGreaterThan(0);
   });
 });

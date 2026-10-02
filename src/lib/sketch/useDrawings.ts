@@ -9,8 +9,8 @@ import { cleanDrawing, drawingKey, type Drawing } from "./drawing";
  * While one loads, or if it fails, the sketch keeps its placeholder box.
  */
 
-// v2: outline icons. Older, filled drawings are left behind and redrawn.
-const STORE = "ff-drawings-v2";
+// v3: outline icons of the subject alone. Older drawings (filled, or with added scenery) are left behind and redrawn.
+const STORE = "ff-drawings-v3";
 const KEEP = 60;
 
 function load(): Record<string, Drawing> {

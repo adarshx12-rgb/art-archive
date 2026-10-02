@@ -1,7 +1,7 @@
 import { withArticle } from "../sketch/layers";
 import type { Glyph } from "../sketch/parse";
 import { byPriority, type Projected } from "./camera";
-import { isSky, isText, widthRatio } from "./model";
+import { isImage, isSky, isText, widthRatio } from "./model";
 
 /** Things that have a front, so which way they face is worth saying. */
 const FACES = new Set<Glyph>(["person", "child", "robot", "animal", "big-animal", "bird", "fish", "car", "bike", "boat", "train", "plane"]);
@@ -55,7 +55,7 @@ function tilt(p: Projected): string {
 /** Approximate on-screen box, as fractions of the frame. */
 function box(p: Projected, aspect: number) {
   const h = p.size;
-  const w = (h * widthRatio(p.glyph, p.label) * p.count) / aspect;
+  const w = (h * widthRatio(p.glyph, p.label, p.image?.ratio) * p.count) / aspect;
   return { x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - h / 2, y1: p.y + h / 2, area: w * h };
 }
 
@@ -104,16 +104,21 @@ export function describeScene(projected: Projected[], aspect: number): string {
     .join("; ");
 }
 
-/** What a point of the frame lands on: the nearest subject covering it, or else the part of the frame. */
-function pointAt(x: number, y: number, projected: Projected[], aspect: number): string {
-  const hit = [...projected]
+/** The subject drawn on top at a point of the frame, if any. Projected subjects come furthest first, the order they're drawn in. */
+export function subjectAt(x: number, y: number, projected: Projected[], aspect: number): Projected | undefined {
+  return [...projected]
     .filter((p) => p.outside < 0.5)
-    .sort((a, b) => a.depth - b.depth)
+    .reverse()
     .find((p) => {
       const b = box(p, aspect);
       return x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1;
     });
-  if (hit) return isText(hit.glyph) ? `the text "${hit.label}"` : `the ${hit.label.replace(/^(a|an|the|one)\s+/i, "")}`;
+}
+
+/** What a point of the frame lands on: the nearest subject covering it, or else the part of the frame. */
+function pointAt(x: number, y: number, projected: Projected[], aspect: number): string {
+  const hit = subjectAt(x, y, projected, aspect);
+  if (hit) return isText(hit.glyph) ? `the text "${hit.label}"` : isImage(hit.glyph) ? hit.label : `the ${hit.label.replace(/^(a|an|the|one)\s+/i, "")}`;
   const h = x < 0.34 ? "left" : x > 0.66 ? "right" : "";
   const v = y < 0.34 ? "upper" : y > 0.66 ? "lower" : "";
   return h && v ? `the ${v} ${h} of the frame` : h ? `the ${h} of the frame` : v ? `the ${v} centre of the frame` : "the centre of the frame";
@@ -122,4 +127,12 @@ function pointAt(x: number, y: number, projected: Projected[], aspect: number): 
 /** Comments pinned to the preview, numbered: "1) the boat: make it an old pirate ship". */
 export function describeComments(comments: { x: number; y: number; text: string }[], projected: Projected[], aspect: number): string[] {
   return comments.map((c, i) => `${i + 1}) ${pointAt(c.x, c.y, projected, aspect)}: ${c.text}`);
+}
+
+/** Where each added picture sits, for the prompt: "image 1 on the left of the frame, large in frame". */
+export function describeImages(projected: Projected[]): string {
+  return byPriority(projected)
+    .filter((p) => isImage(p.glyph))
+    .map((p) => [p.label, where(p), size(p)].filter(Boolean).join(", ").replace(/^(image \d+), (on|in) /, "$1 $2 "))
+    .join("; ");
 }

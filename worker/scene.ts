@@ -7,6 +7,8 @@ import { ask } from "./ai";
 import type { Env } from "./env";
 
 const GLYPHS = Object.keys(REAL_HEIGHT) as [Glyph, ...Glyph[]];
+/** What the model may place: everything but pictures, which only the visitor adds (their kind is restored in the browser). */
+const PLACEABLE = GLYPHS.filter((g) => g !== "image") as [Glyph, ...Glyph[]];
 const ids = <T extends { id: string | number }>(list: readonly T[]) => list.map((o) => String(o.id)) as [string, ...string[]];
 
 // ——— What the browser sends ———
@@ -48,7 +50,7 @@ const SceneOut = z.object({
     .array(
       z.object({
         id: z.string().describe("The id of an existing subject being kept or changed, or an empty string for a new one."),
-        kind: z.enum(GLYPHS).describe("The closest drawable shape. Use 'thing' for anything not in the list."),
+        kind: z.enum(PLACEABLE).describe("The closest drawable shape. Use 'thing' for anything not in the list. Keep an existing subject's kind."),
         label: z.string().describe("What it is, using only the user's own words and details, e.g. 'old fisherman in a yellow coat'. Never add details the user didn't give."),
         count: z.number().int().describe("How many, drawn side by side (1-6)."),
         x: z.number().describe("Metres; negative is left, positive is right."),

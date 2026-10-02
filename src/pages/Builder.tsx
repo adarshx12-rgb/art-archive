@@ -1,10 +1,12 @@
-import { AlertTriangle, Download, Link2, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Eraser, ImagePlus, Link2, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
 
 import { CopyButton } from "../components/actions";
 import { CommentLayer } from "../components/CommentLayer";
+import { EraseLayer } from "../components/EraseLayer";
+import { ImageCropper } from "../components/ImageCropper";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PresetBar } from "../components/PresetBar";
 import { SubjectLayers } from "../components/SubjectLayers";
@@ -18,7 +20,7 @@ import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/typ
 import { aiPrompt, aiScene, aiSchemes } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
-import { composePrompt, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
+import { composePrompt, joinList, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
 import {
   aspectOptions,
   preserveOptions,
@@ -27,11 +29,13 @@ import {
   type PreserveId,
   type Task,
 } from "../lib/prompt/options";
-import { decodeState, defaultState, encodeState, SUBJECT_MAX, TEXT_MAX, type BuilderState } from "../lib/prompt/state";
-import { byPriority, projectScene, shotCamera } from "../lib/scene/camera";
+import { decodeState, defaultState, encodeState, SUBJECT_MAX, TEXT_MAX, type BuilderState, type Comment as Note } from "../lib/prompt/state";
+import { aspectOf, byPriority, projectScene, shotCamera } from "../lib/scene/camera";
+import { subjectAt } from "../lib/scene/describe";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
 import { fillText, needsLayout } from "../lib/scene/instruction";
-import { actorFromText, MAX_ACTORS, newActor, textActor, type Actor } from "../lib/scene/model";
+import { actorFromText, imageActor, MAX_ACTORS, MAX_IMAGES, newActor, textActor, type Actor } from "../lib/scene/model";
+import { newImageKey, saveImage, useImages } from "../lib/images";
 import type { Layer } from "../lib/sketch/layers";
 import { AI_DRAWN } from "../lib/sketch/drawing";
 import { useDrawings } from "../lib/sketch/useDrawings";
@@ -357,15 +361,16 @@ export function Builder() {
   // Subjects in the 3D scene
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /** The comment tool: while it's on, clicks on the preview place, open and move comments. */
-  const [commenting, setCommenting] = useState(false);
+  const [tool, setTool] = useState<"erase" | "comment" | null>(null);
+  const commenting = tool === "comment";
   useEffect(() => {
-    if (!commenting) return;
+    if (!tool) return;
     const off = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) setCommenting(false);
+      if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) setTool(null);
     };
     window.addEventListener("keydown", off);
     return () => window.removeEventListener("keydown", off);
-  }, [commenting]);
+  }, [tool]);
 
   /** What a plain drag on the 3D view's background does. */
   const [viewTool, setViewTool] = useState<"orbit" | "pan">("orbit");
@@ -402,6 +407,28 @@ export function Builder() {
     subjectRef.current?.focus();
   };
   /** Put the typed text on the sketch, where it can be moved and sized, and clear the box. */
+  // ——— Added pictures ———
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [cropping, setCropping] = useState<File | null>(null);
+  const imageCount = state.actors.filter((a) => a.glyph === "image").length;
+  const pickImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast("Choose a JPG, PNG or WebP image.", "error");
+    if (file.size > 10 * 1024 * 1024) return toast("That image is over 10 MB. Choose a smaller one.", "error");
+    setCropping(file);
+  };
+  const addImage = async (dataUrl: string, ratio: number) => {
+    setCropping(null);
+    if (imageCount >= MAX_IMAGES || state.actors.length >= MAX_ACTORS) return;
+    const key = newImageKey();
+    const kept = await saveImage(key, dataUrl);
+    if (!kept) toast("This browser won’t store images, so this one lasts until you close the page.", "error");
+    const actor = framed(imageActor({ key, ratio }, state.actors));
+    setState((s) => ({ ...s, actors: [...s.actors, actor] }));
+    setTool(null);
+    setSelectedId(actor.id);
+  };
+
   const addText = () => {
     const raw = textActor(state.text, state.actors);
     if (!raw || state.actors.length >= MAX_ACTORS) return;
@@ -452,7 +479,13 @@ export function Builder() {
       if (!opts.quiet) toast(res.error, "error");
       return false;
     }
-    const { actors, camera: cam, lighting } = res.data;
+    const { camera: cam, lighting } = res.data;
+    // The AI can move added pictures but never makes them: give kept ones back their kind, label and picture.
+    const pictures = new Map(state.actors.filter((a) => a.image).map((a) => [a.id, a]));
+    const actors = res.data.actors.map((a) => {
+      const was = pictures.get(a.id);
+      return was ? { ...a, glyph: was.glyph, label: was.label, image: was.image, count: 1 } : a;
+    });
     setState((s) => ({
       ...s,
       actors,
@@ -472,7 +505,47 @@ export function Builder() {
   // The flat sketch is the scene seen through the shot camera.
   const camera = shotCamera(state);
   const projected = projectScene(camera, state.actors);
+
+  // ——— Eraser ———
+  /** What one press of the eraser has removed so far, so it can be undone in one go. */
+  const sweep = useRef<{ actors: { actor: Actor; index: number }[]; comments: { comment: Note; index: number }[] }>({ actors: [], comments: [] });
+  const eraseAt = (x: number, y: number, size: { width: number; height: number }) => {
+    const gone = sweep.current;
+    // Comment dots first: they sit on top. Within about 14px of the dot.
+    const dot = state.comments.find((c) => Math.hypot((c.x - x) * size.width, (c.y - y) * size.height) < 14 && !gone.comments.some((g) => g.comment.id === c.id));
+    if (dot) {
+      gone.comments.push({ comment: dot, index: state.comments.indexOf(dot) });
+      setState((s) => ({ ...s, comments: s.comments.filter((c) => c.id !== dot.id) }));
+      return;
+    }
+    const hit = subjectAt(x, y, projected.filter((p) => !gone.actors.some((g) => g.actor.id === p.actor.id)), aspectOf(state.aspect));
+    if (!hit) return;
+    gone.actors.push({ actor: hit.actor, index: state.actors.findIndex((a) => a.id === hit.actor.id) });
+    deleteActor(hit.actor.id);
+  };
+  const endSweep = () => {
+    const { actors, comments } = sweep.current;
+    sweep.current = { actors: [], comments: [] };
+    if (!actors.length && !comments.length) return;
+    const names = [...actors.map((g) => (g.actor.glyph === "text" ? `“${g.actor.label}”` : g.actor.glyph === "image" ? g.actor.label : `the ${g.actor.label.replace(/^(a|an|the|one)\s+/i, "")}`)), ...comments.map((g) => `comment ${g.index + 1}`)];
+    // Put things back where they were in the lists, so numbering and nearest-first order return too.
+    const putBack = <T,>(list: T[], items: { item: T; index: number }[]) => {
+      const out = [...list];
+      [...items].sort((a, b) => a.index - b.index).forEach(({ item, index }) => out.splice(Math.min(index, out.length), 0, item));
+      return out;
+    };
+    setAiNote({
+      text: `Erased ${joinList(names)}.`,
+      undo: () =>
+        setState((s) => ({
+          ...s,
+          actors: putBack(s.actors, actors.map((g) => ({ item: g.actor, index: g.index }))),
+          comments: putBack(s.comments, comments.map((g) => ({ item: g.comment, index: g.index }))),
+        })),
+    });
+  };
   // Subjects with no built-in shape get an AI line drawing once it arrives.
+  const images = useImages(state.actors.flatMap((a) => (a.image ? [a.image.key] : [])));
   const drawings = useDrawings(state.actors.filter((a) => AI_DRAWN.has(a.glyph)).map((a) => a.label));
   const orbited = Boolean(state.orbit.yaw || state.orbit.tilt || state.orbit.panX || state.orbit.panY);
   /** Dragging the 3D view: turn around the set, or slide the camera. */
@@ -847,20 +920,49 @@ export function Builder() {
             <div ref={stageRef} className="relative">
             <div ref={boardRef} className="relative mx-auto" style={{ maxWidth: `calc(58dvh * ${aw} / ${ah})` }}>
               {/* Tools: a slim bar on the board's right edge (inside its corner on small screens) */}
-              <div role="toolbar" aria-label="Preview tools" aria-orientation="vertical" className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg border border-rule bg-paper p-1 shadow-sm sm:top-0 sm:right-auto sm:left-full sm:ml-2">
+              <div role="toolbar" aria-label="Preview tools" aria-orientation="vertical" className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-2xl border border-rule bg-paper p-1.5 shadow-sm sm:top-0 sm:right-auto sm:left-full sm:ml-2">
+                {(
+                  [
+                    ["erase", "Erase", "click or drag over subjects and comments to remove them", Eraser],
+                    ["comment", "Comment", "click the preview to pin a note", MessageSquarePlus],
+                  ] as const
+                ).map(([id, name, how, Icon]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={tool === id}
+                    title={tool === id ? `${name} on (Esc to leave)` : `${name}: ${how}`}
+                    className={`flex size-9 items-center justify-center rounded-xl transition-colors ${tool === id ? "bg-ink text-paper" : "text-ink hover:bg-rule"}`}
+                    onClick={() => {
+                      setTool((t) => (t === id ? null : id));
+                      setSelectedId(null);
+                    }}
+                  >
+                    <Icon size={17} aria-hidden />
+                    <span className="sr-only">{name}</span>
+                  </button>
+                ))}
+                <div className="mx-1 border-t border-rule" aria-hidden />
                 <button
                   type="button"
-                  aria-pressed={commenting}
-                  title={commenting ? "Comment tool on (Esc to leave)" : "Comment: click the preview to pin a note"}
-                  className={`flex size-8 items-center justify-center rounded-md transition-colors ${commenting ? "bg-ink text-paper" : "text-ink hover:bg-rule"}`}
-                  onClick={() => {
-                    setCommenting((on) => !on);
-                    setSelectedId(null);
-                  }}
+                  title={imageCount >= MAX_IMAGES ? `Up to ${MAX_IMAGES} images` : "Add image: pick a picture, crop it, then place it like a subject"}
+                  disabled={imageCount >= MAX_IMAGES || state.actors.length >= MAX_ACTORS || isRestyle}
+                  className="flex size-9 items-center justify-center rounded-xl text-ink transition-colors hover:bg-rule disabled:opacity-40 disabled:hover:bg-transparent"
+                  onClick={() => fileRef.current?.click()}
                 >
-                  <MessageSquarePlus size={17} aria-hidden />
-                  <span className="sr-only">Comment</span>
+                  <ImagePlus size={17} aria-hidden />
+                  <span className="sr-only">Add image</span>
                 </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    pickImage(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
               </div>
               <div className="relative overflow-hidden rounded-xl border border-rule">
                 <Storyboard
@@ -877,9 +979,11 @@ export function Builder() {
                   onView={lookAround}
                   viewTool={viewTool}
                   drawings={drawings}
+                  images={images}
                 />
               </div>
               <CommentLayer comments={state.comments} active={commenting} onChange={(c) => set("comments", c)} />
+              <EraseLayer active={tool === "erase"} onErase={eraseAt} onSweepEnd={endSweep} />
             </div>
             {selectedActor && side && (
               <div className="absolute top-0 overflow-y-auto" style={{ right: `calc(50% + ${side.board / 2 + 16}px)`, width: side.width, maxHeight: side.height }}>
@@ -890,6 +994,8 @@ export function Builder() {
             <p className="meta mt-2 text-center text-muted">
               {commenting ? (
                 "Comment tool: click the preview to pin a note; drag a dot to move it, click it to edit, × to delete. Esc to finish."
+              ) : tool === "erase" ? (
+                "Eraser: click a subject, text or comment to remove it, or drag across several. Esc to finish."
               ) : (
                 <>
                   {state.view === "3d"
@@ -1086,6 +1192,7 @@ export function Builder() {
         </main>
       </div>
 
+      {cropping && <ImageCropper file={cropping} onDone={(url, ratio) => void addImage(url, ratio)} onCancel={() => setCropping(null)} />}
       <ConfirmDialog
         open={confirm === "regenerate"}
         title="Replace your edited prompt?"

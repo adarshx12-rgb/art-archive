@@ -21,7 +21,7 @@ import {
   type PreserveId,
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
-import { describeComments, describeScene } from "../scene/describe";
+import { describeComments, describeImages, describeScene } from "../scene/describe";
 import { withArticle } from "../sketch/layers";
 import { cleanComment, cleanSubject, cleanText, MAX_COMMENTS, type BuilderState } from "./state";
 
@@ -115,7 +115,7 @@ function lowerFirst(s: string): string {
   return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
-function joinList(items: string[]): string {
+export function joinList(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
@@ -155,7 +155,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const notes: string[] = [];
   // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
   const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
-  const placedNames = joinList([...byPriority(projected).filter((p) => p.glyph !== "text").map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
+  const placedNames = joinList([...byPriority(projected).filter((p) => p.glyph !== "text" && p.glyph !== "image").map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
   const subject = placedNames || "[describe your subject]";
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
@@ -267,11 +267,17 @@ export function composePrompt(state: BuilderState): ComposeResult {
     add("Design", `a ${formatInfo(template.format).label.toLowerCase()} layout. ${fillPrompt(template, state.templateText)}`);
   }
 
-  // 5c. Layout of subjects placed on the sketch
-  if (projected.length && !keepComposition) {
-    add("Layout", `${describeScene(projected, aspectOf(state.aspect))}.`);
-  } else if (state.actors.length) {
+  // 5c. Layout of subjects placed on the sketch; added pictures get their own line
+  const sceneOnly = projected.filter((p) => p.glyph !== "image");
+  if (sceneOnly.length && !keepComposition) {
+    add("Layout", `${describeScene(sceneOnly, aspectOf(state.aspect))}.`);
+  } else if (sceneOnly.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
+  }
+  const images = describeImages(projected);
+  if (images) {
+    add("Reference images (attach them with this prompt)", `${images}.`);
+    notes.push("Attach the images you added to the sketch when you use this prompt; the prompt refers to them by number.");
   }
 
   // 5d. Comments pinned to the preview, tied to whatever is under each one

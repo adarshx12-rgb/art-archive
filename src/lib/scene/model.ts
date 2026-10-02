@@ -22,7 +22,17 @@ export interface Actor {
   pose: Pose;
   /** Drawn side by side, e.g. "two dogs". */
   count: number;
+  /** For an added picture: which stored image, and its width / height. */
+  image?: ActorImage;
 }
+
+/** A picture kept in this browser (lib/images.ts) under key; ratio is its width / height after cropping. */
+export interface ActorImage {
+  key: string;
+  ratio: number;
+}
+
+export const MAX_IMAGES = 4;
 
 export const MAX_ACTORS = 12;
 
@@ -46,6 +56,7 @@ export const REAL_HEIGHT: Record<Glyph, number> = {
   table: 0.75, chair: 1, bed: 0.6, lamp: 1.6, book: 0.25, cup: 0.12, candle: 0.25, sword: 1, guitar: 1, device: 0.16, bottle: 0.3,
   thing: 1,
   text: 0.4,
+  image: 1.2,
 };
 
 /** Width relative to height (matches the 2D glyphs). */
@@ -59,10 +70,12 @@ export const WIDTH_RATIO: Partial<Record<Glyph, number>> = {
   thing: 1,
 };
 
-/** Width relative to height for one subject; text is as wide as its words. */
-export const widthRatio = (glyph: Glyph, label: string) => (glyph === "text" ? Math.max(1, 0.62 * label.length) : (WIDTH_RATIO[glyph] ?? 1));
+/** Width relative to height for one subject; text is as wide as its words, an image as wide as its crop. */
+export const widthRatio = (glyph: Glyph, label: string, ratio?: number) =>
+  glyph === "text" ? Math.max(1, 0.62 * label.length) : glyph === "image" ? (ratio ?? 1) : (WIDTH_RATIO[glyph] ?? 1);
 
 export const isText = (g: Glyph) => g === "text";
+export const isImage = (g: Glyph) => g === "image";
 
 const SKY = new Set<Glyph>(["sun", "moon", "star", "planet", "cloud"]);
 const FLYING = new Set<Glyph>(["bird", "plane"]);
@@ -73,7 +86,7 @@ const SIDE_ON = new Set<Glyph>(["animal", "big-animal", "fish", "car", "bike", "
 
 export const isSky = (g: Glyph) => SKY.has(g);
 
-const GLYPHS = new Set<Glyph>([...LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)), "thing", "text"]);
+const GLYPHS = new Set<Glyph>([...LAYER_TYPES.flatMap((g) => g.items.map((i) => i.glyph)), "thing", "text", "image"]);
 
 /** Where a new subject lands: people in front of the camera, backdrops behind, sky far away. */
 export function newActor(glyph: Glyph, label: string, existing: Actor[], count = 1, pose: Pose = "stand"): Actor {
@@ -124,6 +137,14 @@ function headNoun(label: string): string | undefined {
   return last && (parseSubject(last).items[0]?.label ?? last);
 }
 
+/** An added picture, standing in front of the camera like a subject, numbered "image 1", "image 2"… */
+export function imageActor(image: ActorImage, existing: Actor[]): Actor {
+  const taken = new Set(existing.filter((a) => a.glyph === "image").map((a) => a.label));
+  let n = 1;
+  while (taken.has(`image ${n}`)) n++;
+  return { ...newActor("image", `image ${n}`, existing), image };
+}
+
 /** A subject for whatever the user typed: "two old dogs running" draws two running dogs and keeps the wording. */
 export function actorFromText(text: string, existing: Actor[]): Actor | null {
   const label = cleanLabel(text);
@@ -141,10 +162,10 @@ export function actorFromText(text: string, existing: Actor[]): Actor | null {
 
 const r = (n: number, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 
-/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count, joined with "|". */
+/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count, plus ~key~ratio for images, joined with "|". */
 export function encodeActors(actors: Actor[]): string {
   return actors
-    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), r(a.scale), a.pose, a.count].join("~"))
+    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), r(a.scale), a.pose, a.count, ...(a.image ? [a.image.key, r(a.image.ratio, 3)] : [])].join("~"))
     .join("|");
 }
 
@@ -169,6 +190,8 @@ export function decodeActors(raw: string): { actors: Actor[]; bad: boolean } {
       scale: clamp(scale, 0.05, 20),
       pose: POSE_IDS.has(pose) ? pose : "stand",
       count: clamp(Math.round(Number(rest[8]) || 1), 1, 6),
+      // The picture itself stays in the browser that added it; a link carries only its key and shape.
+      ...(glyph === "image" ? { image: { key: (rest[9] ?? "").replace(/[^a-z0-9-]/gi, "").slice(0, 40), ratio: clamp(Number(rest[10]) > 0 ? Number(rest[10]) : 1, 0.1, 10) } } : {}),
     });
   });
   return { actors, bad };

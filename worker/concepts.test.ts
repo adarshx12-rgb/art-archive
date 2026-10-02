@@ -31,6 +31,12 @@ describe("conceptFacts", () => {
     expect(f.alreadyShown).toEqual(["Old idea"]);
   });
 
+  it("offers no lettering devices when the visitor typed no words", () => {
+    const silent = decodeState(new URLSearchParams("s=swiss&fm=poster&q=a%20cat")).state;
+    expect(conceptFacts(silent, [])!.craft.map((c) => c.id)).not.toEqual(expect.arrayContaining(["giant-glyph"]));
+    expect(conceptFacts(silent, [])!.craft.some((c) => ["giant-glyph", "stacked-column", "type-behind", "type-as-image"].includes(c.id))).toBe(false);
+  });
+
   it("adds motion notes to craft phrases for video", () => {
     const video = decodeState(new URLSearchParams("s=punk&o=video&q=a%20dancer")).state;
     expect(conceptFacts(video, [])!.craft.find((c) => c.id === "photocopy-blowup")!.phrase).toMatch(/in motion: copier flicker/);

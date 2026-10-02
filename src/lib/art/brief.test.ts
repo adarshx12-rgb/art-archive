@@ -47,6 +47,36 @@ describe("checkBrief", () => {
     expect(checkBrief(brief({ hero: { subject: "a cake", treatment: "x", scale: null }, type: '"Maya turns 30" huge' }), words).join(" ")).toMatch(/no subjects/);
   });
 
+  it("matches the hero on whole words, not letters", () => {
+    const man = decodeState(new URLSearchParams("s=punk&fm=poster&sc=" + encodeURIComponent("person~man~0~0~0~0~0~0~1~stand~1"))).state;
+    expect(checkBrief(brief({ hero: { subject: "woman", treatment: "x", scale: null }, type: null }), man).join(" ")).toMatch(/hero must be one of/);
+  });
+
+  it("rejects a hero that adds objects to the visitor's subject", () => {
+    expect(checkBrief(brief({ hero: { subject: "woman dancing with a red dragon on a motorbike", treatment: "x", scale: null } }), punk).join(" ")).toMatch(/hero must be one of/);
+    expect(checkBrief(brief({ hero: { subject: "the dancing woman", treatment: "x", scale: null } }), punk)).toEqual([]);
+  });
+
+  it("with no typed words, allows no lettering and no lettering devices", () => {
+    const silent = decodeState(new URLSearchParams("s=swiss&fm=poster")).state;
+    const graphic = brief({ hero: { subject: null, treatment: "flat red circle", scale: null }, type: null, furniture: [], craft: ["vector-flat", "edge-tension"] });
+    expect(checkBrief(graphic, silent)).toEqual([]);
+    expect(checkBrief({ ...graphic, type: "a giant stacked headline at top" }, silent).join(" ")).toMatch(/typed no words/);
+    expect(checkBrief({ ...graphic, craft: ["vector-flat", "giant-glyph"] }, silent).join(" ")).toMatch(/needs lettering: giant-glyph/);
+  });
+
+  it("treats single-quoted text as words", () => {
+    expect(quoted("a 'SALE' sign, the artist's ‘big’ day, rock 'n' roll")).toEqual(["SALE", "big"]);
+    expect(checkBrief(brief({ type: "'SALE' in huge letters" }), punk).join(" ")).toMatch(/"SALE" isn't one of the visitor's words/);
+  });
+
+  it("rejects furniture with prices, dates or capitalised words", () => {
+    for (const f of ["a price tag $9.99", "date stamp 1984", "a stamp: SALE", "a stamp with the year"]) {
+      expect(checkBrief(brief({ furniture: [f] }), punk).join(" ")).toMatch(/carries words/);
+    }
+    expect(checkBrief(brief({ furniture: ["a faded circular rubber-stamp ring", "small registration marks bottom-right"] }), punk)).toEqual([]);
+  });
+
   it("rejects quoted words the visitor didn't type", () => {
     expect(checkBrief(brief({ type: '"Night Shift" and "doors at ten"' }), punk).join(" ")).toMatch(/"doors at ten" isn't one of the visitor's words/);
   });

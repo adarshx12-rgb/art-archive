@@ -38,12 +38,25 @@ export function subjectNames(state: BuilderState): string[] {
   return [...state.actors.filter((a) => a.glyph !== "text" && a.glyph !== "image").map((a) => a.label), cleanSubject(state.subject)].filter(Boolean);
 }
 
-/** Text inside straight or curly double quotes. */
+/** Text inside double or single quotes, straight or curly. A single quote inside a word (an apostrophe) doesn't count, nor does a one-letter span ('n'). */
 export function quoted(s: string): string[] {
-  return [...s.matchAll(/"([^"]+)"|“([^”]+)”/g)].map((m) => (m[1] ?? m[2])!.trim()).filter(Boolean);
+  return [...s.matchAll(/"([^"]+)"|“([^”]+)”|‘([^’]{2,})’|(?<![\w'])'([^'\n]{2,}?)'(?!\w)/g)].map((m) => (m[1] ?? m[2] ?? m[3] ?? m[4])!.trim()).filter(Boolean);
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\b(a|an|the)\b/g, " ").replace(/\s+/g, " ").trim();
+/** Words that carry meaning, for matching a hero to a subject. */
+const LINKS = new Set(["with", "of", "in", "on", "and", "at", "to", "from", "his", "her", "their", "its"]);
+const tokens = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((t) => t && !LINKS.has(t));
+
+/** The hero names this subject: a shortening of it, or it with at most two details added (no extra objects). */
+function namesSubject(hero: string, subject: string): boolean {
+  const h = tokens(hero);
+  const s = tokens(subject);
+  if (!h.length || !s.length) return false;
+  if (h.every((t) => s.includes(t))) return true;
+  return s.every((t) => h.includes(t)) && h.filter((t) => !s.includes(t)).length <= 2;
+}
+
 const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 const opt = (s: string | null, n: number) => (s?.trim() ? cut(s.trim(), n) : null);
 
@@ -62,8 +75,10 @@ export function tidyBrief(b: Brief): Brief {
   };
 }
 
-/** Furniture that mentions words without quoting the visitor's own. */
-const WORDED = /\b(reading|saying|says|text|lettering|words?|caption|slogan|tagline|labell?ed)\b/i;
+/** Furniture that mentions words, figures or dates without quoting the visitor's own. */
+const WORDED = /\b(reading|saying|says|text|lettering|words?|caption|slogan|tagline|labell?ed|price|date|numbers?|numerals?|digits?)\b|\bstamp(?:ed)? with\b/i;
+/** Prices, long numbers and capitalised words: text in disguise. */
+const FIGURES = /\$\d|\d{3,}|\b[A-Z]{2,}\b/;
 
 /** What's wrong with a brief, as instructions the model can act on. Empty when it's fine. */
 export function checkBrief(brief: Brief, state: BuilderState): string[] {
@@ -78,14 +93,19 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
   if (restyle) {
     if (brief.hero.subject || brief.hero.scale || brief.device || brief.type || brief.furniture.length) problems.push("A restyle keeps the visitor's picture: leave hero.subject, hero.scale, device and type null and furniture empty.");
   } else if (subjects.length) {
-    const hero = brief.hero.subject ? norm(brief.hero.subject) : "";
-    if (!hero || !subjects.some((s) => norm(s).includes(hero) || hero.includes(norm(s)))) problems.push(`The hero must be one of the visitor's subjects: ${subjects.join(", ")}.`);
+    const hero = brief.hero.subject ?? "";
+    if (!subjects.some((s) => namesSubject(hero, s))) problems.push(`The hero must be one of the visitor's subjects: ${subjects.join(", ")}.`);
   } else if (brief.hero.subject) {
     problems.push("There are no subjects, so the hero must be the lettering or a pure graphic shape: set hero.subject to null.");
   }
 
   if (brief.furniture.length > 3) problems.push("Use at most 3 furniture items.");
-  for (const f of brief.furniture) if (WORDED.test(f) && !quoted(f).length) problems.push(`Furniture "${f}" carries words; furniture must be wordless.`);
+  if (!words.size) {
+    if (brief.type) problems.push("The visitor typed no words: set type to null and letter nothing.");
+    const lettering = brief.craft.filter((id) => getCraft(id)?.lettering);
+    if (lettering.length) problems.push(`The visitor typed no words, so drop the craft that needs lettering: ${lettering.join(", ")}.`);
+  }
+  for (const f of brief.furniture) if ((WORDED.test(f) || FIGURES.test(f)) && !quoted(f).length) problems.push(`Furniture "${f}" carries words; furniture must be wordless.`);
 
   const unknown = brief.craft.filter((id) => !getCraft(id));
   if (unknown.length) problems.push(`Unknown craft ids: ${unknown.join(", ")}. Use ids from the craft list.`);

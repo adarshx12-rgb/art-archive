@@ -20,6 +20,8 @@ export interface CraftEntry {
   suits: (FormFacet | ColourFacet)[];
   /** How it behaves in video, when that differs. */
   video?: string;
+  /** Only works when the visitor typed words to letter. */
+  lettering?: true;
 }
 
 type Suits = CraftEntry["suits"];
@@ -28,6 +30,8 @@ const technique = entry("technique");
 const device = entry("device");
 const furniture = entry("furniture");
 const finish = entry("finish");
+/** Marks a device that only works on the visitor's own words. */
+const needsWords = (c: CraftEntry): CraftEntry => ({ ...c, lettering: true });
 
 export const craft: CraftEntry[] = [
   // ——— Techniques: how the hero is made ———
@@ -62,22 +66,22 @@ export const craft: CraftEntry[] = [
   device("colossal-crop", "colossal crop", "the main subject scaled up until the frame edges crop it"),
   device("cutout-window", "cutout window", "a flat colour field with one cut-out shape revealing the image underneath", ["geometric", "photographic"]),
   device("silhouette-fill", "silhouette fill", "the main subject as a silhouette filled with a different, related image", ["photographic", "digital"]),
-  device("giant-glyph", "giant letter", "one giant letter or numeral from the lettering fills the frame as the ground", ["typographic"]),
-  device("stacked-column", "type column", "the lettering stacked as one tall vertical column", ["typographic", "geometric"]),
+  needsWords(device("giant-glyph", "giant letter", "one giant letter or numeral from the lettering fills the frame as the ground", ["typographic"])),
+  needsWords(device("stacked-column", "type column", "the lettering stacked as one tall vertical column", ["typographic", "geometric"])),
   device("single-band", "single band", "one solid horizontal band cutting across the frame", ["geometric", "restrained"]),
   device("tiny-in-vast", "empty space", "the subject small and placed low in a vast field of empty space"),
   device("torn-split", "torn split", "the image torn in two, the halves knocked out of line", ["textured", "photographic"]),
   device("repeat-grid", "repeat grid", "the subject repeated in a strict grid with one cell different", ["geometric", "digital"]),
   device("frame-in-frame", "frame in frame", "the subject seen through a frame inside the frame: a window, arch or box", ["ornamental", "geometric"]),
   device("edge-tension", "edge tension", "the subject pushed hard against one edge, the rest left open"),
-  device("type-behind", "type behind", "the lettering passes behind the subject, partly hidden", ["typographic", "photographic"]),
+  needsWords(device("type-behind", "type behind", "the lettering passes behind the subject, partly hidden", ["typographic", "photographic"])),
   device("diagonal-thrust", "diagonal", "one strong diagonal running corner to corner, carrying the eye", ["geometric"]),
   device("split-field", "split field", "the frame split into two flat colour halves, the subject straddling the line", ["geometric", "vivid"]),
   device("mirror-symmetry", "symmetry", "strict mirrored symmetry around a vertical centre line", ["ornamental"]),
   device("motion-sequence", "sequence", "the subject shown as a sequence of frames, like a contact strip", ["photographic"]),
   device("scale-clash", "scale clash", "two things at absurdly mismatched scales side by side", ["illustrative", "photographic"]),
   device("stamp-frame", "stamp frame", "a heavy border framing a small centred image, like a stamp or label", ["ornamental", "earthy"]),
-  device("type-as-image", "type as image", "the lettering itself forms the image", ["typographic"]),
+  needsWords(device("type-as-image", "type as image", "the lettering itself forms the image", ["typographic"])),
   device("radial-burst", "radial burst", "everything radiating out from one point behind the subject", ["vivid", "ornamental"]),
 
   // ——— Furniture: wordless graphic extras ———

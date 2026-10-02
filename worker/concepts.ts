@@ -78,6 +78,7 @@ export function conceptFacts(state: BuilderState, exclude: string[]) {
         .map((p) => ({ label: p.label, x: r(p.x), y: r(p.y), size: r(p.size), count: p.count }))
     : [];
   const keepColours = state.task === "restyle" && state.preserve.includes("colours");
+  const words = typedWords(state);
   return {
     task: state.task === "restyle" ? ("restyle" as const) : ("create" as const),
     output: state.output,
@@ -86,10 +87,13 @@ export function conceptFacts(state: BuilderState, exclude: string[]) {
     template: template ? { name: template.name, notes: template.notes } : null,
     subjects,
     subjectBox: cleanSubject(state.subject) || null,
-    words: typedWords(state),
+    words,
     palette: keepColours ? "keep the source's own colours" : resolvePalette(state, style).colours.map((c) => ({ name: c.name, hex: c.hex, role: c.role, share: c.share })),
     facts: composePrompt(state).prompt,
-    craft: craftFor(style).map((c) => ({ id: c.id, kind: c.kind, phrase: state.output === "video" && c.video ? `${c.phrase}; in motion: ${c.video}` : c.phrase })),
+    // Lettering devices only make sense when there are words to letter.
+    craft: craftFor(style)
+      .filter((c) => words.length || !c.lettering)
+      .map((c) => ({ id: c.id, kind: c.kind, phrase: state.output === "video" && c.video ? `${c.phrase}; in motion: ${c.video}` : c.phrase })),
     alreadyShown: exclude,
   };
 }

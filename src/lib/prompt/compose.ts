@@ -21,7 +21,7 @@ import {
   type PreserveId,
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
-import { describeComments, describeImages, describeScene } from "../scene/describe";
+import { describeComments, describeScene, referenceImages } from "../scene/describe";
 import { withArticle } from "../sketch/layers";
 import { cleanComment, cleanSubject, cleanText, MAX_COMMENTS, type BuilderState } from "./state";
 
@@ -274,10 +274,11 @@ export function composePrompt(state: BuilderState): ComposeResult {
   } else if (sceneOnly.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
-  const images = describeImages(projected);
-  if (images) {
-    add("Reference images (attach them with this prompt)", `${images}.`);
-    notes.push("Attach the images you added to the sketch when you use this prompt; the prompt refers to them by number.");
+  // Pictures added to the sketch: what each is for (a face to keep, a logo to reproduce…), in the order to attach them.
+  const references = referenceImages(projected, aspectOf(state.aspect));
+  references.forEach((line) => add("", line));
+  if (references.length) {
+    notes.push("Attach the images you added, in number order. The prompt asks for exact faces and logos, but how faithfully they're kept depends on the image tool; a face or character reference feature, where the tool has one, holds a likeness best.");
   }
 
   // 5d. Comments pinned to the preview, tied to whatever is under each one

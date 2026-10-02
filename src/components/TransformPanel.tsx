@@ -1,6 +1,6 @@
 import { Copy, FlipHorizontal2, RotateCcw, Trash2, X } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { POSES, type Actor, type Vec3 } from "../lib/scene/model";
+import { FIGURES, IMAGE_USES, POSES, type Actor, type ImageUse, type Vec3 } from "../lib/scene/model";
 
 /**
  * A number you can drag left/right to change (like After Effects), or
@@ -137,7 +137,6 @@ export interface TransformPanelProps {
   vertical?: boolean;
 }
 
-const FIGURES = new Set(["person", "child", "robot"]);
 
 /** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls". */
 export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose, flat = false, vertical = false }: TransformPanelProps) {
@@ -199,9 +198,34 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose
         <Row name="Scale" onReset={() => onChange({ scale: 1 })}>
           <Scrub label="Scale" value={actor.scale * 100} onChange={(v) => onChange({ scale: Math.min(Math.max(v / 100, 0.05), 20) })} suffix="%" />
         </Row>
+        {actor.image && (
+          <Row name="Use as" onReset={() => onChange({ image: { key: actor.image!.key, ratio: actor.image!.ratio } })}>
+            <select
+              aria-label="Use image as"
+              value={actor.image.use ?? ""}
+              onChange={(e) => onChange({ image: { key: actor.image!.key, ratio: actor.image!.ratio, ...(e.target.value ? { use: e.target.value as ImageUse } : {}) } })}
+              className="rounded border border-rule-strong bg-transparent px-1.5 py-1 text-sm"
+              title="What the image model should do with this picture"
+            >
+              <option value="">Auto (a face on a head)</option>
+              {IMAGE_USES.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.label}
+                </option>
+              ))}
+            </select>
+          </Row>
+        )}
         {FIGURES.has(actor.glyph) && (
-          <Row name="Pose" onReset={() => onChange({ pose: "stand" })}>
-            <select aria-label="Pose" value={actor.pose} onChange={(e) => onChange({ pose: e.target.value as Actor["pose"] })} className="rounded border border-rule-strong bg-transparent px-1.5 py-1 text-sm">
+          <Row name="Pose" onReset={() => onChange({ pose: "stand", rig: undefined })}>
+            <select
+              aria-label="Pose"
+              value={actor.rig ? "custom" : actor.pose}
+              // A named pose replaces one set with the puppet tool.
+              onChange={(e) => e.target.value !== "custom" && onChange({ pose: e.target.value as Actor["pose"], rig: undefined })}
+              className="rounded border border-rule-strong bg-transparent px-1.5 py-1 text-sm"
+            >
+              {actor.rig && <option value="custom">Custom (puppet)</option>}
               {POSES.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}

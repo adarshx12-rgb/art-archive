@@ -3,6 +3,7 @@ import { defaultState, decodeState } from "../prompt/state";
 import { effectiveAngle, horizonAt, projectActor, projectScene, shotCamera, unproject } from "./camera";
 import { applyLayerEdit, placeInFrame } from "./convert";
 import { describeScene, subjectAt } from "./describe";
+import { dragJoint, rigFor } from "./rig";
 import { actorFromText, decodeActors, encodeActors, imageActor, newActor, textActor, widthRatio, type Actor, type Vec3 } from "./model";
 
 const cam = (patch = {}) => shotCamera({ ...defaultState(), view: "3d", ...patch });
@@ -257,5 +258,27 @@ describe("images on the sketch", () => {
   it("rejects a bad shape in a link", () => {
     const raw = encodeActors([imageActor({ key: "k", ratio: 1 }, [])]).replace(/~1$/, "~-4");
     expect(decodeActors(raw).actors[0]!.image!.ratio).toBeGreaterThan(0);
+  });
+});
+
+describe("puppet poses", () => {
+  const pose = dragJoint(rigFor("stand"), "handL", { x: -0.12, y: 1.1 });
+
+  it("keep a figure's custom pose through a share link", () => {
+    const man = { ...newActor("person", "man", []), rig: pose };
+    const back = decodeActors(encodeActors([man])).actors[0]!;
+    expect(back.rig).toBeDefined();
+    expect(back.rig!.handL.y).toBeCloseTo(pose.handL.y, 2);
+  });
+
+  it("describe the custom pose instead of the named one", () => {
+    const man = { ...newActor("person", "man", []), position: [0, 0, 0] as Vec3, rig: pose };
+    const text = describeScene(projectScene(cam(), [man]), 4 / 5);
+    expect(text).toContain("the arm on the left raised overhead");
+  });
+
+  it("ignore a rig on things that aren't figures", () => {
+    const raw = encodeActors([{ ...newActor("boat", "boat", []), rig: pose }]);
+    expect(decodeActors(raw).actors[0]!.rig).toBeUndefined();
   });
 });

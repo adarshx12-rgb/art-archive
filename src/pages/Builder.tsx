@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Eraser, ImagePlus, Link2, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Eraser, ImagePlus, Link2, PersonStanding, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
@@ -34,7 +34,7 @@ import { aspectOf, byPriority, projectScene, shotCamera } from "../lib/scene/cam
 import { subjectAt } from "../lib/scene/describe";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
 import { fillText, needsLayout } from "../lib/scene/instruction";
-import { actorFromText, imageActor, MAX_ACTORS, MAX_IMAGES, newActor, textActor, type Actor } from "../lib/scene/model";
+import { actorFromText, FIGURES, imageActor, MAX_ACTORS, MAX_IMAGES, newActor, textActor, type Actor } from "../lib/scene/model";
 import { newImageKey, saveImage, useImages } from "../lib/images";
 import type { Layer } from "../lib/sketch/layers";
 import { AI_DRAWN } from "../lib/sketch/drawing";
@@ -361,7 +361,7 @@ export function Builder() {
   // Subjects in the 3D scene
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /** The comment tool: while it's on, clicks on the preview place, open and move comments. */
-  const [tool, setTool] = useState<"erase" | "comment" | null>(null);
+  const [tool, setTool] = useState<"erase" | "comment" | "puppet" | null>(null);
   const commenting = tool === "comment";
   useEffect(() => {
     if (!tool) return;
@@ -482,9 +482,13 @@ export function Builder() {
     const { camera: cam, lighting } = res.data;
     // The AI can move added pictures but never makes them: give kept ones back their kind, label and picture.
     const pictures = new Map(state.actors.filter((a) => a.image).map((a) => [a.id, a]));
+    // A puppet pose stays unless the AI gave the figure a different pose.
+    const posed = new Map(state.actors.filter((a) => a.rig).map((a) => [a.id, a]));
     const actors = res.data.actors.map((a) => {
       const was = pictures.get(a.id);
-      return was ? { ...a, glyph: was.glyph, label: was.label, image: was.image, count: 1 } : a;
+      if (was) return { ...a, glyph: was.glyph, label: was.label, image: was.image, count: 1 };
+      const figure = posed.get(a.id);
+      return figure && figure.pose === a.pose && FIGURES.has(a.glyph) ? { ...a, rig: figure.rig } : a;
     });
     setState((s) => ({
       ...s,
@@ -923,6 +927,7 @@ export function Builder() {
               <div role="toolbar" aria-label="Preview tools" aria-orientation="vertical" className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-2xl border border-rule bg-paper p-1.5 shadow-sm sm:top-0 sm:right-auto sm:left-full sm:ml-2">
                 {(
                   [
+                    ["puppet", "Puppet", "click a person, then drag the pins on its joints to pose it", PersonStanding],
                     ["erase", "Erase", "click or drag over subjects and comments to remove them", Eraser],
                     ["comment", "Comment", "click the preview to pin a note", MessageSquarePlus],
                   ] as const
@@ -980,6 +985,8 @@ export function Builder() {
                   viewTool={viewTool}
                   drawings={drawings}
                   images={images}
+                  puppet={tool === "puppet"}
+                  onRigChange={(id, rig) => updateActor(id, { rig })}
                 />
               </div>
               <CommentLayer comments={state.comments} active={commenting} onChange={(c) => set("comments", c)} />
@@ -994,6 +1001,10 @@ export function Builder() {
             <p className="meta mt-2 text-center text-muted">
               {commenting ? (
                 "Comment tool: click the preview to pin a note; drag a dot to move it, click it to edit, × to delete. Esc to finish."
+              ) : tool === "puppet" ? (
+                selectedActor && FIGURES.has(selectedActor.glyph)
+                  ? "Puppet: drag a hand or foot and the limb follows; drag an elbow or knee to bend it, the head to lean, the hips to crouch. Esc to finish."
+                  : "Puppet: click a person, child or robot to show the pins on its joints. Esc to finish."
               ) : tool === "erase" ? (
                 "Eraser: click a subject, text or comment to remove it, or drag across several. Esc to finish."
               ) : (

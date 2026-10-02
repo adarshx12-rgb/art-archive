@@ -3,7 +3,8 @@ import { composePrompt, resolvePalette, themePrompt } from "./compose";
 import { decodeState, defaultState, encodeState, MAX_COMMENTS, type BuilderState } from "./state";
 import { projectScene, shotCamera } from "../scene/camera";
 import { getStyle } from "../../content/styles";
-import { imageActor, newActor, type Vec3 } from "../scene/model";
+import { imageActor, newActor, type Actor, type Vec3 } from "../scene/model";
+import { applyLayerEdit } from "../scene/convert";
 
 const state = (patch: Partial<BuilderState> = {}): BuilderState => ({
   ...defaultState(),
@@ -163,13 +164,50 @@ describe("composePrompt", () => {
     expect(decodeState(new URLSearchParams("s=swiss&nt=9~-3~hello")).state.comments[0]).toMatchObject({ x: 1, y: 0, text: "hello" });
   });
 
-  it("refers to placed images as references to attach, not as subjects", () => {
-    const boat = { ...newActor("boat", "boat", []), position: [0.5, 0, -6] as Vec3 };
-    const img = { ...imageActor({ key: "k", ratio: 1 }, [boat]), position: [-0.5, 0, 0] as Vec3 };
-    const { prompt } = composePrompt(state({ subject: "", actors: [boat, img] }));
-    expect(prompt.startsWith("An image of a boat,")).toBe(true);
-    expect(prompt).toMatch(/Reference images \(attach them with this prompt\): image 1 [^.]*left[^.]*\./);
-    expect(prompt).not.toMatch(/Layout:[^\n]*image 1/);
+  describe("reference images", () => {
+    const base = state({ subject: "", aspect: "4:5" });
+    const cam = shotCamera(base);
+    const man = { ...newActor("person", "man", []), id: "man", position: [0, 0, 0] as Vec3 };
+    const onMan = projectScene(cam, [man])[0]!;
+    const top = onMan.y - onMan.size / 2;
+    /** An image dropped at a point of the frame, small, like a sticker. */
+    const at = (x: number, y: number, use?: "face" | "logo" | "product" | "look", n = 0) => {
+      const img = { ...imageActor({ key: `k${n}`, ratio: 1, use }, [man]), id: `img${n}`, label: `image ${n || 1}`, scale: 0.15 };
+      return applyLayerEdit(cam, img, { x, y });
+    };
+    const lines = (actors: Actor[]) => composePrompt({ ...base, actors }).prompt;
+
+    it("an image over a figure's head becomes that figure's face", () => {
+      const p = lines([man, at(onMan.x, top + onMan.size * 0.08)]);
+      expect(p.startsWith("An image of a man,")).toBe(true);
+      expect(p).toContain("Attach image 1 with this prompt.");
+      expect(p).toMatch(/Image 1: the man's face\. Keep the exact likeness/);
+      expect(p).toContain("do not beautify, idealise, replace or stylise away the identity");
+    });
+
+    it("a logo is reproduced exactly and blended onto what it sits on", () => {
+      const p = lines([man, at(onMan.x, top + onMan.size * 0.4, "logo")]);
+      expect(p).toMatch(/Image 1: a logo or symbol on the man\. Reproduce it exactly/);
+      expect(p).toContain("do not redraw, restyle, simplify or add to it");
+      expect(p).toContain("matching the scene's lighting, perspective and surface");
+    });
+
+    it("a product keeps its exact look; a look-only image lends just its look", () => {
+      expect(lines([man, at(0.85, 0.85, "product")])).toMatch(/Image 1: a product or object, exactly as it appears[^.]*\./);
+      const look = lines([man, at(0.1, 0.1, "look")]);
+      expect(look).toContain("Image 1: use only its look (colours, mood, texture); do not copy what it shows.");
+    });
+
+    it("lists several images in order", () => {
+      const p = lines([man, at(onMan.x, top + onMan.size * 0.08, undefined, 1), at(0.1, 0.1, "look", 2)]);
+      expect(p).toContain("Attach images 1 and 2 with this prompt, in this order.");
+      expect(p.indexOf("Image 1:")).toBeLessThan(p.indexOf("Image 2:"));
+    });
+
+    it("keeps the chosen use in a share link", () => {
+      const back = decodeState(new URLSearchParams(encodeState({ ...base, actors: [man, at(0.5, 0.5, "logo")] }).toString())).state;
+      expect(back.actors.find((a) => a.glyph === "image")?.image?.use).toBe("logo");
+    });
   });
 
   it("maps old framing links to the new camera settings", () => {

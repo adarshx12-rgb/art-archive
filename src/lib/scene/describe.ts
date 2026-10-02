@@ -1,7 +1,8 @@
 import { withArticle } from "../sketch/layers";
 import type { Glyph } from "../sketch/parse";
 import { byPriority, type Projected } from "./camera";
-import { isImage, isSky, isText, widthRatio } from "./model";
+import { FIGURES, isImage, isSky, isText, widthRatio } from "./model";
+import { describeRig, mirrorRig } from "./rig";
 
 /** Things that have a front, so which way they face is worth saying. */
 const FACES = new Set<Glyph>(["person", "child", "robot", "animal", "big-animal", "bird", "fish", "car", "bike", "boat", "train", "plane"]);
@@ -94,7 +95,7 @@ export function describeScene(projected: Projected[], aspect: number): string {
         where(p),
         depthBand(p),
         size(p),
-        POSE_WORDS[p.pose ?? "stand"] && !/\b(walk|run|sit|danc|ly|lie)/i.test(p.label) ? POSE_WORDS[p.pose ?? "stand"] : "",
+        p.rig ? describeRig(p.flip ? mirrorRig(p.rig) : p.rig) : POSE_WORDS[p.pose ?? "stand"] && !/\b(walk|run|sit|danc|ly|lie)/i.test(p.label) ? POSE_WORDS[p.pose ?? "stand"] : "",
         facing(p),
         tilt(p),
         hiddenBy(p, nearer, aspect),
@@ -129,10 +130,45 @@ export function describeComments(comments: { x: number; y: number; text: string 
   return comments.map((c, i) => `${i + 1}) ${pointAt(c.x, c.y, projected, aspect)}: ${c.text}`);
 }
 
-/** Where each added picture sits, for the prompt: "image 1 on the left of the frame, large in frame". */
-export function describeImages(projected: Projected[]): string {
-  return byPriority(projected)
-    .filter((p) => isImage(p.glyph))
-    .map((p) => [p.label, where(p), size(p)].filter(Boolean).join(", ").replace(/^(image \d+), (on|in) /, "$1 $2 "))
-    .join("; ");
+/** What an added picture sits on, if anything, and whether that's a figure's head. */
+function imageTarget(img: Projected, projected: Projected[], aspect: number): { on?: Projected; head: boolean } {
+  const others = projected.filter((p) => !isImage(p.glyph) && !isText(p.glyph) && !isSky(p.glyph));
+  const on = subjectAt(img.x, img.y, others, aspect);
+  if (!on || !FIGURES.has(on.glyph)) return { on, head: false };
+  // The top quarter of a figure is its head.
+  const b = box(on, aspect);
+  return { on, head: img.y <= b.y0 + 0.25 * (b.y1 - b.y0) };
+}
+
+const theName = (p: Projected) => `the ${p.label.replace(/^(a|an|the|one)\s+/i, "")}`;
+const LIKENESS =
+  "Keep the exact likeness: the same facial features, face shape, skin tone, hair and age; do not beautify, idealise, replace or stylise away the identity, and let only the lighting and the style's rendering adapt.";
+
+/**
+ * Instructions for the pictures added to the sketch, in the order to attach
+ * them: an attach line, then one line each saying what to do with it. A
+ * picture on a figure's head is that figure's face unless set otherwise.
+ */
+export function referenceImages(projected: Projected[], aspect: number): string[] {
+  // In number order, the order they're attached in.
+  const num = (p: Projected) => Number(p.label.match(/\d+/)?.[0] ?? Infinity);
+  const images = projected.filter((p) => isImage(p.glyph)).sort((a, b) => num(a) - num(b));
+  if (!images.length) return [];
+  const nums = images.map((p) => p.label.match(/\d+/)?.[0] ?? p.label);
+  const list = nums.length === 1 ? nums[0] : `${nums.slice(0, -1).join(", ")} and ${nums.at(-1)}`;
+  const lines = [nums.length === 1 ? `Attach image ${list} with this prompt.` : `Attach images ${list} with this prompt, in this order.`];
+  images.forEach((img, i) => {
+    const name = `Image ${nums[i]}`;
+    const { on, head } = imageTarget(img, projected, aspect);
+    const place = on ? `on ${theName(on)}` : where(img);
+    const use = img.image?.use ?? (head ? "face" : undefined);
+    if (use === "face") lines.push(on && FIGURES.has(on.glyph) ? `${name}: ${theName(on)}'s face. ${LIKENESS}` : `${name}: a face, ${where(img)}. ${LIKENESS}`);
+    else if (use === "logo")
+      lines.push(`${name}: a logo or symbol ${place}. Reproduce it exactly, with the same shapes, letters, colours and proportions; do not redraw, restyle, simplify or add to it, and blend it in by matching the scene's lighting, perspective and surface.`);
+    else if (use === "product")
+      lines.push(on ? `${name}: ${theName(on)}, exactly as it appears in the image, with the same shape, details, labels and colours.` : `${name}: a product or object, exactly as it appears, with the same shape, details, labels and colours, ${where(img)}.`);
+    else if (use === "look") lines.push(`${name}: use only its look (colours, mood, texture); do not copy what it shows.`);
+    else lines.push(`${name}: include exactly what it shows, ${place}.`);
+  });
+  return lines;
 }

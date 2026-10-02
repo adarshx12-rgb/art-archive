@@ -7,6 +7,8 @@ import { horizonAt, project, type ShotCamera } from "../lib/scene/camera";
 import type { Vec3 } from "../lib/scene/model";
 import { clamp, LAYER_HEIGHT, layerAspect, type Layer } from "../lib/sketch/layers";
 import { AI_DRAWN, DRAW_H, drawingKey, type Drawing } from "../lib/sketch/drawing";
+import { FIGURES } from "../lib/scene/model";
+import { dragJoint, JOINTS, rigFor, shoulderOf, type Joint, type Pt, type Rig } from "../lib/scene/rig";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../lib/sketch/parse";
 import { rng } from "./util";
 
@@ -64,9 +66,24 @@ interface Ctx {
 
 const pts = (...p: number[]) => p.join(" ");
 
+/** What each puppet pin does, shown on hover. */
+const PIN_NAMES: Record<Joint, string> = {
+  head: "Head: tilt the upper body",
+  neck: "Neck: tilt the upper body",
+  hip: "Hips: crouch or shift; the feet stay put",
+  elbowL: "Elbow: bend the arm",
+  elbowR: "Elbow: bend the arm",
+  handL: "Hand: move the arm",
+  handR: "Hand: move the arm",
+  kneeL: "Knee: bend the leg",
+  kneeR: "Knee: bend the leg",
+  footL: "Foot: move the leg",
+  footR: "Foot: move the leg",
+};
+
 // ——— Figures ———
 
-function figure(x: number, base: number, h: number, pose: Pose, c: Ctx, main: boolean, robot = false, bust = false, facing: Layer["facing"] = "front"): ReactNode {
+function figure(x: number, base: number, h: number, pose: Pose, c: Ctx, main: boolean, robot = false, bust = false, facing: Layer["facing"] = "front", rig?: Rig): ReactNode {
   const r = h * 0.075;
   const sw = Math.min(Math.max(h * 0.028, 2.5), 9);
   const stroke = { stroke: c.ink, strokeWidth: sw, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
@@ -102,6 +119,38 @@ function figure(x: number, base: number, h: number, pose: Pose, c: Ctx, main: bo
         <line x1={x} y1={neckY} x2={x} y2={neckY + 0.04 * h} {...stroke} />
         {head(x, cy)}
         {face(x, cy)}
+      </g>
+    );
+  }
+
+  // A pose set with the puppet tool: drawn from its skeleton.
+  if (rig) {
+    const X = (p: Pt) => x + p.x * h;
+    const Y = (p: Pt) => base - p.y * h;
+    const line = (...ps: Pt[]) => ps.flatMap((p) => [X(p), Y(p)]);
+    const sh = shoulderOf(rig);
+    const spine = { x: X(rig.neck) - X(rig.hip), y: Y(rig.neck) - Y(rig.hip) };
+    const n = Math.hypot(spine.x, spine.y) || 1;
+    const across = { x: (-spine.y / n) * 0.1 * h, y: (spine.x / n) * 0.1 * h };
+    return (
+      <g>
+        {robot ? (
+          <polygon
+            points={pts(X(rig.hip) - across.x, Y(rig.hip) - across.y, X(rig.hip) + across.x, Y(rig.hip) + across.y, X(rig.neck) + across.x, Y(rig.neck) + across.y, X(rig.neck) - across.x, Y(rig.neck) - across.y)}
+            fill={c.bg}
+            stroke={c.ink}
+            strokeWidth={sw}
+            strokeLinejoin="round"
+          />
+        ) : (
+          <polyline points={pts(...line(rig.hip, rig.neck))} {...stroke} />
+        )}
+        <polyline points={pts(...line(sh, rig.elbowL, rig.handL))} {...stroke} />
+        <polyline points={pts(...line(sh, rig.elbowR, rig.handR))} {...stroke} />
+        <polyline points={pts(...line(rig.hip, rig.kneeL, rig.footL))} {...stroke} />
+        <polyline points={pts(...line(rig.hip, rig.kneeR, rig.footR))} {...stroke} />
+        {head(X(rig.head), Y(rig.head))}
+        {face(X(rig.head), Y(rig.head))}
       </g>
     );
   }
@@ -581,7 +630,7 @@ function topGlyph(g: Glyph, x: number, y: number, u: number, c: Ctx, main: boole
  * A placed subject drawn around its own centre (0, 0) at height `hh`, so a
  * transform can move, scale and rotate it like a layer.
  */
-function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, facing?: Layer["facing"], drawing?: Drawing): ReactNode {
+function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, facing?: Layer["facing"], drawing?: Drawing, rig?: Rig): ReactNode {
   const b = hh / 2;
   if (drawing) {
     // The AI's outline icon, scaled from its box to the placeholder's, drawn with one even, bold pen.
@@ -600,7 +649,7 @@ function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, fac
     case "person":
     case "child":
     case "robot":
-      return figure(0, b, hh, pose, c, main, g === "robot", false, facing);
+      return figure(0, b, hh, pose, c, main, g === "robot", false, facing, rig);
     case "animal":
       return frontGlyph(g, 0, b, hh / 0.9, c, main);
     case "big-animal":
@@ -652,11 +701,15 @@ function layerGlyph(g: Glyph, hh: number, c: Ctx, main: boolean, pose: Pose, fac
     case "thing": {
       const w = hh * 1.2;
       const sw = Math.min(Math.max(hh * 0.02, 2.5), 6);
-      // Until a drawing arrives (or if none can be made): a box with a cross, labelled below.
+      // While its drawing is being made: a faint dashed outline saying so, labelled below.
       return (
-        <g stroke={c.ink} strokeWidth={sw} fill={main ? c.accent : c.secondary} fillOpacity={0.55} strokeLinejoin="round">
-          <rect x={-w / 2} y={-hh / 2} width={w} height={hh} rx={hh * 0.08} />
-          <path d={`M${-w / 2} ${-hh / 2} L${w / 2} ${hh / 2} M${w / 2} ${-hh / 2} L${-w / 2} ${hh / 2}`} fill="none" strokeOpacity={0.5} />
+        <g stroke={c.ink} strokeWidth={sw} fill="none" strokeLinejoin="round" opacity={0.55}>
+          <rect x={-w / 2} y={-hh / 2} width={w} height={hh} rx={hh * 0.08} strokeDasharray={`${sw * 4} ${sw * 3}`}>
+            <animate attributeName="stroke-dashoffset" from="0" to={sw * 14} dur="1.2s" repeatCount="indefinite" />
+          </rect>
+          <text textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-mono)" fontSize={Math.max(hh * 0.11, 12)} fill={c.ink} stroke="none">
+            sketching…
+          </text>
         </g>
       );
     }
@@ -690,9 +743,12 @@ export interface StoryboardProps {
   drawings?: Record<string, Drawing>;
   /** Added pictures (data: URLs) by key; a missing one is drawn as a labelled placeholder. */
   images?: Record<string, string>;
+  /** The puppet tool: a click selects, and a selected figure shows pins on its joints to pose it. */
+  puppet?: boolean;
+  onRigChange?: (id: string, rig: Rig) => void;
 }
 
-type Drag = { mode: "move" | "scale" | "rotate"; id: string; start: { x: number; y: number }; layer: Layer };
+type Drag = { mode: "move" | "scale" | "rotate" | "puppet"; id: string; start: { x: number; y: number }; layer: Layer; joint?: Joint; rig?: Rig };
 
 /** The ground grid (y = 0) as seen through the camera, as one SVG path. Lines behind the camera are skipped. */
 function groundGrid(cam: ShotCamera, W: number, H: number): string {
@@ -735,6 +791,8 @@ export function Storyboard({
   viewTool = "orbit",
   drawings = {},
   images = {},
+  puppet = false,
+  onRigChange,
 }: StoryboardProps) {
   const layersRef = useRef<SVGGElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -987,7 +1045,16 @@ export function Storyboard({
     e.stopPropagation();
     (e.currentTarget as Element).closest("svg")?.setPointerCapture(e.pointerId);
     onSelect?.(l.id);
+    // With the puppet tool, clicking a subject only selects it; its pins do the moving.
+    if (puppet) return;
     drag.current = { mode, id: l.id, start: toLocal(e), layer: l };
+  };
+  /** Grab one of a figure's pins. */
+  const grabPin = (e: PointerEvent, l: Layer, joint: Joint) => {
+    if (!onRigChange) return;
+    e.stopPropagation();
+    (e.currentTarget as Element).closest("svg")?.setPointerCapture(e.pointerId);
+    drag.current = { mode: "puppet", id: l.id, start: toLocal(e), layer: l, joint, rig: l.rig ?? rigFor(l.pose ?? "stand") };
   };
   const lookable = Boolean(onView) && !flat;
   const startView = (e: PointerEvent) => {
@@ -1005,10 +1072,23 @@ export function Storyboard({
       return;
     }
     const d = drag.current;
-    if (!d || !onLayerChange) return;
+    if (!d) return;
     const p = toLocal(e);
     const cx = d.layer.x * W;
     const cy = d.layer.y * H;
+    if (d.mode === "puppet") {
+      // The pointer, back into the figure's own units: unrotate, unflip, from its first copy's base.
+      const { hh, one } = sizeOf(d.layer);
+      const a = (-d.layer.rotation * Math.PI) / 180;
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      const ux = (dx * Math.cos(a) - dy * Math.sin(a)) * (d.layer.flip ? -1 : 1);
+      const uy = dx * Math.sin(a) + dy * Math.cos(a);
+      const off = (-(copies(d.layer) - 1) / 2) * one * 1.15;
+      onRigChange?.(d.id, dragJoint(d.rig!, d.joint!, { x: (ux - off) / hh, y: (hh / 2 - uy) / hh }));
+      return;
+    }
+    if (!onLayerChange) return;
     if (d.mode === "move") {
       onLayerChange(d.id, { x: clamp(d.layer.x + (p.x - d.start.x) / W, -0.2, 1.2), y: clamp(d.layer.y + (p.y - d.start.y) / H, -0.2, 1.2) });
     } else if (d.mode === "scale") {
@@ -1197,7 +1277,7 @@ export function Storyboard({
                     )
                   ) : Array.from({ length: n }, (_, k) => (
                     <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
-                      {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing, AI_DRAWN.has(l.glyph) ? drawings[drawingKey(l.label)] : undefined)}
+                      {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing, AI_DRAWN.has(l.glyph) ? drawings[drawingKey(l.label)] : undefined, l.rig)}
                     </g>
                   ))}
                 </g>
@@ -1240,6 +1320,41 @@ export function Storyboard({
               const corners = [at(-ww / 2, -hh / 2), at(ww / 2, -hh / 2), at(ww / 2, hh / 2), at(-ww / 2, hh / 2)];
               const top = at(0, -hh / 2);
               const knob = at(0, -hh / 2 - 60);
+              if (puppet) {
+                const outline = <polygon points={corners.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#3B82F6" strokeWidth={2} strokeDasharray="6 8" opacity={0.6} />;
+                if (!FIGURES.has(selected.glyph)) return outline;
+                // Pins on the joints of the first figure (a group shares one pose).
+                const { one } = sizeOf(selected);
+                const off = (-(copies(selected) - 1) / 2) * one * 1.15;
+                const rig = selected.rig ?? rigFor(selected.pose ?? "stand");
+                const sx = selected.flip ? -1 : 1;
+                const pinR = Math.max(W / 95, Math.min(hh * 0.03, W / 60));
+                return (
+                  <g>
+                    {outline}
+                    {JOINTS.map((j) => {
+                      const p = at(sx * (off + rig[j].x * hh), hh / 2 - rig[j].y * hh);
+                      const end = j === "head" || j === "hip" || j.startsWith("hand") || j.startsWith("foot");
+                      return (
+                        <circle
+                          key={j}
+                          cx={p.x}
+                          cy={p.y}
+                          r={end ? pinR : pinR * 0.8}
+                          fill={end ? "#DFFF70" : "#FFFFFF"}
+                          stroke="#191919"
+                          strokeWidth={3}
+                          style={{ cursor: "grab" }}
+                          onPointerDown={(e) => grabPin(e, selected, j)}
+                          aria-label={PIN_NAMES[j]}
+                        >
+                          <title>{PIN_NAMES[j]}</title>
+                        </circle>
+                      );
+                    })}
+                  </g>
+                );
+              }
               return (
                 <g>
                   <polygon points={corners.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#3B82F6" strokeWidth={3} strokeDasharray="10 6" />

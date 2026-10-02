@@ -182,6 +182,7 @@ export function projectActor(cam: ShotCamera, a: Actor): Projected {
     count: a.count,
     pose: a.pose,
     ...(a.image ? { image: a.image } : {}),
+    ...(a.rig ? { rig: a.rig } : {}),
     x: centre.x,
     y: centre.y,
     scale: size / LAYER_HEIGHT[a.glyph],

@@ -85,6 +85,6 @@ export function aiGuide(state: BuilderState) {
 }
 
 /** A storyboard line drawing for a subject the sketch has no shape for. */
-export function aiDraw(label: string) {
-  return post<{ strokes: Drawing | null }>("/api/draw", { label });
+export function aiDraw(label: string, detail: "quick" | "full") {
+  return post<{ strokes: Drawing | null }>("/api/draw", { label, detail });
 }

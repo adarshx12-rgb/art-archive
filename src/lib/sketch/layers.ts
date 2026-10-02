@@ -1,5 +1,6 @@
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "./parse";
 import type { ActorImage } from "../scene/model";
+import type { Rig } from "../scene/rig";
 
 /**
  * Subjects the user places on the sketch by hand. Position is the centre of
@@ -26,6 +27,8 @@ export interface Layer {
   facing?: "front" | "back" | "left" | "right";
   /** For an added picture: which stored image, and its width / height. */
   image?: ActorImage;
+  /** For a figure posed with the puppet tool: its skeleton. */
+  rig?: Rig;
 }
 
 export const MAX_LAYERS = 12;

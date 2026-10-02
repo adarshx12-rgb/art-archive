@@ -1,4 +1,5 @@
 import { AI_DRAWN } from "../sketch/drawing";
+import { decodeRig, encodeRig, type Rig } from "./rig";
 import { cleanLabel, clamp, LAYER_TYPES } from "../sketch/layers";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../sketch/parse";
 
@@ -24,12 +25,28 @@ export interface Actor {
   count: number;
   /** For an added picture: which stored image, and its width / height. */
   image?: ActorImage;
+  /** For a figure posed with the puppet tool: its skeleton (lib/scene/rig.ts). Replaces the named pose. */
+  rig?: Rig;
 }
+
+/** Subjects drawn as stick figures, which the puppet tool can pose. */
+export const FIGURES = new Set<Glyph>(["person", "child", "robot"]);
+
+/** What an added picture is for: a face to keep, a logo to reproduce, a product to show, or only its look. */
+export type ImageUse = "face" | "logo" | "product" | "look";
+export const IMAGE_USES: { id: ImageUse; label: string }[] = [
+  { id: "face", label: "Face (keep likeness)" },
+  { id: "logo", label: "Logo / symbol (exact)" },
+  { id: "product", label: "Product / object (exact)" },
+  { id: "look", label: "Look only" },
+];
 
 /** A picture kept in this browser (lib/images.ts) under key; ratio is its width / height after cropping. */
 export interface ActorImage {
   key: string;
   ratio: number;
+  /** Unset: worked out from where it sits (on a figure's head, it's that figure's face). */
+  use?: ImageUse;
 }
 
 export const MAX_IMAGES = 4;
@@ -162,10 +179,10 @@ export function actorFromText(text: string, existing: Actor[]): Actor | null {
 
 const r = (n: number, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 
-/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count, plus ~key~ratio for images, joined with "|". */
+/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count, plus ~key~ratio for images or ~rig for posed figures, joined with "|". */
 export function encodeActors(actors: Actor[]): string {
   return actors
-    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), r(a.scale), a.pose, a.count, ...(a.image ? [a.image.key, r(a.image.ratio, 3)] : [])].join("~"))
+    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), r(a.scale), a.pose, a.count, ...(a.image ? [a.image.key, r(a.image.ratio, 3), ...(a.image.use ? [a.image.use] : [])] : a.rig && FIGURES.has(a.glyph) ? [encodeRig(a.rig)] : [])].join("~"))
     .join("|");
 }
 
@@ -191,7 +208,8 @@ export function decodeActors(raw: string): { actors: Actor[]; bad: boolean } {
       pose: POSE_IDS.has(pose) ? pose : "stand",
       count: clamp(Math.round(Number(rest[8]) || 1), 1, 6),
       // The picture itself stays in the browser that added it; a link carries only its key and shape.
-      ...(glyph === "image" ? { image: { key: (rest[9] ?? "").replace(/[^a-z0-9-]/gi, "").slice(0, 40), ratio: clamp(Number(rest[10]) > 0 ? Number(rest[10]) : 1, 0.1, 10) } } : {}),
+      ...(FIGURES.has(glyph as Glyph) && rest[9] && decodeRig(rest[9]) ? { rig: decodeRig(rest[9])! } : {}),
+      ...(glyph === "image" ? { image: { key: (rest[9] ?? "").replace(/[^a-z0-9-]/gi, "").slice(0, 40), ratio: clamp(Number(rest[10]) > 0 ? Number(rest[10]) : 1, 0.1, 10), ...(IMAGE_USES.some((u) => u.id === rest[11]) ? { use: rest[11] as ImageUse } : {}) } } : {}),
     });
   });
   return { actors, bad };

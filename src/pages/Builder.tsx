@@ -1,10 +1,11 @@
-import { AlertTriangle, Download, Eraser, ImagePlus, Link2, PersonStanding, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Undo2, X } from "lucide-react";
+import { AlertTriangle, Download, Eraser, ImagePlus, Link2, PersonStanding, MessageSquarePlus, Plus, RefreshCw, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate } from "react-router";
 import { Storyboard } from "../art/Storyboard";
 
 import { CopyButton } from "../components/actions";
 import { CommentLayer } from "../components/CommentLayer";
+import { ConceptCards } from "../components/ConceptCards";
 import { EraseLayer } from "../components/EraseLayer";
 import { ImageCropper } from "../components/ImageCropper";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -17,7 +18,7 @@ import { palettes, getPalette } from "../content/palettes";
 import { getStyle, styles } from "../content/styles";
 import { formatInfo, TEMPLATE_FORMATS } from "../content/templates";
 import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/types";
-import { aiPrompt, aiScene, aiSchemes } from "../lib/ai";
+import { aiConcepts, aiPrompt, aiScene, aiSchemes, type Concept } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, joinList, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
@@ -463,9 +464,46 @@ export function Builder() {
   const selectedActor = state.actors.find((a) => a.id === selectedId) ?? null;
 
   // ——— AI (server side; see worker/) ———
-  const [aiBusy, setAiBusy] = useState<null | "scene" | "prompt">(null);
+  const [aiBusy, setAiBusy] = useState<null | "scene" | "prompt" | "concepts">(null);
   const [aiNote, setAiNote] = useState<{ text: string; undo?: () => void } | null>(null);
   const [promptWarnings, setPromptWarnings] = useState<string[]>([]);
+  // Design ideas: three concepts, the titles shown so far, the prompt they were made for, and the one picked.
+  const [concepts, setConcepts] = useState<Concept[] | null>(null);
+  const [shownTitles, setShownTitles] = useState<string[]>([]);
+  const [conceptsBasis, setConceptsBasis] = useState("");
+  const [chosenConcept, setChosenConcept] = useState<string | null>(null);
+
+  const getIdeas = async (more: boolean) => {
+    setAiBusy("concepts");
+    const res = await aiConcepts(state, more ? shownTitles : []);
+    setAiBusy(null);
+    if (!res.ok) {
+      toast(res.error, "error");
+      return;
+    }
+    const titles = res.data.concepts.map((c) => c.title);
+    setConcepts(res.data.concepts);
+    setShownTitles(more ? [...shownTitles, ...titles].slice(-12) : titles);
+    setConceptsBasis(composed.prompt);
+    setChosenConcept(null);
+  };
+
+  const applyConcept = async (concept: Concept) => {
+    setAiBusy("prompt");
+    const { tags: _tags, ...brief } = concept;
+    const res = await aiPrompt(state, brief);
+    setAiBusy(null);
+    if (!res.ok) {
+      toast(res.error, "error");
+      return;
+    }
+    setBasis(composed.prompt);
+    setText(res.data.prompt);
+    setEdited(true);
+    setPromptWarnings(res.data.warnings);
+    setChosenConcept(concept.title);
+    toast(res.data.warnings.length ? "Prompt written. Check the notes below it." : `Prompt written for “${concept.title}”`);
+  };
   /**
    * Lay out, change or re-sync the scene on the server. The previous scene can be restored.
    * clearDraft / clearText empty the boxes whose words were used; quiet leaves failures to the caller.
@@ -1065,26 +1103,9 @@ export function Builder() {
                 {style.name}, {state.task === "restyle" ? "restyling a source" : "new"}, {state.intensity} intensity. Colours: {keepColours ? "original colours" : palette.label}.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  disabled={aiBusy !== null}
-                  onClick={async () => {
-                    setAiBusy("prompt");
-                    const res = await aiPrompt(state);
-                    setAiBusy(null);
-                    if (!res.ok) {
-                      toast(res.error, "error");
-                      return;
-                    }
-                    setBasis(composed.prompt);
-                    setText(res.data.prompt);
-                    setEdited(true);
-                    setPromptWarnings(res.data.warnings);
-                    toast(res.data.warnings.length ? "Prompt written. Check the notes below it." : "Prompt written and checked against your scene");
-                  }}
-                >
-                  {aiBusy === "prompt" ? "Writing…" : "Perfect prompt"}
+                <button type="button" className="btn btn-sm btn-primary" disabled={aiBusy !== null} onClick={() => getIdeas(false)}>
+                  <Sparkles size={14} aria-hidden />
+                  {aiBusy === "concepts" ? "Thinking…" : concepts ? "New design ideas" : "Design ideas"}
                 </button>
                 {edited && (
                   <button type="button" className="btn btn-sm btn-ghost" disabled={aiBusy !== null} onClick={() => runScene("from-prompt", prompt)} title="Rebuild the scene so it matches the prompt as you’ve edited it">
@@ -1093,6 +1114,15 @@ export function Builder() {
                   </button>
                 )}
               </div>
+              <ConceptCards
+                concepts={concepts}
+                loading={aiBusy === "concepts"}
+                stale={concepts !== null && conceptsBasis !== composed.prompt}
+                busy={aiBusy !== null}
+                chosen={chosenConcept}
+                onMore={() => getIdeas(true)}
+                onUse={applyConcept}
+              />
             </div>
 
             {staleEdit && (

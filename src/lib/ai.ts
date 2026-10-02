@@ -1,4 +1,5 @@
 import type { Hex, PaletteRole } from "../content/types";
+import type { Brief } from "./art/brief";
 import type { BuilderState } from "./prompt/state";
 import { encodeState } from "./prompt/state";
 import type { ShotCamera } from "./scene/camera";
@@ -72,9 +73,16 @@ export interface PromptReply {
   warnings: string[];
 }
 
-/** The server re-derives every fact from the settings themselves (the share-link form). */
-export function aiPrompt(state: BuilderState) {
-  return post<PromptReply>("/api/prompt", { query: encodeState(state).toString() });
+/** The server re-derives every fact from the settings themselves (the share-link form). With a brief, it writes the prompt for that concept. */
+export function aiPrompt(state: BuilderState, brief?: Brief) {
+  return post<PromptReply>("/api/prompt", { query: encodeState(state).toString(), ...(brief ? { brief } : {}) });
+}
+
+export type Concept = Brief & { tags: string[] };
+
+/** Three art-directed concepts for the current settings; `exclude` lists titles already shown. */
+export function aiConcepts(state: BuilderState, exclude: string[]) {
+  return post<{ concepts: Concept[] }>("/api/concepts", { query: encodeState(state).toString(), exclude: exclude.slice(-12) });
 }
 
 export type Idea = { title: string; why: string } & ({ kind: "scene"; instruction: string } | { kind: "words"; slot: string; words: string });

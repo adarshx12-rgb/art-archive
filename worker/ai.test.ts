@@ -268,6 +268,12 @@ describe("concepts task", () => {
     await expect(concepts(env(), { query, exclude: [] })).rejects.toThrow(/design ideas/);
   });
 
+  it("never repeats a tag on a card", async () => {
+    fakeFetch({ openrouter: () => reply(concept("Torn in two", ["photocopy-blowup", "torn-split", "photocopy-contrast"]), three[1], three[2]) });
+    const tags = (await concepts(env(), { query, exclude: [] })).concepts[0]!.tags;
+    expect(new Set(tags).size).toBe(tags.length);
+  });
+
   it("tells the model which ideas were already shown", async () => {
     const calls = fakeFetch({ openrouter: () => reply(...three) });
     await concepts(env(), { query, exclude: ["Big numeral"] });

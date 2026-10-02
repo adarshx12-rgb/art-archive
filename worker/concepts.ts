@@ -115,7 +115,7 @@ export function sortBriefs(raw: Brief[], state: BuilderState, start: Brief[] = [
   return { kept, problems };
 }
 
-const tagsFor = (b: Brief) => b.craft.map((id) => getCraft(id)?.label).filter((l): l is string => Boolean(l)).slice(0, 4);
+const tagsFor = (b: Brief) => [...new Set(b.craft.map((id) => getCraft(id)?.label).filter((l): l is string => Boolean(l)))].slice(0, 4);
 
 export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, override?: string | null) {
   const { state } = decodeState(new URLSearchParams(body.query));

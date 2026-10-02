@@ -150,6 +150,52 @@ describe("prompt task", () => {
     expect(r).toMatchObject({ warnings: [], model: "google/gemini-3.8-flash" });
     expect(calls).toHaveLength(1);
   });
+  describe("with a chosen concept", () => {
+    const punk = "s=punk&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1");
+    const brief = {
+      title: "Torn in two",
+      idea: "The dancer blown up huge and ripped down the middle.",
+      hero: { subject: "woman dancing", treatment: "photocopied huge, solid blacks", scale: "cropped at the knees" },
+      device: "torn top to bottom just left of centre",
+      furniture: ["two strips of masking tape across the tear"],
+      type: '"Night Shift" in ransom letters across the tear',
+      colour: null,
+      finish: "toner specks",
+      craft: ["photocopy-blowup", "torn-split", "tape-strips"],
+      motion: null,
+    };
+    const directed = 'Punk poster, 4:5. Xerox white (#F0EEE7) sheet. A woman dancing, photocopied huge in toner black (#0F0F0F), torn down the middle. "Night Shift" in ransom letters with fluoro pink (#FF2E88). Avoid: polished gradients.';
+
+    it("writes it as an art director, with the concept in the input", async () => {
+      const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+      const r = await perfectPrompt(env(), { query: punk, brief });
+      expect(r).toMatchObject({ prompt: directed, warnings: [] });
+      const sent = JSON.stringify(calls[0]!.body);
+      expect(sent).toContain("senior graphic designer");
+      expect(sent).toContain("Torn in two");
+      // Craft ids reach the model as phrases.
+      expect(sent).toContain("high-contrast photocopier blow-up");
+    });
+
+    it("rejects a brief that no longer fits the settings, without calling a model", async () => {
+      const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+      await expect(perfectPrompt(env(), { query: punk, brief: { ...brief, hero: { ...brief.hero, subject: "a dragon" } } })).rejects.toThrow(/no longer fits/);
+      expect(calls).toHaveLength(0);
+    });
+
+    it("warns about quoted words the visitor didn't type", async () => {
+      fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed + ' A badge reading "OPEN LATE".' })) });
+      const r = await perfectPrompt(env(), { query: punk, brief });
+      expect(r.warnings.join(" ")).toContain("OPEN LATE");
+    });
+
+    it("strips filler words", async () => {
+      fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace("A woman dancing", "A highly detailed woman dancing") })) });
+      const r = await perfectPrompt(env(), { query: punk, brief });
+      expect(r.prompt).not.toMatch(/highly detailed/i);
+      expect(r.prompt).toContain("A woman dancing");
+    });
+  });
 });
 
 describe("colour schemes", () => {

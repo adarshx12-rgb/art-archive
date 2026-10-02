@@ -109,7 +109,7 @@ for (const c of cases) {
 const novice = [
   { name: "A cat, Swiss poster", q: { s: "swiss", fm: "poster", q: "a cat" } },
   { name: "Night Shift, Punk poster", q: { s: "punk", fm: "poster", q: "a woman dancing", tx: "Night Shift" } },
-  { name: "Birthday flyer, words only", q: { s: "kidcore", fm: "flyer", tx: "Maya turns 30" } },
+  { name: "Birthday flyer, words only", q: { s: "memphis", fm: "flyer", tx: "Maya turns 30" } },
   { name: "Jazz magazine, Art Deco", q: { s: "art-deco", fm: "magazine", q: "a jazz trumpeter", tx: "Blue Hour" } },
   { name: "Speedrun thumbnail, Web 1.0", q: { s: "web-1-0", fm: "thumbnail", q: "a fox", tx: "Speedrun" } },
   { name: "Marble bust, Vaporwave image", q: { s: "vaporwave", q: "a marble bust" } },

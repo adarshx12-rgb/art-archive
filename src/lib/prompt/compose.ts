@@ -1,6 +1,6 @@
 import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
-import { fillPrompt, formatInfo, getTemplate, slotText } from "../../content/templates";
+import { fillPrompt, formatInfo, getTemplate } from "../../content/templates";
 import type { Hex, PaletteRole, PaletteSize, StyleRecord, TemplateFormat } from "../../content/types";
 import { describeHex } from "../color";
 import {
@@ -22,8 +22,9 @@ import {
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
 import { describeComments, describeScene, referenceImages } from "../scene/describe";
+import { typedWords } from "../art/brief";
 import { withArticle } from "../sketch/layers";
-import { cleanComment, cleanSubject, cleanText, MAX_COMMENTS, type BuilderState } from "./state";
+import { cleanComment, cleanSubject, MAX_COMMENTS, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
   1: ["background"],
@@ -169,8 +170,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const keepTiming = isVideo && preserve.has("timing");
   // Text placed on the sketch, then any still in the box. It replaces the source's lettering, so "keep existing text" no longer applies.
   const template = state.template ? getTemplate(style.slug, state.template) : undefined;
-  const templateWords = template ? Object.values(slotText(template, state.templateText)) : [];
-  const texts = [...new Set([...templateWords, ...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), cleanText(state.text)].filter(Boolean))];
+  const texts = typedWords(state);
   if (texts.length && preserve.delete("text")) notes.push("The text you typed replaces the source’s lettering, so “Text & logos” is not preserved.");
 
   const lines: string[] = [];

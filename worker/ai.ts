@@ -46,6 +46,14 @@ export interface Usage {
   cost?: number;
 }
 
+/** Sum two calls' usage (cost only when either reported it). */
+export const addUsage = (a: Usage, b: Usage): Usage => ({
+  input: a.input + b.input,
+  output: a.output + b.output,
+  cached: a.cached + b.cached,
+  ...(a.cost !== undefined || b.cost !== undefined ? { cost: (a.cost ?? 0) + (b.cost ?? 0) } : {}),
+});
+
 export interface AskResult<T> {
   data: T;
   usage: Usage;

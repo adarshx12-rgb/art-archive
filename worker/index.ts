@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { angleOptions, compositionOptions, lensOptions, lightingOptions, shotOptions } from "../src/lib/prompt/options";
 import { AiError } from "./ai";
+import { concepts, ConceptsRequest } from "./concepts";
 import type { Env } from "./env";
 import { SchemesRequest, suggestSchemes } from "./palette";
 import { draw, DrawRequest } from "./draw";
@@ -14,6 +15,7 @@ import { buildScene, SceneRequest } from "./scene";
  *
  *   POST /api/scene    text or instruction  -> 3D scene
  *   POST /api/schemes  style (+ mood)       -> a 2, 3 and 4-colour scheme
+ *   POST /api/concepts builder settings     -> three art-directed design concepts
  *   POST /api/prompt   builder settings     -> checked, polished prompt
  *   POST /api/guide    builder settings     -> ideas for the template design
  *   POST /api/draw     a subject's name     -> a storyboard line drawing of it
@@ -74,6 +76,11 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const body = SchemesRequest.safeParse(raw);
       if (!body.success) return fail("That colour scheme request isn’t valid.", 400);
       return json(await suggestSchemes(env, body.data, override));
+    }
+    case "/api/concepts": {
+      const body = ConceptsRequest.safeParse(raw);
+      if (!body.success) return fail("That request isn’t valid.", 400);
+      return json(await concepts(env, body.data, override));
     }
     case "/api/prompt": {
       const body = PromptRequest.safeParse(raw);

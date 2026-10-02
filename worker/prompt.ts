@@ -5,7 +5,7 @@ import { composePrompt, resolvePalette } from "../src/lib/prompt/compose";
 import { lensOptions, findOption } from "../src/lib/prompt/options";
 import { cleanText, decodeState, type BuilderState } from "../src/lib/prompt/state";
 import { parseSubject } from "../src/lib/sketch/parse";
-import { ask, chain, type AskResult, type Usage } from "./ai";
+import { addUsage, ask, chain, type AskResult } from "./ai";
 import type { Env } from "./env";
 
 export const PromptRequest = z.object({
@@ -82,13 +82,6 @@ const missing = (prompt: string, checks: ReturnType<typeof mustInclude>) => {
   return checks.filter((c) => !c.any.some((w) => text.includes(w))).map((c) => c.label);
 };
 
-const add = (a: Usage, b: Usage): Usage => ({
-  input: a.input + b.input,
-  output: a.output + b.output,
-  cached: a.cached + b.cached,
-  ...(a.cost !== undefined || b.cost !== undefined ? { cost: (a.cost ?? 0) + (b.cost ?? 0) } : {}),
-});
-
 export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest>, override?: string | null) {
   const { state } = decodeState(new URLSearchParams(body.query));
   const style = getStyle(state.style);
@@ -125,7 +118,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
       },
       override,
     );
-    usage = add(usage, repair.usage);
+    usage = addUsage(usage, repair.usage);
     const left = missing(repair.data.prompt, checks);
     if (left.length <= gaps.length) {
       best = repair;
@@ -137,7 +130,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
   if (gaps.length && best.index + 1 < chain(env, override, models).length) {
     const next = await write(best.index + 1).catch(() => null);
     if (next) {
-      usage = add(usage, next.usage);
+      usage = addUsage(usage, next.usage);
       const left = missing(next.data.prompt, checks);
       if (left.length < gaps.length) {
         best = next;

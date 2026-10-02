@@ -4,6 +4,7 @@ import { ask, chain } from "./ai";
 import type { Env } from "./env";
 import { suggestSchemes } from "./palette";
 import { perfectPrompt } from "./prompt";
+import { concepts } from "./concepts";
 
 const env = (patch: Partial<Env> = {}): Env =>
   ({
@@ -173,5 +174,63 @@ describe("colour schemes", () => {
     expect((await suggestSchemes(env(), { style: "art-deco", request: "" })).schemes.map((s) => s.name)).toEqual(["Three"]);
     fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ schemes: [bad] })) });
     await expect(suggestSchemes(env(), { style: "art-deco", request: "" })).rejects.toThrow(/colour schemes/);
+  });
+});
+
+describe("concepts task", () => {
+  const query = "s=punk&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1");
+  const concept = (title: string, craft: string[], subject = "woman dancing") => ({
+    title,
+    idea: "An idea.",
+    hero: { subject, treatment: "photocopied huge", scale: "cropped at the knees" },
+    device: "torn top to bottom",
+    furniture: ["two strips of tape"],
+    type: '"Night Shift" across the tear',
+    colour: null,
+    finish: "toner specks",
+    craft,
+    motion: null,
+  });
+  const reply = (...cs: unknown[]) => openRouterReply(JSON.stringify({ concepts: cs }));
+  const three = [concept("Torn in two", ["photocopy-blowup", "torn-split"]), concept("Through the window", ["halftone-screen", "cutout-window"]), concept("Copier drag", ["one-bit-dither", "motion-sequence"])];
+
+  it("returns three checked concepts with tags in one call", async () => {
+    const calls = fakeFetch({ openrouter: () => reply(...three) });
+    const r = await concepts(env(), { query, exclude: [] });
+    expect(r.concepts.map((c) => c.title)).toEqual(["Torn in two", "Through the window", "Copier drag"]);
+    expect(r.concepts[0]!.tags).toEqual(["photocopy", "torn split"]);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("repairs once and keeps the concepts that passed", async () => {
+    const calls = fakeFetch({
+      openrouter: (_b, n) => (n === 0 ? reply(concept("Dragon", ["duotone"], "a dragon"), three[0], three[1]) : reply(three[0], three[1], three[2])),
+    });
+    const r = await concepts(env(), { query, exclude: [] });
+    expect(r.concepts.map((c) => c.title)).toEqual(["Torn in two", "Through the window", "Copier drag"]);
+    expect(calls).toHaveLength(2);
+    expect(JSON.stringify(calls[1]!.body)).toContain("Concept 1: The hero must be");
+  });
+
+  it("shows fewer than three when the repair still falls short", async () => {
+    fakeFetch({ openrouter: () => reply(three[0], three[0], concept("Dragon", ["duotone"], "a dragon")) });
+    expect((await concepts(env(), { query, exclude: [] })).concepts.map((c) => c.title)).toEqual(["Torn in two"]);
+  });
+
+  it("fails cleanly when no concept passes", async () => {
+    fakeFetch({ openrouter: () => reply(concept("Dragon", ["duotone"], "a dragon")) });
+    await expect(concepts(env(), { query, exclude: [] })).rejects.toThrow(/design ideas/);
+  });
+
+  it("tells the model which ideas were already shown", async () => {
+    const calls = fakeFetch({ openrouter: () => reply(...three) });
+    await concepts(env(), { query, exclude: ["Big numeral"] });
+    expect(JSON.stringify(calls[0]!.body)).toContain("Big numeral");
+  });
+
+  it("accepts restyle concepts that only change the making", async () => {
+    const restyle = { ...concept("Dots", ["halftone-screen"]), hero: { subject: null, treatment: "Ben-Day dots everywhere", scale: null }, device: null, furniture: [], type: null, colour: "flat primaries" };
+    fakeFetch({ openrouter: () => reply(restyle, { ...restyle, title: "Riso", craft: ["riso-overprint"] }, { ...restyle, title: "Copy", craft: ["photocopy-blowup"] }) });
+    expect((await concepts(env(), { query: "s=pop-art&t=restyle", exclude: [] })).concepts).toHaveLength(3);
   });
 });

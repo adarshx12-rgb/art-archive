@@ -10,11 +10,13 @@ import { cleanDrawing, drawingKey, type Drawing } from "./drawing";
  * tried again a few times; if the detailed one fails, the quick one stays.
  */
 
-// v3: outline icons of the subject alone. Older drawings (filled, or with added scenery) are left behind and redrawn.
-const STORE = "ff-drawings-v3";
+// v4: the plainest recognisable form, with details only when asked for. Older drawings (filled, with added scenery or extra marks) are left behind and redrawn.
+const STORE = "ff-drawings-v4";
 const KEEP = 60;
 const TRIES = 3;
 const RETRY_MS = 4000;
+/** Too many AI requests: the limit is per minute, so wait most of one. Not counted as a failure. */
+const LIMITED_MS = 20_000;
 
 function load(): Record<string, Drawing> {
   try {
@@ -67,8 +69,9 @@ export function useDrawings(labels: string[]): Record<string, Drawing> {
       const p = progress.get(key) ?? { busy: false, fails: 0, full: false };
       p.busy = true;
       progress.set(key, p);
-      const failed = () => {
+      const failed = (status?: number) => {
         p.busy = false;
+        if (status === 429) return void window.setTimeout(() => setRetry((n) => n + 1), LIMITED_MS);
         p.fails++;
         if (p.fails < TRIES) window.setTimeout(() => setRetry((n) => n + 1), RETRY_MS);
       };
@@ -77,10 +80,13 @@ export function useDrawings(labels: string[]): Record<string, Drawing> {
         // The quick sketch first, unless one is already showing.
         if (!drawings[key]) {
           const quick = await aiDraw(key, "quick");
-          if (!quick.ok || !quick.data.strokes) return failed();
+          if (!quick.ok) return failed(quick.status);
+          if (!quick.data.strokes) return failed();
           show(quick.data.strokes);
         }
         const full = await aiDraw(key, "full");
+        // Refused for now: the quick sketch stays up and the full one is asked for again later.
+        if (!full.ok && full.status === 429) return failed(429);
         if (!full.ok || !full.data.strokes) {
           // The quick sketch is on screen; keep it rather than pay for more slow attempts.
           p.busy = false;

@@ -11,13 +11,14 @@ import type { Drawing } from "./sketch/drawing";
  * message that can be shown as-is.
  */
 
-export type AiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+/** `status` is the HTTP status of a refused request (429: too many AI requests); absent when the server wasn't reached. */
+export type AiResult<T> = { ok: true; data: T } | { ok: false; error: string; status?: number };
 
 async function post<T>(path: string, body: unknown): Promise<AiResult<T>> {
   try {
     const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
-    if (!res.ok || !data) return { ok: false, error: data?.error ?? (res.status === 404 ? "This isn’t available on this version of the site." : "Something went wrong. Please try again.") };
+    if (!res.ok || !data) return { ok: false, status: res.status, error: data?.error ?? (res.status === 404 ? "This isn’t available on this version of the site." : "Something went wrong. Please try again.") };
     return { ok: true, data };
   } catch {
     return { ok: false, error: "Couldn’t reach the server. Check your connection and try again." };

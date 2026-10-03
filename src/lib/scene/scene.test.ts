@@ -282,3 +282,29 @@ describe("puppet poses", () => {
     expect(decodeActors(raw).actors[0]!.rig).toBeUndefined();
   });
 });
+
+describe("stretching a subject", () => {
+  it("keeps a width stretch in share links, and old links load unstretched", () => {
+    const wide = person({ scale: 1.2, stretch: 1.6 });
+    const back = decodeActors(encodeActors([wide])).actors[0]!;
+    expect([back.scale, back.stretch]).toEqual([1.2, 1.6]);
+    expect(encodeActors([person({ scale: 1.2 })])).toContain("~1.2~stand~");
+    expect(decodeActors(encodeActors([person()])).actors[0]!.stretch).toBeUndefined();
+  });
+
+  it("carries the stretch from the sketch to the 3D subject and back", () => {
+    const c = cam();
+    const a = applyLayerEdit(c, person(), { stretch: 0.5 });
+    expect(a.stretch).toBe(0.5);
+    expect(projectActor(c, a).stretch).toBe(0.5);
+    expect(applyLayerEdit(c, a, { stretch: 1 }).stretch).toBeUndefined();
+  });
+
+  it("says when a subject is clearly wide or narrow", () => {
+    const c = cam();
+    const say = (stretch?: number) => describeScene(projectScene(c, [{ ...newActor("tower", "tower", []), stretch }]), 0.8);
+    expect(say(1.6)).toMatch(/^a tower, .*wide and squat/);
+    expect(say(0.6)).toMatch(/^a tower, .*tall and narrow/);
+    expect(say(1.2)).not.toMatch(/squat|narrow/);
+  });
+});

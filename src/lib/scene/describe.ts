@@ -28,6 +28,14 @@ function size(p: Projected): string {
   return "";
 }
 
+/** Only a clear stretch is worth a word; small ones would just add noise. */
+function shape(p: Projected): string {
+  if (isText(p.glyph) || isImage(p.glyph) || !p.stretch) return "";
+  if (p.stretch >= 1.4) return "wide and squat";
+  if (p.stretch <= 0.7) return "tall and narrow";
+  return "";
+}
+
 function facing(p: Projected): string {
   if (!FACES.has(p.glyph)) return "";
   switch (p.facing) {
@@ -56,7 +64,7 @@ function tilt(p: Projected): string {
 /** Approximate on-screen box, as fractions of the frame. */
 function box(p: Projected, aspect: number) {
   const h = p.size;
-  const w = (h * widthRatio(p.glyph, p.label, p.image?.ratio) * p.count) / aspect;
+  const w = (h * widthRatio(p.glyph, p.label, p.image?.ratio) * (p.stretch ?? 1) * p.count) / aspect;
   return { x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - h / 2, y1: p.y + h / 2, area: w * h };
 }
 
@@ -95,6 +103,7 @@ export function describeScene(projected: Projected[], aspect: number): string {
         where(p),
         depthBand(p),
         size(p),
+        shape(p),
         p.rig ? describeRig(p.flip ? mirrorRig(p.rig) : p.rig) : POSE_WORDS[p.pose ?? "stand"] && !/\b(walk|run|sit|danc|ly|lie)/i.test(p.label) ? POSE_WORDS[p.pose ?? "stand"] : "",
         facing(p),
         tilt(p),

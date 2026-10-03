@@ -1,6 +1,6 @@
 import { clamp, LAYER_HEIGHT, type Layer } from "../sketch/layers";
 import { projectActor, standingHeight, unproject, type ShotCamera } from "./camera";
-import { isSky, REAL_HEIGHT, widthRatio, type Actor, type Vec3 } from "./model";
+import { isSky, MAX_STRETCH, MIN_STRETCH, REAL_HEIGHT, widthRatio, type Actor, type Vec3 } from "./model";
 
 /** Place a 3D actor so that, through `cam`, it lands where a 2D layer was (old share links). */
 export function actorFromLayer(cam: ShotCamera, l: Layer): Actor {
@@ -49,6 +49,12 @@ export function applyLayerEdit(cam: ShotCamera, a: Actor, patch: Partial<Layer>)
     }
   }
   if (patch.scale !== undefined && now.scale > 0) next.scale = clamp((a.scale * patch.scale) / now.scale, 0.05, 20);
+  if (patch.stretch !== undefined) {
+    // A ratio of the subject's own width, the same through any camera; 1 is stored as unset.
+    const { stretch: _, ...rest } = next;
+    const s = clamp(patch.stretch, MIN_STRETCH, MAX_STRETCH);
+    next = Math.abs(s - 1) < 0.005 ? rest : { ...rest, stretch: s };
+  }
   if (patch.rotation !== undefined) next.rotation = [a.rotation[0], a.rotation[1], patch.rotation + cam.roll];
   if (patch.flip !== undefined && patch.flip !== now.flip) next.rotation = [next.rotation[0], next.rotation[1] + 180, next.rotation[2]];
   if (patch.label !== undefined) next = { ...next, label: patch.label };

@@ -1,6 +1,6 @@
 import { Copy, FlipHorizontal2, RotateCcw, Trash2, X } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { FIGURES, IMAGE_USES, POSES, type Actor, type ImageUse, type Vec3 } from "../lib/scene/model";
+import { FIGURES, IMAGE_USES, MAX_STRETCH, MIN_STRETCH, POSES, type Actor, type ImageUse, type Vec3 } from "../lib/scene/model";
 
 /**
  * A number you can drag left/right to change (like After Effects), or
@@ -143,6 +143,17 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose
   const [px, py, pz] = actor.position;
   const [rx, ry, rz] = actor.rotation;
   const setPos = (i: 0 | 1 | 2, v: number) => onChange({ position: actor.position.map((p, j) => (j === i ? Math.round(v * 100) / 100 : p)) as Vec3 });
+  const width = actor.scale * (actor.stretch ?? 1);
+  const stretchTo = (w: number, scale: number) => {
+    const st = Math.min(Math.max(w / scale, MIN_STRETCH), MAX_STRETCH);
+    return Math.abs(st - 1) < 0.005 ? undefined : st;
+  };
+  // Width changes only the stretch; height changes the scale and keeps the width.
+  const setWidth = (v: number) => onChange({ stretch: stretchTo(Math.max(v / 100, 0.005), actor.scale) });
+  const setHeight = (v: number) => {
+    const scale = Math.min(Math.max(v / 100, 0.05), 20);
+    onChange({ scale, stretch: stretchTo(width, scale) });
+  };
   const setRot = (i: 0 | 1 | 2, v: number) => onChange({ rotation: actor.rotation.map((p, j) => (j === i ? Math.round(v * 10) / 10 : p)) as Vec3 });
   return (
     <Vertical.Provider value={vertical}>
@@ -195,8 +206,10 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose
             <Scrub label="Rotation Z" value={rz} onChange={(v) => setRot(2, v)} step={0.5} format={formatTurns} parse={parseTurns} suffix="°" />
           </Row>
         )}
-        <Row name="Scale" onReset={() => onChange({ scale: 1 })}>
-          <Scrub label="Scale" value={actor.scale * 100} onChange={(v) => onChange({ scale: Math.min(Math.max(v / 100, 0.05), 20) })} suffix="%" />
+        {/* Percent of the natural size each way. Height is the scale; width is the scale times the stretch. */}
+        <Row name="Scale" onReset={() => onChange({ scale: 1, stretch: undefined })}>
+          <Scrub label="Width" value={actor.scale * (actor.stretch ?? 1) * 100} onChange={setWidth} suffix="%" />
+          <Scrub label="Height" value={actor.scale * 100} onChange={setHeight} suffix="%" />
         </Row>
         {actor.image && (
           <Row name="Use as" onReset={() => onChange({ image: { key: actor.image!.key, ratio: actor.image!.ratio } })}>

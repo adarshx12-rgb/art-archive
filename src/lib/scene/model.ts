@@ -20,6 +20,8 @@ export interface Actor {
   /** Degrees about x (lean), y (turn) and z (roll). Turn 0 faces the camera. */
   rotation: Vec3;
   scale: number;
+  /** Width as a multiple of its natural width at this scale; unset is 1. `scale` alone sets the height. */
+  stretch?: number;
   pose: Pose;
   /** Drawn side by side, e.g. "two dogs". */
   count: number;
@@ -51,7 +53,12 @@ export interface ActorImage {
 
 export const MAX_IMAGES = 4;
 
-export const MAX_ACTORS = 12;
+/** How far a subject can be stretched or squashed sideways. */
+export const MIN_STRETCH = 0.1;
+export const MAX_STRETCH = 10;
+
+/** No practical limit on subjects; this only guards share links and the API against absurd sizes. */
+export const MAX_ACTORS = 200;
 
 export const POSES: { id: Pose; label: string }[] = [
   { id: "stand", label: "Standing" },
@@ -179,10 +186,10 @@ export function actorFromText(text: string, existing: Actor[]): Actor | null {
 
 const r = (n: number, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 
-/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count, plus ~key~ratio for images or ~rig for posed figures, joined with "|". */
+/** glyph~label~x~y~z~rx~ry~rz~scale~pose~count (scale is "height" or "heightxstretch"), plus ~key~ratio for images or ~rig for posed figures, joined with "|". */
 export function encodeActors(actors: Actor[]): string {
   return actors
-    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), r(a.scale), a.pose, a.count, ...(a.image ? [a.image.key, r(a.image.ratio, 3), ...(a.image.use ? [a.image.use] : [])] : a.rig && FIGURES.has(a.glyph) ? [encodeRig(a.rig)] : [])].join("~"))
+    .map((a) => [a.glyph, a.label, ...a.position.map((v) => r(v)), ...a.rotation.map((v) => r(v, 1)), a.stretch ? `${r(a.scale)}x${r(a.stretch)}` : r(a.scale), a.pose, a.count, ...(a.image ? [a.image.key, r(a.image.ratio, 3), ...(a.image.use ? [a.image.use] : [])] : a.rig && FIGURES.has(a.glyph) ? [encodeRig(a.rig)] : [])].join("~"))
     .join("|");
 }
 
@@ -191,7 +198,9 @@ export function decodeActors(raw: string): { actors: Actor[]; bad: boolean } {
   const actors: Actor[] = [];
   raw.split("|").filter(Boolean).slice(0, MAX_ACTORS).forEach((part, i) => {
     const [glyph, label, ...rest] = part.split("~");
-    const nums = rest.slice(0, 7).map(Number);
+    // The scale field may carry a width stretch: "1.2x0.6".
+    const [height, stretch] = (rest[6] ?? "").split("x");
+    const nums = [...rest.slice(0, 6), height].map(Number);
     const pose = rest[7] as Pose;
     if (!GLYPHS.has(glyph as Glyph) || nums.length < 7 || nums.some((v) => !Number.isFinite(v))) {
       bad = true;
@@ -205,6 +214,7 @@ export function decodeActors(raw: string): { actors: Actor[]; bad: boolean } {
       position: [clamp(x, -5000, 5000), clamp(y, -100, 5000), clamp(z, -5000, 5000)],
       rotation: [clamp(rx, -3600, 3600), clamp(ry, -3600, 3600), clamp(rz, -3600, 3600)],
       scale: clamp(scale, 0.05, 20),
+      ...(stretch !== undefined && Number.isFinite(Number(stretch)) && Number(stretch) > 0 && Number(stretch) !== 1 ? { stretch: clamp(Number(stretch), MIN_STRETCH, MAX_STRETCH) } : {}),
       pose: POSE_IDS.has(pose) ? pose : "stand",
       count: clamp(Math.round(Number(rest[8]) || 1), 1, 6),
       // The picture itself stays in the browser that added it; a link carries only its key and shape.

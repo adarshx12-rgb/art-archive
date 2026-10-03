@@ -400,11 +400,16 @@ export function Builder() {
   };
   /** ADD: a plain subject is placed at once; a described layout ("add {text} on a cloud with cows below") is worked out by the server. */
   const addDraft = async () => {
-    if (aiBusy || state.actors.length >= MAX_ACTORS || !state.subject.trim()) return;
+    if (aiBusy === "scene" || state.actors.length >= MAX_ACTORS || !state.subject.trim()) return;
     const words = state.subject;
+    // A plain subject needs no AI, so it never waits for design ideas or a prompt to finish.
     if (!needsLayout(words)) {
       placeDraft(words);
       subjectRef.current?.focus();
+      return;
+    }
+    if (aiBusy) {
+      toast(aiBusy === "concepts" ? "Design ideas are still loading. Add this once they’re in." : "The prompt is still being written. Add this once it’s done.", "error");
       return;
     }
     const filled = fillText(words, state.text);
@@ -686,6 +691,9 @@ export function Builder() {
             </label>
             <div className="flex gap-2">
               <select id="style-select" className="field min-w-0 flex-1" value={state.style} onChange={(e) => (e.target.value === CUSTOM_SLUG ? setDescribing(true) : setStyle(e.target.value))}>
+                <optgroup label="Your own">
+                  <option value={CUSTOM_SLUG}>{state.style === CUSTOM_SLUG ? (style.name === "Custom" ? "Custom" : `Custom: ${style.name}`) : "Custom…"}</option>
+                </optgroup>
                 {byKind.map((g) => (
                   <optgroup key={g.kind} label={kindLabels[g.kind]}>
                     {g.items.map((s) => (
@@ -695,9 +703,6 @@ export function Builder() {
                     ))}
                   </optgroup>
                 ))}
-                <optgroup label="Your own">
-                  <option value={CUSTOM_SLUG}>{state.style === CUSTOM_SLUG ? (style.name === "Custom" ? "Custom" : `Custom: ${style.name}`) : "Custom…"}</option>
-                </optgroup>
               </select>
               {!isRestyle && (
                 <>

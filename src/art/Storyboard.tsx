@@ -7,7 +7,7 @@ import { horizonAt, project, type ShotCamera } from "../lib/scene/camera";
 import type { Vec3 } from "../lib/scene/model";
 import { clamp, LAYER_HEIGHT, layerAspect, type Layer } from "../lib/sketch/layers";
 import { AI_DRAWN, DRAW_H, drawingKey, type Drawing } from "../lib/sketch/drawing";
-import { FIGURES } from "../lib/scene/model";
+import { FIGURES, MAX_STRETCH, MIN_STRETCH } from "../lib/scene/model";
 import { dragJoint, JOINTS, rigFor, shoulderOf, type Joint, type Pt, type Rig } from "../lib/scene/rig";
 import { parseSubject, type Glyph, type Pose, type SketchItem } from "../lib/sketch/parse";
 import { rng } from "./util";
@@ -748,7 +748,7 @@ export interface StoryboardProps {
   onRigChange?: (id: string, rig: Rig) => void;
 }
 
-type Drag = { mode: "move" | "scale" | "rotate" | "puppet"; id: string; start: { x: number; y: number }; layer: Layer; joint?: Joint; rig?: Rig };
+type Drag = { mode: "move" | "scale" | "width" | "height" | "rotate" | "puppet"; id: string; start: { x: number; y: number }; layer: Layer; joint?: Joint; rig?: Rig };
 
 /** The ground grid (y = 0) as seen through the camera, as one SVG path. Lines behind the camera are skipped. */
 function groundGrid(cam: ShotCamera, W: number, H: number): string {
@@ -870,11 +870,6 @@ export function Storyboard({
   const mainIsFigure = main && (main.item.glyph === "person" || main.item.glyph === "child" || main.item.glyph === "robot");
   const bust = shot === "close-up" || shot === "extreme-close-up";
 
-  const labels = new Map<string, { x: number; y: number; text: string }>();
-  const label = (item: SketchItem, x: number, y: number) => {
-    if (!labels.has(item.label)) labels.set(item.label, { x, y: Math.min(y, H - 18), text: item.count > 1 ? `${item.label} ×${item.count}` : item.label });
-  };
-
   const frontNodes: ReactNode[] = [];
   const backNodes: ReactNode[] = [];
   const skyNodes: ReactNode[] = [];
@@ -903,11 +898,9 @@ export function Storyboard({
         y = H * 0.52 + u * 1.6;
       }
       frontNodes.push(<g key={`t${i}`}>{topGlyph(item.glyph, x, y, u, c, idx === 0)}</g>);
-      label(item, x, y + u * (isBack ? 1.6 : 1.2) + 18);
     });
     held.forEach((item, i) => {
       frontNodes.push(<g key={`th${i}`}>{heldGlyph(item.glyph, mainX + u * (0.9 + i * 0.7), H * 0.52 + u * 0.3, u * 0.6, c)}</g>);
-      label(item, mainX + u * (1.2 + i * 0.7), H * 0.52 + u * 1.3);
     });
   } else {
     const hasTable = furniture.some((f) => f.item.glyph === "table");
@@ -919,7 +912,6 @@ export function Storyboard({
       if (item.glyph === "flower") x = mainX + (k - 1) * 0.25 * h - 0.6 * h;
       const b = item.glyph === "bed" && scene.pose === "lie" ? base + 0.25 * h : base;
       frontNodes.push(<g key={`f${i}`}>{frontGlyph(item.glyph, x, b, size, c, false)}</g>);
-      label(item, x, b + 30);
     });
     actors.forEach(({ item }, idx) => {
       const x = xs[idx]!;
@@ -934,7 +926,6 @@ export function Storyboard({
         const b = item.glyph === "fish" && scene.water ? horizon + (H - horizon) * 0.2 : base;
         frontNodes.push(<g key={`a${idx}`}>{frontGlyph(item.glyph, x, b, size, c, isMain)}</g>);
       }
-      label(item, x, figureBase + 30);
     });
     held.forEach((item, i) => {
       // Close-ups: props rise into frame beside the face.
@@ -949,7 +940,6 @@ export function Storyboard({
             ? handOf(mainX, base, h, scene.pose)
             : { x: mainX + (i + 1) * 0.3 * h, y: base };
       frontNodes.push(<g key={`h${i}`}>{heldGlyph(item.glyph, pos.x + (bust ? 0 : i * 0.05 * h), pos.y + (bust ? 0 : s * 0.4), s, c)}</g>);
-      label(item, pos.x, pos.y + (bust ? 30 : s + 26));
     });
 
     // Back layer along the horizon.
@@ -965,7 +955,6 @@ export function Storyboard({
         const wallItem = scene.interior && (item.glyph === "window" || item.glyph === "door");
         const b = wallItem ? (item.glyph === "door" ? horizon : horizon - 0.08 * H) : horizon + (scene.water ? 0 : 4);
         backNodes.push(<g key={`b${item.label}${k}`}>{backGlyph(item.glyph, x, b, s, c, scene.interior)}</g>);
-        if (k === 0) label(item, x, b + 26);
       }
     });
 
@@ -977,7 +966,6 @@ export function Storyboard({
       .forEach((item, i) => {
         if (item.glyph === "star") {
           for (let k = 0; k < 14; k++) skyNodes.push(<g key={`s${k}`}>{skyGlyph("star", rand() * W, rand() * skyTop * 0.85, 14 + rand() * 14, c, k)}</g>);
-          label(item, W * 0.5, skyTop * 0.2);
           return;
         }
         const spots = { sun: [0.76, 0.3], moon: [0.78, 0.26], planet: [0.22, 0.24], cloud: [0.35, 0.22], bird: [0.55, 0.2], plane: [0.4, 0.14] } as Record<string, [number, number]>;
@@ -989,7 +977,6 @@ export function Storyboard({
         for (let k = 0; k < Math.min(item.count, 5); k++) {
           skyNodes.push(<g key={`k${i}${k}`}>{skyGlyph(item.glyph, fx * W + k * size * 1.3, y + (k % 2) * size * 0.4, size, c, k)}</g>);
         }
-        label(item, fx * W + size * 0.9, setting ? horizon - size * 0.8 : y + size * 0.9 + 18);
       });
   }
 
@@ -1012,20 +999,8 @@ export function Storyboard({
   // Text reads at a similar size whether the frame is tall or wide.
   const fs = Math.round(Math.min(Math.max(14 + 10 * (H / W), 18), 32));
   const font = { fontFamily: "var(--font-mono)", fontSize: fs };
-  // Nudge labels up until they clear the ones already placed (mono glyphs are ~0.6em wide).
-  const placed: { x: number; y: number; text: string }[] = [];
-  // Subjects turned or panned out of view keep no label at the frame edge.
-  const inView = (l: Layer) => l.x > -0.05 && l.x < 1.05 && l.y > -0.3 && l.y < 1.3;
-  // Placed text is its own label.
-  const layerLabels = layers.filter((l) => inView(l) && l.glyph !== "text").map((l) => ({ x: l.x * W, y: l.y * H + (LAYER_HEIGHT[l.glyph] * l.scale * H) / 2 + fs * 1.3, text: l.label }));
-  [...layerLabels, ...labels.values()].forEach((l) => {
-    l.x = Math.min(Math.max(l.x, 80), W - 80);
-    const clash = () => placed.some((p) => Math.abs(p.x - l.x) < 0.3 * fs * (p.text.length + l.text.length) + fs * 0.5 && Math.abs(p.y - l.y) < fs * 1.2);
-    for (let tries = 0; clash() && tries < 6; tries++) l.y -= fs * 1.3;
-    placed.push(l);
-  });
 
-  // ——— Layer editing: drag to move, corner to scale, top handle to rotate ———
+  // ——— Layer editing: drag to move, corner to scale, edge to stretch one way, top handle to rotate ———
   const editable = Boolean(onLayerChange);
   const toLocal = (e: PointerEvent) => {
     const m = layersRef.current?.getScreenCTM();
@@ -1037,8 +1012,9 @@ export function Storyboard({
   const copies = (l: Layer) => Math.max(1, l.count ?? 1);
   const sizeOf = (l: Layer) => {
     const hh = LAYER_HEIGHT[l.glyph] * l.scale * H;
-    const one = hh * layerAspect(l.glyph, l.label, l.image?.ratio);
-    return { hh, one, ww: one * copies(l) + one * 0.15 * (copies(l) - 1) };
+    const stretch = l.stretch ?? 1;
+    const one = hh * layerAspect(l.glyph, l.label, l.image?.ratio) * stretch;
+    return { hh, one, stretch, ww: one * copies(l) + one * 0.15 * (copies(l) - 1) };
   };
   const begin = (e: PointerEvent, mode: Drag["mode"], l: Layer) => {
     if (!editable) return;
@@ -1078,14 +1054,14 @@ export function Storyboard({
     const cy = d.layer.y * H;
     if (d.mode === "puppet") {
       // The pointer, back into the figure's own units: unrotate, unflip, from its first copy's base.
-      const { hh, one } = sizeOf(d.layer);
+      const { hh, one, stretch } = sizeOf(d.layer);
       const a = (-d.layer.rotation * Math.PI) / 180;
       const dx = p.x - cx;
       const dy = p.y - cy;
       const ux = (dx * Math.cos(a) - dy * Math.sin(a)) * (d.layer.flip ? -1 : 1);
       const uy = dx * Math.sin(a) + dy * Math.cos(a);
       const off = (-(copies(d.layer) - 1) / 2) * one * 1.15;
-      onRigChange?.(d.id, dragJoint(d.rig!, d.joint!, { x: (ux - off) / hh, y: (hh / 2 - uy) / hh }));
+      onRigChange?.(d.id, dragJoint(d.rig!, d.joint!, { x: (ux - off) / (hh * stretch), y: (hh / 2 - uy) / hh }));
       return;
     }
     if (!onLayerChange) return;
@@ -1094,6 +1070,19 @@ export function Storyboard({
     } else if (d.mode === "scale") {
       const before = Math.hypot(d.start.x - cx, d.start.y - cy) || 1;
       onLayerChange(d.id, { scale: clamp((d.layer.scale * Math.hypot(p.x - cx, p.y - cy)) / before, 0.05, 8) });
+    } else if (d.mode === "width" || d.mode === "height") {
+      // Distance from the centre along the subject's own (rotated) axis, now and at the start of the drag.
+      const a = (d.layer.rotation * Math.PI) / 180;
+      const along = (q: { x: number; y: number }) =>
+        d.mode === "width" ? Math.abs((q.x - cx) * Math.cos(a) + (q.y - cy) * Math.sin(a)) : Math.abs(-(q.x - cx) * Math.sin(a) + (q.y - cy) * Math.cos(a));
+      const k = Math.max(along(p), 1) / Math.max(along(d.start), 1);
+      const stretch = d.layer.stretch ?? 1;
+      if (d.mode === "width") onLayerChange(d.id, { stretch: clamp(stretch * k, MIN_STRETCH, MAX_STRETCH) });
+      else {
+        // Taller or shorter at the same width: the height scales and the stretch makes up the difference.
+        const scale = clamp(d.layer.scale * k, 0.05, 8);
+        onLayerChange(d.id, { scale, stretch: clamp((stretch * d.layer.scale) / scale, MIN_STRETCH, MAX_STRETCH) });
+      }
     } else {
       const delta = (Math.atan2(p.y - cy, p.x - cx) - Math.atan2(d.start.y - cy, d.start.x - cx)) * (180 / Math.PI);
       let rotation = d.layer.rotation + delta;
@@ -1169,10 +1158,10 @@ export function Storyboard({
             // 2D board: graph paper, nothing in perspective.
             <g stroke={c.ink}>
               {Array.from({ length: Math.ceil(W / 50) + 1 }, (_, i) => (
-                <line key={`gx${i}`} x1={i * 50} y1={0} x2={i * 50} y2={H} strokeOpacity={i % 4 === 0 ? 0.3 : 0.13} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+                <line key={`gx${i}`} x1={i * 50} y1={0} x2={i * 50} y2={H} strokeOpacity={i % 4 === 0 ? 0.15 : 0.06} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
               ))}
               {Array.from({ length: Math.ceil(H / 50) + 1 }, (_, i) => (
-                <line key={`gy${i}`} x1={0} y1={i * 50} x2={W} y2={i * 50} strokeOpacity={i % 4 === 0 ? 0.3 : 0.13} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
+                <line key={`gy${i}`} x1={0} y1={i * 50} x2={W} y2={i * 50} strokeOpacity={i % 4 === 0 ? 0.15 : 0.06} strokeWidth={i % 4 === 0 ? 2 : 1.5} />
               ))}
             </g>
           ) : camera ? (
@@ -1181,13 +1170,13 @@ export function Storyboard({
               {skyNodes}
               <rect x={-W} y={Math.max(horizon, -H)} width={W * 3} height={H * 3} fill={pal.bg} />
               <rect x={-W} y={Math.max(horizon, -H)} width={W * 3} height={H * 3} fill={scene.interior ? pal.secondary : pal.primary} fillOpacity={0.35} />
-              <path d={groundGrid(camera, W, H)} fill="none" stroke={c.ink} strokeOpacity={0.18} strokeWidth={2} />
+              <path d={groundGrid(camera, W, H)} fill="none" stroke={c.ink} strokeOpacity={0.09} strokeWidth={2} />
               {camHorizon !== null && camHorizon !== undefined && camHorizon > -0.1 && camHorizon < 1.1 && (
                 <line x1={-W} y1={horizon} x2={W * 2} y2={horizon} stroke={c.ink} strokeOpacity={0.5} strokeWidth={3} />
               )}
             </>
           ) : overhead ? (
-            <g stroke={c.ink} strokeOpacity={0.18} strokeWidth={2}>
+            <g stroke={c.ink} strokeOpacity={0.09} strokeWidth={2}>
               <rect width={W} height={H} fill={groundFill} fillOpacity={0.35} stroke="none" />
               {Array.from({ length: 12 }, (_, i) => (
                 <line key={`v${i}`} x1={(i * W) / 11} y1={0} x2={(i * W) / 11} y2={H} />
@@ -1209,7 +1198,7 @@ export function Storyboard({
                   ))}
                 </g>
               )}
-              <g stroke={c.ink} strokeOpacity={0.16} strokeWidth={2}>
+              <g stroke={c.ink} strokeOpacity={0.08} strokeWidth={2}>
                 {floorLines.map((dx) => (
                   <line key={dx} x1={vx} y1={horizon} x2={vx + dx * 2.2} y2={H * 1.6} />
                 ))}
@@ -1228,7 +1217,7 @@ export function Storyboard({
           )}
           <g ref={layersRef}>
             {layers.map((l, i) => {
-              const { hh, ww, one } = sizeOf(l);
+              const { hh, ww, one, stretch } = sizeOf(l);
               const n = copies(l);
               const front = i === layers.length - 1;
               const isText = l.glyph === "text";
@@ -1276,7 +1265,7 @@ export function Storyboard({
                       </g>
                     )
                   ) : Array.from({ length: n }, (_, k) => (
-                    <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)`}>
+                    <g key={k} transform={`translate(${(k - (n - 1) / 2) * one * 1.15} 0)${stretch !== 1 ? ` scale(${stretch} 1)` : ""}`}>
                       {layerGlyph(l.glyph, hh, c, front && k === 0, l.pose ?? "stand", l.facing, AI_DRAWN.has(l.glyph) ? drawings[drawingKey(l.label)] : undefined, l.rig)}
                     </g>
                   ))}
@@ -1304,14 +1293,6 @@ export function Storyboard({
           {(state.lens === "14" || state.lens === "24") && <rect width={W} height={H} fill="url(#sb-vignette)" />}
 
           </g>
-          {/* Labels */}
-          <g {...font} textAnchor="middle" fill={c.ink} stroke={pal.bg} strokeWidth={6} paintOrder="stroke" strokeLinejoin="round" pointerEvents="none">
-            {placed.map((l, i) => (
-              <text key={`${i}${l.text}`} x={l.x} y={l.y}>
-                {l.text}
-              </text>
-            ))}
-          </g>
           {selected &&
             (() => {
               const { hh, ww } = sizeOf(selected);
@@ -1324,7 +1305,7 @@ export function Storyboard({
                 const outline = <polygon points={corners.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#3B82F6" strokeWidth={2} strokeDasharray="6 8" opacity={0.6} />;
                 if (!FIGURES.has(selected.glyph)) return outline;
                 // Pins on the joints of the first figure (a group shares one pose).
-                const { one } = sizeOf(selected);
+                const { one, stretch } = sizeOf(selected);
                 const off = (-(copies(selected) - 1) / 2) * one * 1.15;
                 const rig = selected.rig ?? rigFor(selected.pose ?? "stand");
                 const sx = selected.flip ? -1 : 1;
@@ -1333,7 +1314,7 @@ export function Storyboard({
                   <g>
                     {outline}
                     {JOINTS.map((j) => {
-                      const p = at(sx * (off + rig[j].x * hh), hh / 2 - rig[j].y * hh);
+                      const p = at(sx * (off + rig[j].x * hh * stretch), hh / 2 - rig[j].y * hh);
                       const end = j === "head" || j === "hip" || j.startsWith("hand") || j.startsWith("foot");
                       return (
                         <circle
@@ -1373,9 +1354,36 @@ export function Storyboard({
                       style={{ cursor: "nwse-resize" }}
                       onPointerDown={(e) => begin(e, "scale", selected)}
                     >
-                      <title>Drag to scale</title>
+                      <title>Drag to scale both ways</title>
                     </rect>
                   ))}
+                  {([
+                    ["width", at(-ww / 2, 0)],
+                    ["width", at(ww / 2, 0)],
+                    ["height", at(0, -hh / 2)],
+                    ["height", at(0, hh / 2)],
+                  ] as const).map(([mode, p], i) => {
+                    // A bar along the edge, turned with the subject; the cursor follows the nearer axis.
+                    const long = handle * 1.6;
+                    const turned = Math.abs(Math.sin(a)) > Math.SQRT1_2;
+                    return (
+                      <rect
+                        key={`e${i}`}
+                        x={p.x - (mode === "width" ? handle / 3 : long / 2)}
+                        y={p.y - (mode === "width" ? long / 2 : handle / 3)}
+                        width={mode === "width" ? (handle * 2) / 3 : long}
+                        height={mode === "width" ? long : (handle * 2) / 3}
+                        transform={`rotate(${selected.rotation} ${p.x} ${p.y})`}
+                        fill="#FFFFFF"
+                        stroke="#3B82F6"
+                        strokeWidth={3}
+                        style={{ cursor: (mode === "width") !== turned ? "ew-resize" : "ns-resize" }}
+                        onPointerDown={(e) => begin(e, mode, selected)}
+                      >
+                        <title>{mode === "width" ? "Drag to stretch sideways" : "Drag to stretch up and down"}</title>
+                      </rect>
+                    );
+                  })}
                   <circle cx={knob.x} cy={knob.y} r={handle * 0.75} fill="#FFFFFF" stroke="#3B82F6" strokeWidth={3} style={{ cursor: "grab" }} onPointerDown={(e) => begin(e, "rotate", selected)}>
                     <title>Drag to rotate (Shift snaps to 15°)</title>
                   </circle>
@@ -1386,7 +1394,7 @@ export function Storyboard({
 
         {/* Framing grid and notes (not rotated); they never take the pointer */}
         <g pointerEvents="none">
-        <g stroke={hudInk} strokeOpacity={0.35} strokeWidth={2} strokeDasharray="10 10">
+        <g stroke={hudInk} strokeOpacity={0.2} strokeWidth={2} strokeDasharray="10 10">
           <line x1={W / 3} y1={0} x2={W / 3} y2={H} />
           <line x1={(2 * W) / 3} y1={0} x2={(2 * W) / 3} y2={H} />
           <line x1={0} y1={H / 3} x2={W} y2={H / 3} />

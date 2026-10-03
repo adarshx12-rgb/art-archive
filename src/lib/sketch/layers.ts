@@ -15,6 +15,8 @@ export interface Layer {
   x: number;
   y: number;
   scale: number;
+  /** Width as a multiple of the natural width; unset is 1. */
+  stretch?: number;
   /** Degrees, clockwise. May go past 360 (shown as turns + degrees). */
   rotation: number;
   flip: boolean;

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCraft } from "../src/content/craft";
+import { inspiration } from "../src/content/inspiration";
 import { getStyle } from "../src/content/styles";
 import { getTemplate, slotText } from "../src/content/templates";
 import { checkBrief, quoted, stripSlop, typedWords, type Brief } from "../src/lib/art/brief";
@@ -50,6 +51,7 @@ Order:
 Rules:
 - Keep every subject with its details, every colour with its name, hex and rough share, the style name, and any camera, lighting or film setup the facts set. Never add people, animals, objects or scenery beyond the facts and the concept.
 - Quote only the visitor's own words. No other text, slogans, dates, captions or numbers in the image.
+- If inspiration is given (what the best real examples of this style do), make the image, colour and finish the way it describes, and never include anything listed in its tells.
 - Copy the "Attach image…" line and every "Image N:" line word for word, as their own lines, right after the hero.
 - For a restyle, start with the instruction to restyle the provided image, keep everything the facts say to preserve, and describe only the treatment, colour and finish.
 - For a video, add one line on how the key frame moves, then the facts' camera, motion and duration.
@@ -117,6 +119,12 @@ const missing = (prompt: string, checks: ReturnType<typeof mustInclude>) => {
   return checks.filter((c) => !c.any.some((w) => text.includes(w))).map((c) => c.label);
 };
 
+/** How the art director should make and finish the image; the moves are already in the concept. */
+function inspirationInput(slug: string) {
+  const i = inspiration[slug];
+  return i ? { inspiration: { image: i.image, colour: i.colour, finish: i.finish, tells: i.tells } } : {};
+}
+
 /** The concept as the model sees it: craft ids become their phrases. */
 const forModel = (b: Brief) => ({ ...b, craft: b.craft.map((id) => getCraft(id)?.phrase).filter(Boolean) });
 
@@ -142,7 +150,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     // Typography only matters when the facts mention lettering; otherwise it invites text into the image.
     style: { name: style.name, cues: style.prompt.cues, ...(/Lettering:/.test(facts) ? { typography: style.look.typography } : {}) },
     facts,
-    ...(brief ? { concept: forModel(brief) } : {}),
+    ...(brief ? { concept: forModel(brief), ...inspirationInput(style.slug) } : {}),
   };
   const system = brief ? DIRECTOR : SYSTEM;
   const models = env.OPENROUTER_PROMPT_MODELS;

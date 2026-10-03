@@ -177,6 +177,18 @@ describe("prompt task", () => {
       expect(sent).toContain("high-contrast photocopier blow-up");
     });
 
+    it("gives the art director the style's inspiration when there is one", async () => {
+      const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: "Grunge poster. A boxer. Last Round." })) });
+      const grunge = "s=grunge&fm=poster&tx=Last%20Round&sc=" + encodeURIComponent("person~boxer~0~0~0~0~0~0~1~stand~1");
+      await perfectPrompt(env(), { query: grunge, brief: { ...brief, hero: { ...brief.hero, subject: "boxer" }, type: '"Last Round" scrawled across the top' } });
+      const sent = JSON.stringify(calls[0]!.body);
+      expect(sent).toContain("digital grunge-texture overlay");
+      // Punk has no inspiration yet, so none is sent.
+      const punkCalls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+      await perfectPrompt(env(), { query: punk, brief });
+      expect(JSON.stringify(punkCalls[0]!.body)).not.toContain('"inspiration"');
+    });
+
     it("rejects a brief that no longer fits the settings, without calling a model", async () => {
       const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
       await expect(perfectPrompt(env(), { query: punk, brief: { ...brief, hero: { ...brief.hero, subject: "a dragon" } } })).rejects.toThrow(/no longer fits/);

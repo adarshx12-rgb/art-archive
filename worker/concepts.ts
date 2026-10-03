@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCraft, craftFor } from "../src/content/craft";
+import { inspirationFor } from "../src/content/inspiration";
 import { getStyle } from "../src/content/styles";
 import { formatInfo, getTemplate } from "../src/content/templates";
 import { checkBrief, checkSet, tidyBrief, typedWords, type Brief } from "../src/lib/art/brief";
@@ -44,6 +45,8 @@ export const BriefSchema = z.object({
 const ConceptsOut = z.object({ concepts: z.array(BriefSchema).describe("Exactly three concepts, each a genuinely different idea.") });
 
 const SYSTEM = `You are a senior graphic designer and art director. The visitor has no design training: they gave you a style, maybe a format, some subjects placed on a sketch, maybe a few words to letter, and a palette. Your job is to make the design decisions they can't, and propose three genuinely different concepts.
+
+If the facts include inspiration, start there: it distils what the best real examples of this style do, studied from real references. Base at least two of the three concepts on its moves, adapted to the visitor's subject; make the image, colour and finish the way it describes; and never do anything listed in its tells.
 
 Method, for each concept:
 1. Find the one idea: what the piece is about, and the single image that says it.
@@ -90,6 +93,7 @@ export function conceptFacts(state: BuilderState, exclude: string[]) {
     words,
     palette: keepColours ? "keep the source's own colours" : resolvePalette(state, style).colours.map((c) => ({ name: c.name, hex: c.hex, role: c.role, share: c.share })),
     facts: composePrompt(state).prompt,
+    inspiration: inspirationFor(style.slug, words.length > 0),
     // Lettering devices only make sense when there are words to letter.
     craft: craftFor(style)
       .filter((c) => words.length || !c.lettering)

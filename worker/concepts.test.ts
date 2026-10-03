@@ -37,6 +37,15 @@ describe("conceptFacts", () => {
     expect(conceptFacts(silent, [])!.craft.some((c) => ["giant-glyph", "stacked-column", "type-behind", "type-as-image"].includes(c.id))).toBe(false);
   });
 
+  it("passes the style's inspiration, with lettering moves only when there are words", () => {
+    const worded = decodeState(new URLSearchParams("s=grunge&fm=poster&q=a%20boxer&tx=Last%20Round")).state;
+    const silent = decodeState(new URLSearchParams("s=grunge&fm=poster&q=a%20boxer")).state;
+    expect(conceptFacts(worded, [])!.inspiration?.moves.length).toBeGreaterThan(0);
+    expect(conceptFacts(worded, [])!.inspiration).toHaveProperty("lettering");
+    expect(conceptFacts(silent, [])!.inspiration).not.toHaveProperty("lettering");
+    expect(conceptFacts(state, [])!.inspiration).toBeNull();
+  });
+
   it("adds motion notes to craft phrases for video", () => {
     const video = decodeState(new URLSearchParams("s=punk&o=video&q=a%20dancer")).state;
     expect(conceptFacts(video, [])!.craft.find((c) => c.id === "photocopy-blowup")!.phrase).toMatch(/in motion: copier flicker/);

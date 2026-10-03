@@ -1251,3 +1251,138 @@ Avoid: the likeness of a real person, copying any existing painting, even or fla
 ```
 
 **If it misses:** Make the shadows deeper and the window beam harder, so most of the canvas falls into near-black and only faces, hands, the book and cloth catch the light. Keep the figures and the room as they are.
+
+## 45. Editorial Poster
+
+- Slug: `editorial-poster`
+- Artwork: Newspaper front-page fan poster (Offset print on newsprint)
+- Format: tall 2:3
+- Save as: `covers-src/editorial-poster.png`
+
+```text
+An original poster laid out like the front page of a newspaper, printed in black ink on off-white newsprint.
+
+Composition: a towering ultra-condensed masthead fills the full width of the top fifth. Below it, a full-width solid black bar carries a short subhead in white. Under the bar, two tall photo panels sit side by side on a column grid, separated by a thin gutter: the left panel shows a rain-wet city street at night seen from below, the right panel a lone streetlamp against a dark sky. A boxer in a hooded robe, cut out from his photograph, stands in front of both panels, so his shoulders and raised gloves break over their edges and his body overlaps the columns below. Under the panels, narrow columns of grey rules stand in for text, with no readable words. The boxer is the clear focal point; the masthead is the second thing you read.
+
+Typography: set exactly this text: "LAST ROUND" as the masthead in ultra-condensed heavy sans-serif capitals; "ONE NIGHT ONLY" as the white subhead on the black bar in bold condensed sans-serif capitals. No other words anywhere.
+
+Colours: newsprint white #EEECE6 ground, press black #0D0D0D for the type, bar and shadows, halftone grey #8A8A86 in the mid-tones, and one small flag red #C8201E rule beside the subhead.
+
+Light: hard, high-contrast light that posterises the boxer's shadows into flat black shapes with a few crisp white highlights.
+
+Finish: offset print on newsprint: a visible halftone dot in the grey areas, slightly uneven black ink, faint paper grain.
+
+Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame, crumpled paper or mockup.
+
+Avoid: the likeness of a real person, real newspaper or brand names, paragraphs of fake text, full-colour photography, soft gradients.
+```
+
+**If it misses:** Push the boxer further out of the panels, so his gloves and shoulders clearly overlap the panel edges and the masthead, and keep the area under the panels as plain grey rules with no readable text. Keep the layout and lettering as they are.
+
+## 46. Concert Poster
+
+- Slug: `concert-poster`
+- Artwork: Contemporary tour poster (Black-and-white live photography with layered type)
+- Format: tall 2:3
+- Save as: `covers-src/concert-poster.png`
+
+```text
+An original tour poster for an invented singer, built from black-and-white live concert photography on a near-black ground.
+
+Composition: a giant title in heavy white condensed sans-serif capitals spans the full width of the upper half, split over two lines. The photography is woven through it in depth: a wide curved LED screen showing the singer's silhouette passes in front of the first line, hiding the middle of its letters, while the stage below sits behind the second line. Far down on the stage, a lone singer stands small under one hard spotlight that cuts down through thick haze. Across the bottom third, the crowd fills the foreground in dark silhouette, one fan's raised arm crossing the lower edge of the title. The weave between the letters and the photographs is the clear idea; the spotlit singer is the focal point.
+
+Typography: set exactly this text: "NOCTURNE" as the first line of the title and "LIVE" as the second line. No other words, dates, logos, barcodes or icons anywhere.
+
+Colours: stage black #0B0B0C over most of the frame, spotlight white #EDEDEA for the title and highlights, haze grey #6E6E70 in the smoke and screen, and one soft flare amber #E8A33D lens flare in the upper right corner.
+
+Light: one hard spotlight from above, haze glowing in its beam, everything outside it falling into deep black.
+
+Finish: real concert photography: fine film grain, a few dust specks and faint scratches on the black areas.
+
+Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame or mockup.
+
+Avoid: the likeness of a real person, real artist or brand names, colourful stage lighting, small text in the corners, clean digital gradients.
+```
+
+**If it misses:** Make the weave clearer: the curved screen must sit in front of the first line of the title, hiding part of its letters, and the stage must sit behind the second line. Keep the lettering and colours as they are.
+
+## 47. Film Still Poster
+
+- Slug: `film-still-poster`
+- Artwork: Alternative movie poster (Black-and-white film still with a spot-colour title)
+- Format: tall 2:3
+- Save as: `covers-src/film-still-poster.png`
+
+```text
+An original alternative movie poster for an invented 1950s film, made from a black-and-white film still with the title added in one spot colour.
+
+Composition: a man in a loose white kurta and dhoti stands on the veranda of an old colonial mansion at dusk, leaning against a carved stone pillar on the right, arms folded, looking away from the camera. He fills the right two-thirds of the frame from head to ankles. Behind him, a tall arched doorway glows faintly and an old street lamp hangs in the upper left. The left third stays darker, open for the title. The figure is the focal point; the red title is the only colour.
+
+Typography: set exactly this text: "MONSOON", stacked one letter per line down the left side, filling the full height, in heavy grotesque sans-serif capitals. No other words anywhere.
+
+Colours: film black #141414 in the shadows, silver white #E6E4DF in his clothes and the lit pillar, still grey #7A7A78 in the set, and title red #C8161D on the title letters only.
+
+Light: soft cinematic light from the left, deep shadows in the architecture.
+
+Finish: a real black-and-white film frame: film grain, a soft motion blur and a faint ghosted double edge on the figure; the red title printed with grainy, slightly bleeding ink.
+
+Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame or mockup.
+
+Avoid: the likeness of a real actor, any real film's title or still, full colour anywhere but the title, crisp digital sharpness, small text blocks.
+```
+
+**If it misses:** Make the title one letter per line, filling the full height of the left side in red, and keep everything else black and white with a soft ghosted edge on the figure. Keep the scene as it is.
+
+## 48. Streetwear Poster
+
+- Slug: `streetwear-poster`
+- Artwork: Streetwear quote poster (Cut-out classical painting with clashing type)
+- Format: tall 2:3
+- Save as: `covers-src/streetwear-poster.png`
+
+```text
+An original streetwear quote poster that remixes a classical Indian oil painting with a loud, modern quote.
+
+Composition: a flat poster-red ground fills the sheet. A giant word in ultra-condensed white capitals runs the full height of the left half, turned on its side. In front of it, cut out from an invented 19th-century Indian oil painting, a young royal archer in gold armour and a jewelled turban stands from the waist up in the lower left, holding a bow, looking calmly to the right; the white strokes of the giant word pass over his shoulder and arm. Down the right half, the rest of the quote is stacked line by line, each line in a different typeface. The archer and the giant word are the focal point; the quote stack is the second thing you read.
+
+Typography: set exactly this text, and nothing else: "LOUD" as the giant full-height word, in ultra-condensed heavy white sans-serif capitals; then stacked down the right half: "STAY" in condensed white sans-serif capitals, "NO MATTER" in heavy acid-yellow italic capitals, and "what." in a white decorative display face.
+
+Colours: poster red #C4161C for the ground, paper white #EFEDE6 for most of the type, acid yellow #E3E934 on one line only, ink black #111111 in the shadows of the cut-out.
+
+Light: flat, even print light; the archer keeps the warm painted light of his source painting.
+
+Finish: a printed poster that has been folded: two faint fold creases, paper grain, and photocopy grit with a coarse halftone on the cut-out figure, which is slightly posterised.
+
+Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame or mockup.
+
+Avoid: real deities or real people, copying any existing painting, real brand or song names, muted colour, a single clean typeface, glossy 3D rendering.
+```
+
+**If it misses:** Make the type clash harder: every line of the quote in a clearly different typeface, size and colour, and let the giant white word pass over the archer's shoulder. Keep the archer, the red ground and the lettering as they are.
+
+## 49. Shoegaze
+
+- Slug: `shoegaze`
+- Artwork: Alternative record sleeve (Grainy night photograph, photocopied)
+- Format: tall 2:3
+- Save as: `covers-src/shoegaze.png`
+
+```text
+An original record sleeve for an invented alternative band, made from a grainy night photograph that has been photocopied and faded.
+
+Composition: a young woman's face rises out of black water in the right half of the frame, eyes closed, chin and mouth still under the surface, wet hair spreading around her and dissolving into the dark. She is cropped close, from the forehead to just below the waterline. A soft second, ghosted copy of her face drifts slightly to the right, as if the camera moved. The left side and the top are deep, quiet darkness. Her face is the only lit thing and the clear focal point.
+
+Typography: set exactly this text: "undertow" as one small line in a thin elegant italic serif, in faded mint, near the top left. No other words anywhere.
+
+Colours: deep black #0E1214 over most of the frame, a cold sea-teal #2E6F73 tint in the water and shadows, faded mint white #C9D3CC in the highlights of her face, and a faint bruise violet #5B4A6B in the lower edge.
+
+Light: dim and underexposed; only her face catches a soft glow from above.
+
+Finish: heavy film grain and photocopy noise, soft motion blur, a light leak in the upper right corner, faint water stains on the sleeve.
+
+Format: tall portrait (2:3). Show the flat artwork itself, edge to edge, with no record, wall, frame or mockup.
+
+Avoid: the likeness of a real person, copying any real album cover, bright saturated colour, crisp clean digital photography, cluttered layouts.
+```
+
+**If it misses:** Make it darker and dreamier: push most of the frame into near-black, add more grain and blur, and keep only her face softly lit. Keep the lettering and colours as they are.

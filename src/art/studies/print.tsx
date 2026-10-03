@@ -80,6 +80,160 @@ export const printStudies: Record<string, Renderer> = {
     </>
   ),
 
+  "editorial-poster": ([paper, ink, grey, red], u) => (
+    <>
+      <rect width={W} height={H} fill={paper} />
+      <text x={200} y={92} textAnchor="middle" fontFamily={sans} fontWeight={900} fontSize={84} fill={ink} transform="scale(1 1.3)" style={{ transformOrigin: "200px 60px" }} letterSpacing={-3}>
+        DAILY
+      </text>
+      <rect x={30} y={112} width={340} height={26} fill={ink} />
+      <text x={200} y={130} textAnchor="middle" fontFamily={sans} fontWeight={700} fontSize={13} letterSpacing={2} fill={paper}>
+        LATE EDITION
+      </text>
+      <rect x={30} y={150} width={164} height={190} fill={grey} />
+      <rect x={206} y={150} width={164} height={190} fill={ink} />
+      {range(5).map((i) => (
+        <rect key={i} x={46 + i * 24} y={180 + (i % 2) * 20} width={14} height={160 - (i % 2) * 20} fill={ink} opacity={0.35} />
+      ))}
+      <circle cx={318} cy={196} r={16} fill={paper} />
+      {/* The figure breaks out over both panels and the columns below. */}
+      <path d="M200 176 C 176 176, 168 204, 178 222 C 140 236, 118 290, 112 352 L 98 452 L 150 452 L 166 372 L 200 400 L 234 372 L 250 452 L 302 452 L 288 352 C 282 290, 260 236, 222 222 C 232 204, 224 176, 200 176 Z" fill={ink} stroke={paper} strokeWidth={5} />
+      <path d="M200 252 L 186 286 L 200 312 L 214 286 Z" fill={paper} />
+      <rect x={312} y={426} width={58} height={4} fill={red} />
+      {range(8).map((i) => (
+        <rect key={i} x={30} y={352 + i * 12} width={i === 7 ? 40 : 60} height={4} fill={ink} opacity={0.45} />
+      ))}
+      {range(8).map((i) => (
+        <rect key={i} x={310} y={352 + i * 12} width={i === 7 ? 30 : 60} height={4} fill={ink} opacity={0.45} />
+      ))}
+      <Grain u={u} opacity={0.14} />
+    </>
+  ),
+
+  "concert-poster": ([black, white, haze, amber], u) => (
+    <>
+      <defs>
+        <linearGradient id={`${u}beam`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={white} stopOpacity={0.55} />
+          <stop offset="1" stopColor={white} stopOpacity={0} />
+        </linearGradient>
+        <radialGradient id={`${u}flare`}>
+          <stop offset="0" stopColor={amber} stopOpacity={0.8} />
+          <stop offset="1" stopColor={amber} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={black} />
+      <text x={200} y={150} textAnchor="middle" fontFamily={sans} fontWeight={900} fontSize={150} fill={white} letterSpacing={-6}>
+        LIVE
+      </text>
+      <path d="M170 0 L 230 0 L 300 420 L 100 420 Z" fill={`url(#${u}beam)`} />
+      {/* The screen band passes in front of the title: the weave. */}
+      <rect x={60} y={98} width={280} height={44} fill={haze} />
+      <rect x={60} y={98} width={280} height={44} fill={black} opacity={0.35} />
+      <path d="M200 250 C 190 250, 186 262, 190 270 C 176 276, 170 300, 172 330 L 166 400 L 186 400 L 192 350 L 200 352 L 208 350 L 214 400 L 234 400 L 228 330 C 230 300, 224 276, 210 270 C 214 262, 210 250, 200 250 Z" fill={black} />
+      <path d="M210 276 L 248 226 L 254 230 L 220 284 Z" fill={black} />
+      {range(16).map((i) => {
+        const r = rng(i + 40);
+        const x = i * 26 + r() * 10;
+        const h = 30 + r() * 30;
+        return <ellipse key={i} cx={x} cy={H - h / 2} rx={16} ry={h} fill={haze} opacity={0.5} />;
+      })}
+      <path d="M60 500 L 70 430 L 78 500 Z M330 500 L 342 420 L 350 500 Z" fill={haze} />
+      <circle cx={318} cy={60} r={60} fill={`url(#${u}flare)`} />
+      <Grain u={u} opacity={0.22} />
+    </>
+  ),
+
+  "film-still-poster": ([black, silver, grey, red], u) => (
+    <>
+      <defs>
+        <linearGradient id={`${u}set`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={black} />
+          <stop offset="1" stopColor={grey} />
+        </linearGradient>
+        <filter id={`${u}ghost`}>
+          <feGaussianBlur stdDeviation={1.2} />
+        </filter>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${u}set)`} />
+      <rect x={330} y={0} width={34} height={H} fill={silver} opacity={0.35} />
+      <rect x={322} y={430} width={50} height={70} fill={silver} opacity={0.3} />
+      <circle cx={150} cy={90} r={22} fill={silver} opacity={0.5} />
+      {/* The figure, with a faint ghosted copy offset to one side. */}
+      {[8, 0].map((dx) => (
+        <path
+          key={dx}
+          d={`M${250 + dx} 110 C ${236 + dx} 110, ${230 + dx} 126, ${236 + dx} 140 C ${210 + dx} 150, ${200 + dx} 200, ${204 + dx} 270 L ${196 + dx} 470 L ${304 + dx} 470 L ${296 + dx} 270 C ${300 + dx} 200, ${290 + dx} 150, ${264 + dx} 140 C ${270 + dx} 126, ${264 + dx} 110, ${250 + dx} 110 Z`}
+          fill={silver}
+          opacity={dx ? 0.3 : 0.92}
+          filter={`url(#${u}ghost)`}
+        />
+      ))}
+      {"FILM".split("").map((ch, i) => (
+        <text key={i} x={36} y={140 + i * 104} fontFamily={sans} fontWeight={900} fontSize={118} fill={red} opacity={0.92}>
+          {ch}
+        </text>
+      ))}
+      <Grain u={u} opacity={0.3} freq={1.1} />
+    </>
+  ),
+
+  "streetwear-poster": ([red, white, yellow, ink], u) => (
+    <>
+      <rect width={W} height={H} fill={red} />
+      <line x1={0} y1={250} x2={W} y2={250} stroke={ink} strokeWidth={1} opacity={0.15} />
+      <line x1={200} y1={0} x2={200} y2={H} stroke={white} strokeWidth={1} opacity={0.2} />
+      <text x={-470} y={150} fontFamily={sans} fontWeight={900} fontSize={190} fill={white} transform="rotate(-90) scale(1 0.8)" letterSpacing={-8}>
+        LOUD
+      </text>
+      <text x={196} y={80} fontFamily={sans} fontWeight={800} fontSize={44} fill={white} transform="scale(0.8 1)" style={{ transformOrigin: "196px 80px" }}>
+        STAY
+      </text>
+      <text x={196} y={140} fontFamily={sans} fontStyle="italic" fontWeight={900} fontSize={46} fill={yellow}>
+        NO MATTER
+      </text>
+      <text x={196} y={196} fontFamily={serif} fontSize={44} fill={white}>
+        what.
+      </text>
+      {/* A cut-out figure overlapping the giant word. */}
+      <path d="M120 250 C 100 250, 92 274, 102 290 C 70 304, 54 360, 50 420 L 44 500 L 230 500 L 222 420 C 218 360, 196 304, 166 290 C 176 274, 168 250, 146 250 Z" fill={ink} />
+      <path d="M108 236 L 160 236 L 154 214 L 134 200 L 114 214 Z" fill={yellow} />
+      <path d="M88 330 C 110 320, 150 320, 180 336 L 176 352 C 150 340, 112 340, 92 348 Z" fill={yellow} opacity={0.85} />
+      {range(5).map((i) => (
+        <rect key={i} x={70 + i * 8} y={230} width={4} height={270} fill={white} opacity={0.7} />
+      ))}
+      <Grain u={u} opacity={0.32} freq={1.1} />
+    </>
+  ),
+
+  shoegaze: ([black, teal, mint, violet], u) => (
+    <>
+      <defs>
+        <radialGradient id={`${u}glow`} cx="0.58" cy="0.46" r="0.6">
+          <stop offset="0" stopColor={teal} stopOpacity={0.9} />
+          <stop offset="1" stopColor={black} stopOpacity={1} />
+        </radialGradient>
+        <filter id={`${u}haze`}>
+          <feGaussianBlur stdDeviation={6} />
+        </filter>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${u}glow)`} />
+      <rect x={0} y={380} width={W} height={120} fill={violet} opacity={0.25} />
+      {/* A face emerging from the dark, blurred, with a ghosted copy drifting off. */}
+      <g filter={`url(#${u}haze)`}>
+        <ellipse cx={246} cy={226} rx={70} ry={92} fill={mint} opacity={0.75} />
+        <ellipse cx={268} cy={232} rx={70} ry={92} fill={mint} opacity={0.2} />
+        <path d="M170 330 C 190 290, 300 290, 330 340 L 360 500 L 150 500 Z" fill={mint} opacity={0.35} />
+      </g>
+      <ellipse cx={222} cy={214} rx={12} ry={4} fill={black} opacity={0.6} />
+      <ellipse cx={268} cy={214} rx={12} ry={4} fill={black} opacity={0.6} />
+      <text x={40} y={70} fontFamily={serif} fontStyle="italic" fontSize={30} fill={mint} opacity={0.8}>
+        undertow
+      </text>
+      <Grain u={u} opacity={0.4} freq={1.3} />
+    </>
+  ),
+
   "type-doodles": ([paper, ink, coral, sky]) => (
     <>
       <rect width={W} height={H} fill={paper} />

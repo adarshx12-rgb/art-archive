@@ -46,6 +46,16 @@ export const descriptions: Record<string, string> = {
     "The graphic language of 1980s magazines, when titles such as The Face and i-D redefined editorial design. Designers such as Neville Brody mixed bold typography, flat colour, striking flash photography and unconventional layouts. It turned the magazine page into a statement of youth culture and style.",
   editorial:
     "The design of magazines, newspapers and books, focused on guiding the reader through content. It relies on a strong grid, a clear typographic hierarchy, careful pairing of image and text, and generous white space. Good editorial design balances art direction with readability.",
+  "editorial-poster":
+    "A contemporary poster genre that borrows the layout of a newspaper front page, widely used for fan posters of films, comics and music. It pairs a huge condensed masthead with boxed photographs on a column grid, usually in black and white. Its signature move is a cut-out figure that breaks out of the panels toward the viewer.",
+  "concert-poster":
+    "A contemporary poster genre for concerts, tours and music tributes, widely shared on Behance and Pinterest. It sets black-and-white performance photography against a dark ground, with a giant artist-name title across the frame. Its best examples weave the lettering through the image, so parts of the photo pass in front of the letters.",
+  "film-still-poster":
+    "A popular style of fan-made alternative movie poster, especially for classic and Bollywood films, shared widely on Pinterest and Instagram. It takes a black-and-white still from the film and adds the title in a single spot colour, often stacked one letter per line. Soft blur, ghosting and grainy ink give it the feel of a lo-fi print.",
+  "streetwear-poster":
+    "A Gen-Z poster trend, especially strong in India, that remixes classical and devotional art with street culture and hip-hop quotes. A quote is set as a loud stack of clashing typefaces over a flat poster-red ground, often in two scripts. Cut-out painted figures with photocopy grit overlap a giant condensed word that runs the full height.",
+  shoegaze:
+    "A visual mood drawn from shoegaze and alternative-metal record art of the 1990s and 2000s, revived on social media in the 2020s, where it is often called the Deftones aesthetic. It favours grainy, blurred photographs of figures emerging from darkness, tinted cold teal or green-black. The effect is dreamy, melancholy and slightly menacing.",
   "type-doodles":
     "An informal, hand-drawn approach to lettering where words are surrounded by doodles such as stars, arrows and small characters. It grew from sketchbook and notebook culture and is popular in illustration, zines and social media. Its charm lies in imperfection and a personal, playful touch.",
   handwritten:

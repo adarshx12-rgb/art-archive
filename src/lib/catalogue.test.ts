@@ -11,8 +11,8 @@ import { emptyStyleQuery, filterPalettes, filterStyles, palettesForStyle, sugges
 import { parseSaved } from "./storage";
 
 describe("content integrity", () => {
-  it("has 64 styles with unique slugs", () => {
-    expect(allStyles).toHaveLength(64);
+  it("has 69 styles with unique slugs", () => {
+    expect(allStyles).toHaveLength(69);
     expect(new Set(allStyles.map((s) => s.slug)).size).toBe(allStyles.length);
   });
 

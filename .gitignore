@@ -15,3 +15,7 @@ covers-src/
 .dev.vars.*
 !.dev.vars.example
 .wrangler
+
+# Reference images collected per style (third-party work, studied locally;
+# what they teach lives in src/content/inspiration.ts)
+inspiration/

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getStyle } from "../src/content/styles";
+import { CUSTOM_SLUG, CUSTOM_STYLE_MAX, customStyle } from "../src/content/styles/custom";
 import type { Hex, PaletteRole, PaletteSize } from "../src/content/types";
 import { normaliseHex } from "../src/lib/color";
 import { ROLE_ORDER } from "../src/lib/prompt/compose";
@@ -21,6 +22,8 @@ const PaletteOut = z.object({
 
 export const SchemesRequest = z.object({
   style: z.string().max(80),
+  /** The visitor's own style, when `style` is the custom slug. */
+  custom: z.object({ template: z.string().max(40).nullable(), text: z.string().max(CUSTOM_STYLE_MAX) }).optional(),
   /** Optional mood or scene to steer the schemes. */
   request: z.string().max(400),
 });
@@ -37,10 +40,12 @@ Every scheme must be true to the style's own colour sense (its period, materials
 
 /** Three schemes (2, 3 and 4 colours) for a style; invalid ones are dropped. */
 export async function suggestSchemes(env: Env, body: z.infer<typeof SchemesRequest>, override?: string | null) {
-  const style = getStyle(body.style);
+  const style = body.style === CUSTOM_SLUG ? customStyle(body.custom ?? { template: null, text: "" }) : getStyle(body.style);
   const input = {
     request: body.request.trim() || null,
-    style: style ? { name: style.name, colour: style.look.colour, swatches: style.swatches.map((s) => `${s.name} ${s.hex}`) } : null,
+    style: style
+      ? { name: style.name, ...(style.slug === CUSTOM_SLUG ? { description: style.about } : {}), colour: style.look.colour, swatches: style.swatches.map((s) => `${s.name} ${s.hex}`) }
+      : null,
   };
   const { data, usage, model } = await ask(env, { system: SCHEMES_SYSTEM, user: JSON.stringify(input), schema: SchemesOut, name: "schemes", effort: "low" }, override);
 

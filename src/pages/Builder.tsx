@@ -9,6 +9,7 @@ import { ConceptCards } from "../components/ConceptCards";
 import { EraseLayer } from "../components/EraseLayer";
 import { ImageCropper } from "../components/ImageCropper";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { CustomStyleDialog } from "../components/CustomStyleDialog";
 import { PresetBar } from "../components/PresetBar";
 import { SubjectLayers } from "../components/SubjectLayers";
 import { TransformPanel } from "../components/TransformPanel";
@@ -16,6 +17,7 @@ import { site } from "../config/site";
 import { kindLabels } from "../content/facets";
 import { palettes, getPalette } from "../content/palettes";
 import { getStyle, styles } from "../content/styles";
+import { CUSTOM_SLUG, customStyle, type CustomStyleSpec } from "../content/styles/custom";
 import { formatInfo, TEMPLATE_FORMATS } from "../content/templates";
 import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/types";
 import { aiConcepts, aiPrompt, aiScene, aiSchemes, type Concept } from "../lib/ai";
@@ -30,7 +32,7 @@ import {
   type PreserveId,
   type Task,
 } from "../lib/prompt/options";
-import { decodeState, defaultState, encodeState, SUBJECT_MAX, TEXT_MAX, type BuilderState, type Comment as Note } from "../lib/prompt/state";
+import { decodeState, defaultState, encodeState, styleFor, SUBJECT_MAX, TEXT_MAX, type BuilderState, type Comment as Note } from "../lib/prompt/state";
 import { aspectOf, byPriority, projectScene, shotCamera } from "../lib/scene/camera";
 import { subjectAt } from "../lib/scene/describe";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
@@ -234,7 +236,7 @@ export function Builder() {
     return () => ro.disconnect();
   }, []);
 
-  const style = getStyle(state.style) ?? styles[0]!;
+  const style = styleFor(state);
   const composed = useMemo(() => composePrompt(state), [state]);
   const palette = resolvePalette(state, style);
   // A 1-colour palette is the background only; the sketch fills the other roles with the style's colours.
@@ -293,7 +295,7 @@ export function Builder() {
       const next = { ...s, count: n };
       // No curated palette has one colour: keep the current background as a custom one.
       if (n === 1 && s.paletteMode === "curated") {
-        const bg = resolvePalette(s, getStyle(s.style)!).colours[0]!.hex;
+        const bg = resolvePalette(s, styleFor(s)).colours[0]!.hex;
         return { ...next, paletteMode: "custom", custom: [bg, s.custom[1], s.custom[2], s.custom[3]] };
       }
       if (s.paletteMode === "curated" && getPalette(s.palette)?.colours.length !== n) {
@@ -323,13 +325,24 @@ export function Builder() {
       return { ...s, style: slug, custom };
     });
 
+  /** "Custom…" in the style list opens the description dialog; the style changes only when it's saved. */
+  const [describing, setDescribing] = useState(false);
+  const saveCustomStyle = (spec: CustomStyleSpec) => {
+    setDescribing(false);
+    setState((s) => {
+      const custom = s.paletteMode === "custom" ? s.custom : (customStyle(spec).swatches.map((w) => w.hex) as BuilderState["custom"]);
+      // Layout templates belong to catalogue styles.
+      return { ...s, style: CUSTOM_SLUG, customStyle: spec, custom, template: null, templateText: {} };
+    });
+  };
+
   /** A poster, thumbnail…: the frame takes the format's shape. */
   const chooseFormat = (format: TemplateFormat | null) => setState((s) => ({ ...s, format, ...(format ? { aspect: formatInfo(format).aspect } : {}) }));
 
   /** Copy the colours currently in use into editable custom slots. Curated entries are never modified. */
   const customise = () =>
     setState((s) => {
-      const cols = resolvePalette(s, getStyle(s.style)!).colours.map((c) => c.hex);
+      const cols = resolvePalette(s, styleFor(s)).colours.map((c) => c.hex);
       const custom = [...s.custom] as BuilderState["custom"];
       cols.forEach((h, i) => (custom[i] = h));
       return { ...s, paletteMode: "custom", count: cols.length as PaletteSize, custom };
@@ -672,7 +685,7 @@ export function Builder() {
               Style
             </label>
             <div className="flex gap-2">
-              <select id="style-select" className="field min-w-0 flex-1" value={state.style} onChange={(e) => setStyle(e.target.value)}>
+              <select id="style-select" className="field min-w-0 flex-1" value={state.style} onChange={(e) => (e.target.value === CUSTOM_SLUG ? setDescribing(true) : setStyle(e.target.value))}>
                 {byKind.map((g) => (
                   <optgroup key={g.kind} label={kindLabels[g.kind]}>
                     {g.items.map((s) => (
@@ -682,6 +695,9 @@ export function Builder() {
                     ))}
                   </optgroup>
                 ))}
+                <optgroup label="Your own">
+                  <option value={CUSTOM_SLUG}>{state.style === CUSTOM_SLUG ? (style.name === "Custom" ? "Custom" : `Custom: ${style.name}`) : "Custom…"}</option>
+                </optgroup>
               </select>
               {!isRestyle && (
                 <>
@@ -699,12 +715,21 @@ export function Builder() {
                 </>
               )}
             </div>
-            <p className="mt-2 text-sm text-muted">
-              {style.summary}{" "}
-              <Link to={`/styles/${style.slug}`} className="underline underline-offset-2">
-                View style
-              </Link>
-            </p>
+            {state.style === CUSTOM_SLUG ? (
+              <p className="mt-2 text-sm text-muted">
+                <span className="line-clamp-3">{style.summary}</span>{" "}
+                <button type="button" className="underline underline-offset-2" onClick={() => setDescribing(true)}>
+                  Edit custom style
+                </button>
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-muted">
+                {style.summary}{" "}
+                <Link to={`/styles/${style.slug}`} className="underline underline-offset-2">
+                  View style
+                </Link>
+              </p>
+            )}
           </Group>
 
           <Group legend="Task">
@@ -1234,6 +1259,7 @@ export function Builder() {
       </div>
 
       {cropping && <ImageCropper file={cropping} onDone={(url, ratio) => void addImage(url, ratio)} onCancel={() => setCropping(null)} />}
+      <CustomStyleDialog open={describing} initial={state.customStyle} onSave={saveCustomStyle} onCancel={() => setDescribing(false)} />
       <ConfirmDialog
         open={confirm === "regenerate"}
         title="Replace your edited prompt?"

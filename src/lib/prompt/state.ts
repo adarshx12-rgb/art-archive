@@ -1,7 +1,8 @@
 import { getPalette } from "../../content/palettes";
 import { getStyle, styles } from "../../content/styles";
+import { CUSTOM_SLUG, CUSTOM_STYLE_MAX, customStyle, getCustomTemplate, type CustomStyleSpec } from "../../content/styles/custom";
 import { getTemplate, isTemplateFormat, textSlots } from "../../content/templates";
-import type { Hex, PaletteSize, TemplateFormat } from "../../content/types";
+import type { Hex, PaletteSize, StyleRecord, TemplateFormat } from "../../content/types";
 import { normaliseHex } from "../color";
 import { shotCamera } from "../scene/camera";
 import { actorFromLayer } from "../scene/convert";
@@ -44,7 +45,10 @@ import {
 } from "./options";
 
 export interface BuilderState {
+  /** A catalogue slug, or CUSTOM_SLUG for the visitor's own description. */
   style: string;
+  /** The visitor's own style; used only when `style` is CUSTOM_SLUG. */
+  customStyle: CustomStyleSpec;
   output: Output;
   task: Task;
   subject: string;
@@ -105,6 +109,7 @@ const firstStyle = styles[0]!;
 export function defaultState(): BuilderState {
   return {
     style: firstStyle.slug,
+    customStyle: { template: null, text: "" },
     output: "image",
     task: "create",
     subject: "",
@@ -154,12 +159,20 @@ export const cleanComment = (input: string) => cleanSubject(input.replace(/[~|]/
 /** The same cleaning for the text to letter, with its own cap. */
 export const cleanText = (input: string) => cleanSubject(input, TEXT_MAX);
 
+/** The style record in use: a catalogue style, or one built from the visitor's description. */
+export function styleFor(state: Pick<BuilderState, "style" | "customStyle">): StyleRecord {
+  if (state.style === CUSTOM_SLUG) return customStyle(state.customStyle);
+  return getStyle(state.style) ?? firstStyle;
+}
+
 // ——— URL codec ———
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
 const KEYS = {
   style: "s",
+  customText: "cs",
+  customTemplate: "ct",
   output: "o",
   task: "t",
   subject: "q",
@@ -200,6 +213,10 @@ export function encodeState(state: BuilderState): URLSearchParams {
     if (value !== def) q.set(key, value);
   };
   q.set(KEYS.style, state.style);
+  if (state.style === CUSTOM_SLUG) {
+    if (state.customStyle.template) q.set(KEYS.customTemplate, state.customStyle.template);
+    if (state.customStyle.text) q.set(KEYS.customText, state.customStyle.text);
+  }
   put(KEYS.output, state.output, d.output);
   put(KEYS.task, state.task, d.task);
   if (state.subject) q.set(KEYS.subject, state.subject);
@@ -264,7 +281,13 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   };
 
   const styleSlug = params.get(KEYS.style);
-  if (styleSlug !== null) {
+  if (styleSlug === CUSTOM_SLUG) {
+    const template = params.get(KEYS.customTemplate);
+    if (template !== null && !getCustomTemplate(template)) issues.push(`The custom style template “${template.slice(0, 20)}” isn’t recognised.`);
+    state.style = CUSTOM_SLUG;
+    state.customStyle = { template: getCustomTemplate(template)?.id ?? null, text: cleanSubject(params.get(KEYS.customText) ?? "", CUSTOM_STYLE_MAX) };
+    state.custom = customStyle(state.customStyle).swatches.map((s) => s.hex) as BuilderState["custom"];
+  } else if (styleSlug !== null) {
     const style = getStyle(styleSlug);
     if (style) {
       state.style = style.slug;

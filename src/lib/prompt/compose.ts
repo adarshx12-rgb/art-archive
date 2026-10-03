@@ -1,5 +1,4 @@
 import { getPalette } from "../../content/palettes";
-import { getStyle, styles } from "../../content/styles";
 import { fillPrompt, formatInfo, getTemplate } from "../../content/templates";
 import type { Hex, PaletteRole, PaletteSize, StyleRecord, TemplateFormat } from "../../content/types";
 import { describeHex } from "../color";
@@ -24,7 +23,7 @@ import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "
 import { describeComments, describeScene, referenceImages } from "../scene/describe";
 import { typedWords } from "../art/brief";
 import { withArticle } from "../sketch/layers";
-import { cleanComment, cleanSubject, MAX_COMMENTS, type BuilderState } from "./state";
+import { cleanComment, cleanSubject, MAX_COMMENTS, styleFor, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
   1: ["background"],
@@ -152,7 +151,7 @@ export interface ComposeResult {
  * state always yields the same text.
  */
 export function composePrompt(state: BuilderState): ComposeResult {
-  const style = getStyle(state.style) ?? styles[0]!;
+  const style = styleFor(state);
   const notes: string[] = [];
   // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
   const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
@@ -195,7 +194,9 @@ export function composePrompt(state: BuilderState): ComposeResult {
   // 2. Aesthetic characteristics, scaled by intensity
   const cues = style.prompt.cues.slice(0, CUE_COUNT[state.intensity]);
   const cueText = joinList(cues.map(lowerFirst));
-  if (state.intensity === "subtle") {
+  if (!cues.length) {
+    // A custom style with no description yet: the opening line names it, nothing more to add.
+  } else if (state.intensity === "subtle") {
     add("Style", `a light touch; keep the subject natural and borrow only ${cueText}.`);
   } else if (state.intensity === "strong") {
     add("Style", `fully committed to the look: ${cueText}.`);
@@ -296,10 +297,10 @@ export function composePrompt(state: BuilderState): ComposeResult {
     const set = isRestyle
       ? `change the lettering to read exactly ${quoted}`
       : texts.length > 1 ? `set exactly these texts: ${quoted}` : `set exactly this text: ${quoted}`;
-    add("Lettering", `${set} in ${style.look.typography}; spell ${texts.length > 1 ? "each" : "it"} exactly as written and add no other words.`);
+    add("Lettering", `${set}${style.look.typography ? ` in ${style.look.typography}` : ""}; spell ${texts.length > 1 ? "each" : "it"} exactly as written and add no other words.`);
   } else if (TEXT_HINT.test(state.subject) || preserve.has("text")) {
     if (preserve.has("text")) add("Lettering", "keep existing lettering exactly as it is.");
-    else add("Lettering", `if text appears, ${style.look.typography}.`);
+    else if (style.look.typography) add("Lettering", `if text appears, ${style.look.typography}.`);
   }
 
   // 8. Motion (video only)
@@ -342,6 +343,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
 export function themeState(style: StyleRecord, output: "image" | "video"): BuilderState {
   return {
     style: style.slug,
+    customStyle: { template: null, text: "" },
     output,
     task: "restyle",
     subject: "",

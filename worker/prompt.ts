@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { getCraft } from "../src/content/craft";
 import { inspiration } from "../src/content/inspiration";
-import { getStyle } from "../src/content/styles";
 import { getTemplate, slotText } from "../src/content/templates";
 import { checkBrief, quoted, stripSlop, typedWords, type Brief } from "../src/lib/art/brief";
 import { composePrompt, resolvePalette } from "../src/lib/prompt/compose";
 import { lensOptions, findOption } from "../src/lib/prompt/options";
-import { cleanText, decodeState, type BuilderState } from "../src/lib/prompt/state";
+import { CUSTOM_SLUG } from "../src/content/styles/custom";
+import { cleanText, decodeState, styleFor, type BuilderState } from "../src/lib/prompt/state";
 import { parseSubject } from "../src/lib/sketch/parse";
 import { addUsage, AiError, ask, chain, type AskResult } from "./ai";
 import { BriefSchema } from "./concepts";
@@ -84,8 +84,9 @@ function mustInclude(state: BuilderState, colours: string[]): { label: string; a
     checks.push({ label: `the ${a.label}`, any: [noun.toLowerCase()] });
   }
   for (const hex of colours) checks.push({ label: `colour ${hex}`, any: [hex.toLowerCase()] });
-  const style = getStyle(state.style);
-  if (style) checks.push({ label: `the ${style.name} style`, any: [style.name.toLowerCase(), style.name.split(/[\s/]+/)[0]!.toLowerCase()] });
+  const style = styleFor(state);
+  // A custom style's name ("Custom", "Canvas") needn't appear; its description is in the facts.
+  if (state.style !== CUSTOM_SLUG) checks.push({ label: `the ${style.name} style`, any: [style.name.toLowerCase(), style.name.split(/[\s/]+/)[0]!.toLowerCase()] });
   const text = cleanText(state.text);
   if (text) checks.push({ label: `the text "${text}"`, any: [text.toLowerCase()] });
   const template = state.template ? getTemplate(state.style, state.template) : undefined;
@@ -135,7 +136,7 @@ function extraWords(prompt: string, allowed: Set<string>): string[] {
 
 export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest>, override?: string | null) {
   const { state } = decodeState(new URLSearchParams(body.query));
-  const style = getStyle(state.style);
+  const style = styleFor(state);
   if (!style) throw new Error("style");
   const brief = body.brief ?? null;
   if (brief && checkBrief(brief, state).length) throw new AiError("That design idea no longer fits your settings. Get new ideas and pick again.", 409, false);

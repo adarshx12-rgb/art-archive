@@ -65,7 +65,7 @@ export interface SchemesReply {
 
 /** 2, 3 and 4-colour schemes true to the chosen style, optionally for a mood. */
 export function aiSchemes(state: BuilderState, request: string) {
-  return post<SchemesReply>("/api/schemes", { style: state.style, request });
+  return post<SchemesReply>("/api/schemes", { style: state.style, custom: state.customStyle, request });
 }
 
 export interface PromptReply {

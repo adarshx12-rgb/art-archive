@@ -97,7 +97,8 @@ export interface PaletteMatch {
 /** Curated palettes first, then the closest palettes by colour, up to `limit`. */
 export function palettesForStyle(style: StyleRecord, limit = 4): PaletteMatch[] {
   const curated = palettes.filter((p) => p.suits.includes(style.slug)).map((p) => ({ palette: p, reason: "curated" as const }));
-  if (curated.length >= limit) return curated.slice(0, limit);
+  // Four of its own is a full set; colour-match filler would only dilute it.
+  if (curated.length >= Math.min(limit, 4)) return curated.slice(0, limit);
   const rest = palettes
     .filter((p) => !p.suits.includes(style.slug))
     .map((p) => ({ p, d: paletteFit(p, style) }))

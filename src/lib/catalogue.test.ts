@@ -200,6 +200,13 @@ describe("palette filtering", () => {
     expect(filterPalettes(palettes, null, "", null)).toHaveLength(palettes.length);
   });
 
+  it("a style with four or more palettes of its own shows only those, never colour-match filler", () => {
+    for (const s of styles) {
+      const r = palettesForStyle(s, 8);
+      expect(r.every((m) => m.reason === "curated"), s.slug).toBe(true);
+    }
+  });
+
   it("every style gets compatible palettes", () => {
     for (const s of styles) expect(palettesForStyle(s).length, s.slug).toBe(4);
   });

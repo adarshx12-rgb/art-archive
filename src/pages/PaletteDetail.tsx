@@ -4,6 +4,7 @@ import { PaletteArt } from "../art/PaletteArt";
 import { artLabel, StyleArt } from "../art/StyleArt";
 import { CopyButton, SaveButton } from "../components/actions";
 import { StyleCard } from "../components/cards";
+import { ColourSwap } from "../components/ColourSwap";
 import { Recovery } from "../components/Recovery";
 import { HexSwatch } from "../components/Swatches";
 import { getPalette } from "../content/palettes";
@@ -95,7 +96,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
               Roles and proportions
             </h2>
             <p className="mt-3 max-w-sm text-muted">
-              Suggested shares of the image, totalling 100%. Select a colour to copy its hex.
+              Suggested shares of the image, totalling 100%. Select a colour to copy its hex, or swap one below.
             </p>
           </div>
           <div className="lg:col-span-8">
@@ -117,6 +118,7 @@ function PaletteView({ palette }: { palette: PaletteRecord }) {
                 </li>
               ))}
             </ul>
+            <ColourSwap palette={palette} />
           </div>
         </div>
       </section>

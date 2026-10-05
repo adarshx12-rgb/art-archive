@@ -69,6 +69,16 @@ export function aiSchemes(state: BuilderState, request: string) {
   return post<SchemesReply>("/api/schemes", { style: state.style, custom: state.customStyle, request });
 }
 
+export interface SwapReply {
+  /** Up to three palettes, each keeping the visitor's colour in place. */
+  palettes: { name: string; colours: { hex: Hex; name: string; role: PaletteRole }[]; why: string }[];
+}
+
+/** Rebuild a palette around one new colour, for one style. */
+export function aiSwap(body: { style: string; colours: { hex: Hex; name: string }[]; index: number; hex: Hex }) {
+  return post<SwapReply>("/api/swap", body);
+}
+
 export interface PromptReply {
   prompt: string;
   warnings: string[];

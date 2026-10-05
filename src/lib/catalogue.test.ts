@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { palettes } from "../content/palettes";
+import { libraryPalettes } from "../content/palettes/library";
 import { coverPrompts, promptForImage } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
 import { fontSuggestions } from "../content/fonts";
 import { references } from "../content/references";
 import { allStyles, styles } from "../content/styles";
 import { renderers } from "../art/studies";
-import { describeHex, normaliseHex } from "./color";
+import { contrastRatio, describeHex, normaliseHex } from "./color";
 import { emptyStyleQuery, filterPalettes, filterStyles, palettesForStyle, suggestStyles } from "./catalogue";
 import { parseSaved } from "./storage";
 
@@ -102,8 +103,7 @@ describe("content integrity", () => {
     expect(firstCues.size).toBe(styles.length);
   });
 
-  it("has at least 18 palettes spread across 2, 3 and 4 colours, shares totalling 100", () => {
-    expect(palettes.length).toBeGreaterThanOrEqual(18);
+  it("has at least 300 palettes spread across 2, 3 and 4 colours, shares totalling 100", () => {
     const slugs = new Set(allStyles.map((s) => s.slug));
     for (const size of [2, 3, 4]) {
       expect(palettes.filter((p) => p.colours.length === size).length).toBeGreaterThanOrEqual(6);
@@ -113,6 +113,27 @@ describe("content integrity", () => {
       p.suits.forEach((s) => expect(slugs.has(s), `${p.slug} → ${s}`).toBe(true));
     }
     expect(new Set(palettes.map((p) => p.slug)).size).toBe(palettes.length);
+    expect(palettes.length).toBeGreaterThanOrEqual(300);
+  });
+
+  it("every style has at least four palettes of its own, in a mix of sizes", () => {
+    for (const s of allStyles) {
+      const own = palettes.filter((p) => p.suits.includes(s.slug));
+      expect(own.length, s.slug).toBeGreaterThanOrEqual(4);
+      expect(own.some((p) => p.colours.length <= 3), `${s.slug} needs a 2 or 3-colour palette`).toBe(true);
+      expect(own.some((p) => p.colours.length === 4), `${s.slug} needs a 4-colour palette`).toBe(true);
+    }
+  });
+
+  it("every palette has valid hexes, roles in order, and a legible primary", () => {
+    const order: Record<number, string[]> = { 2: ["background", "primary"], 3: ["background", "primary", "accent"], 4: ["background", "primary", "secondary", "accent"] };
+    const library = new Set(libraryPalettes.map((p) => p.slug));
+    for (const p of palettes) {
+      expect(p.colours.map((c) => c.role), p.slug).toEqual(order[p.colours.length]);
+      for (const c of p.colours) expect(c.hex, `${p.slug} ${c.name}`).toMatch(/^#[0-9A-F]{6}$/);
+      expect(new Set(p.colours.map((c) => c.hex)).size, `${p.slug} repeats a colour`).toBe(p.colours.length);
+      if (!library.has(p.slug)) expect(contrastRatio(p.colours[0]!.hex, p.colours[1]!.hex), `${p.slug} primary on background`).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("references carry licence and source metadata", () => {

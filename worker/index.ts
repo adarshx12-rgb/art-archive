@@ -8,6 +8,7 @@ import { draw, DrawRequest } from "./draw";
 import { guide, GuideRequest } from "./guide";
 import { perfectPrompt, PromptRequest } from "./prompt";
 import { buildScene, SceneRequest } from "./scene";
+import { swapColour, SwapRequest } from "./swap";
 
 /**
  * The site's small backend. Static files are served by Cloudflare directly;
@@ -19,6 +20,7 @@ import { buildScene, SceneRequest } from "./scene";
  *   POST /api/prompt   builder settings     -> checked, polished prompt
  *   POST /api/guide    builder settings     -> ideas for the template design
  *   POST /api/draw     a subject's name     -> a storyboard line drawing of it
+ *   POST /api/swap     palette + one colour -> three palettes rebuilt around it
  */
 
 const MAX_BODY = 32_000;
@@ -96,6 +98,11 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const body = DrawRequest.safeParse(raw);
       if (!body.success) return fail("That drawing request isn’t valid.", 400);
       return json(await draw(env, body.data, override));
+    }
+    case "/api/swap": {
+      const body = SwapRequest.safeParse(raw);
+      if (!body.success) return fail("That colour swap request isn’t valid.", 400);
+      return json(await swapColour(env, body.data, override));
     }
     default:
       return fail("Not found.", 404);

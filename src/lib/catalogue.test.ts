@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { palettes } from "../content/palettes";
+import { allPalettes, getPalette, palettes } from "../content/palettes";
 import { libraryPalettes } from "../content/palettes/library";
 import { coverPrompts, promptForImage } from "../content/coverPrompts";
 import { covers, similarCovers } from "../content/covers";
@@ -106,19 +106,19 @@ describe("content integrity", () => {
   it("has at least 300 palettes spread across 2, 3 and 4 colours, shares totalling 100", () => {
     const slugs = new Set(allStyles.map((s) => s.slug));
     for (const size of [2, 3, 4]) {
-      expect(palettes.filter((p) => p.colours.length === size).length).toBeGreaterThanOrEqual(6);
+      expect(allPalettes.filter((p) => p.colours.length === size).length).toBeGreaterThanOrEqual(6);
     }
-    for (const p of palettes) {
+    for (const p of allPalettes) {
       expect(p.colours.reduce((a, c) => a + c.share, 0), p.slug).toBe(100);
       p.suits.forEach((s) => expect(slugs.has(s), `${p.slug} → ${s}`).toBe(true));
     }
-    expect(new Set(palettes.map((p) => p.slug)).size).toBe(palettes.length);
-    expect(palettes.length).toBeGreaterThanOrEqual(300);
+    expect(new Set(allPalettes.map((p) => p.slug)).size).toBe(allPalettes.length);
+    expect(allPalettes.length).toBeGreaterThanOrEqual(300);
   });
 
   it("every style has at least four palettes of its own, in a mix of sizes", () => {
     for (const s of allStyles) {
-      const own = palettes.filter((p) => p.suits.includes(s.slug));
+      const own = allPalettes.filter((p) => p.suits.includes(s.slug));
       expect(own.length, s.slug).toBeGreaterThanOrEqual(4);
       expect(own.some((p) => p.colours.length <= 3), `${s.slug} needs a 2 or 3-colour palette`).toBe(true);
       expect(own.some((p) => p.colours.length === 4), `${s.slug} needs a 4-colour palette`).toBe(true);
@@ -128,7 +128,7 @@ describe("content integrity", () => {
   it("every palette has valid hexes, roles in order, and a legible primary", () => {
     const order: Record<number, string[]> = { 2: ["background", "primary"], 3: ["background", "primary", "accent"], 4: ["background", "primary", "secondary", "accent"] };
     const library = new Set(libraryPalettes.map((p) => p.slug));
-    for (const p of palettes) {
+    for (const p of allPalettes) {
       expect(p.colours.map((c) => c.role), p.slug).toEqual(order[p.colours.length]);
       for (const c of p.colours) expect(c.hex, `${p.slug} ${c.name}`).toMatch(/^#[0-9A-F]{6}$/);
       expect(new Set(p.colours.map((c) => c.hex)).size, `${p.slug} repeats a colour`).toBe(p.colours.length);
@@ -190,6 +190,14 @@ describe("palette filtering", () => {
       r.forEach((p) => expect(p.colours).toHaveLength(n));
     }
     expect(filterPalettes(palettes, null)).toHaveLength(palettes.length);
+  });
+
+  it("lists a palette only once one of its styles is shown, like styles themselves", () => {
+    const shown = new Set(styles.map((s) => s.slug));
+    expect(palettes.every((p) => p.suits.some((slug) => shown.has(slug)))).toBe(true);
+    const hidden = allPalettes.filter((p) => !p.suits.some((slug) => shown.has(slug)));
+    for (const p of hidden) expect(getPalette(p.slug), p.slug).toBeUndefined();
+    expect(palettes.length + hidden.length).toBe(allPalettes.length);
   });
 
   it("filters palettes by style", () => {

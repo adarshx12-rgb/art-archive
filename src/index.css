@@ -100,20 +100,16 @@
     overflow-x: hidden;
   }
   /*
-   * Site-wide texture (background.webp, or background-dark.webp in dark mode). It sits at the
-   * top of the page, behind the header and hero, and fades to nothing well before it ends, so
-   * it never stops in a hard line however tall the page or viewport is. Never takes clicks.
+   * Site-wide texture (background.webp, or background-dark.webp in dark mode). It is fixed to
+   * the viewport and fills it, so the page scrolls over a still background. Never takes clicks.
    */
   body::before {
     content: "";
-    position: absolute;
-    inset: 0 0 auto;
+    position: fixed;
+    inset: 0;
     z-index: -1;
-    height: 60rem;
-    background: var(--texture-image) center top / cover no-repeat;
+    background: var(--texture-image) center / cover no-repeat;
     opacity: var(--texture-opacity);
-    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 18rem, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0, #000 18rem, transparent 100%);
     pointer-events: none;
   }
   ::selection {

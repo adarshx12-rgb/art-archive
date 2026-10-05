@@ -18,13 +18,12 @@ returns three valid palettes containing the visitor's colour in a few seconds.
 
 ## Constraints
 
-- **Palette content is written by Claude Code in the session**, as source
+- **Palette content is written by Claude Code during the build**, as source
   files. No script calls OpenRouter or any other paid API to generate it.
-- **The live swap calls Claude directly** through `ANTHROPIC_API_KEY`, skipping
-  OpenRouter, so it costs no OpenRouter credits. It uses Claude Haiku 4.5
-  (`claude-haiku-4-5-20251001`), the cheapest current Claude model, which is
-  enough for a short JSON colour task. Each swap is one small request on the
-  owner's Anthropic account, covered by the existing per-visitor `AI_LIMIT`.
+- **The AI API is used only at runtime**, for the live colour swap a visitor
+  triggers. It goes through the site's normal `ask()` chain (OpenRouter models,
+  then Anthropic), like the other AI features, and is covered by the existing
+  per-visitor `AI_LIMIT`.
 - "Trending" means curated with current web and graphic design practice in
   mind (legible contrast, usable as UI colours). There is no live trend data.
 
@@ -76,8 +75,7 @@ Shares are copied from the original palette, since roles are unchanged.
 **API.** `POST /api/swap` with
 `{ style, colours: [{hex, name, role}], index, hex }`, validated with zod (2–4
 colours, valid hexes, `index` in range, known style). Handled by
-`worker/swap.ts`, which calls `ask()` with a new `direct: true` option meaning
-"Anthropic only", and a per-task `anthropicModel` set to Claude Haiku 4.5.
+`worker/swap.ts`, which calls `ask()` with `effort: "low"`.
 The prompt is modelled on `SCHEMES_SYSTEM`: three distinct palettes, same size
 and roles as the original, the locked colour unchanged, true to the style.
 
@@ -97,13 +95,12 @@ like `suggestSchemes`.
   total 100, unique slugs, valid hex, `suits` slugs exist); style filter
   returns only that style's palettes.
 - `worker/swap.test.ts`: request validation; locked colour enforced when the
-  model changes it; wrong-size and bad-hex palettes dropped; all-invalid → 502;
-  `direct` skips OpenRouter targets in `chain()`.
+  model changes it; wrong-size and bad-hex palettes dropped; all-invalid → 502.
 - `npm run typecheck`, `npm test`, then manual check in the dev server.
 
 ## Order of work
 
-1. `ask()` direct option + `/api/swap` + `ColourSwap` UI.
+1. `/api/swap` + `ColourSwap` UI.
 2. Split palettes into `src/content/palettes/`, add style filter and `?s=` links.
 3. Write palettes family by family (movements, print, retro, digital, craft),
    tests passing after each.

@@ -141,7 +141,7 @@ function CoverPromptBlock({ prompt, what }: { prompt: CoverPrompt; what: string 
 function StyleView({ style }: { style: StyleRecord }) {
   useMeta(style.name, `${style.summary} Visual ingredients, colours and ready-to-copy image and video prompts.`);
   const refs = style.references.map(getReference).filter((r): r is ReferenceImage => Boolean(r));
-  const matches = palettesForStyle(style);
+  const matches = palettesForStyle(style, 8);
   const related = relatedStyles(style);
   const imagePrompt = themePrompt(style, "image");
   const videoPrompt = themePrompt(style, "video");
@@ -354,7 +354,7 @@ function StyleView({ style }: { style: StyleRecord }) {
         <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {matches.map(({ palette, reason }) => (
             <li key={palette.slug} className="border-t border-rule pt-3">
-              <Link to={`/palettes/${palette.slug}`} className="group block">
+              <Link to={`/palettes/${palette.slug}?s=${style.slug}`} className="group block">
                 <PaletteArt colours={palette.colours} composition={palette.composition} name={palette.name} className="aspect-[4/3] h-auto w-full" />
                 <p className="mt-2 font-semibold group-hover:underline">{palette.name}</p>
               </Link>

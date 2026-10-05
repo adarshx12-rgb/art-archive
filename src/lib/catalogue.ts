@@ -67,10 +67,11 @@ export function filterStyles(list: StyleRecord[], query: StyleQuery): StyleRecor
 
 // ——— Palette filters ———
 
-export function filterPalettes(list: PaletteRecord[], size: PaletteSize | null, q = ""): PaletteRecord[] {
+export function filterPalettes(list: PaletteRecord[], size: PaletteSize | null, q = "", style: string | null = null): PaletteRecord[] {
   const terms = fold(q).split(/\s+/).filter(Boolean);
   return list.filter((p) => {
     if (size && p.colours.length !== size) return false;
+    if (style && !p.suits.includes(style)) return false;
     if (!terms.length) return true;
     const hay = fold([p.name, p.mood, p.description, ...p.colours.map((c) => `${c.name} ${c.hex}`)].join(" "));
     return terms.every((t) => hay.includes(t));

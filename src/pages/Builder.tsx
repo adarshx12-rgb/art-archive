@@ -648,7 +648,10 @@ export function Builder() {
   const isVideo = state.output === "video";
   const keepColours = isRestyle && state.preserve.includes("colours");
   const keepComposition = isRestyle && state.preserve.includes("composition");
-  const curatedOfSize = palettes.filter((p) => p.colours.length === state.count);
+  // The chosen style's own palettes first; sort is stable, so library order holds within each group.
+  const curatedOfSize = palettes
+    .filter((p) => p.colours.length === state.count)
+    .sort((a, b) => Number(b.suits.includes(style.slug)) - Number(a.suits.includes(style.slug)));
   const roles = ROLE_ORDER[state.count];
 
   const filename = `${slugify(site.shortName)}-${style.slug}-${state.output}.txt`;

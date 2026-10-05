@@ -171,6 +171,14 @@ describe("palette filtering", () => {
     expect(filterPalettes(palettes, null)).toHaveLength(palettes.length);
   });
 
+  it("filters palettes by style", () => {
+    const r = filterPalettes(palettes, null, "", "art-deco");
+    expect(r.length).toBeGreaterThan(0);
+    expect(r.every((p) => p.suits.includes("art-deco"))).toBe(true);
+    expect(filterPalettes(palettes, null, "", "no-such-style")).toEqual([]);
+    expect(filterPalettes(palettes, null, "", null)).toHaveLength(palettes.length);
+  });
+
   it("every style gets compatible palettes", () => {
     for (const s of styles) expect(palettesForStyle(s).length, s.slug).toBe(4);
   });

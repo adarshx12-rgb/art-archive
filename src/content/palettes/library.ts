@@ -1,11 +1,5 @@
-import type { Hex, PaletteColour, PaletteRecord, PaletteRole } from "./types";
-
-const p = (hex: Hex, name: string, role: PaletteRole, share: number): PaletteColour => ({
-  hex,
-  name,
-  role,
-  share,
-});
+import type { PaletteRecord } from "../types";
+import { p } from "./define";
 
 /**
  * Curated palettes. Every palette has exactly 2, 3 or 4 colours whose
@@ -14,7 +8,7 @@ const p = (hex: Hex, name: string, role: PaletteRole, share: number): PaletteCol
  *   3 colours: background, primary, accent
  *   4 colours: background, primary, secondary, accent
  */
-export const palettes: PaletteRecord[] = [
+export const libraryPalettes: PaletteRecord[] = [
   // ——— Two colours ———
   {
     slug: "ink-and-signal",
@@ -317,13 +311,3 @@ export const palettes: PaletteRecord[] = [
     composition: "stripes",
   },
 ];
-
-const bySlug = new Map(palettes.map((pl) => [pl.slug, pl]));
-
-export function getPalette(slug: string | null | undefined): PaletteRecord | undefined {
-  return slug ? bySlug.get(slug) : undefined;
-}
-
-export const featuredPalettes = palettes
-  .filter((pl) => pl.featured !== undefined)
-  .sort((a, b) => (a.featured ?? 0) - (b.featured ?? 0));

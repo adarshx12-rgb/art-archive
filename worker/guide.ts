@@ -5,6 +5,7 @@ import { projectScene, shotCamera } from "../src/lib/scene/camera";
 import { decodeState, styleFor, type BuilderState } from "../src/lib/prompt/state";
 import { ask } from "./ai";
 import type { Env } from "./env";
+import { DESIGN_JUDGMENT, designMemoryFor } from "./design-memory";
 
 /**
  * Ideas for the design in progress: when a template is chosen, look at the
@@ -63,6 +64,7 @@ export function guideFacts(state: BuilderState) {
     },
     subjects,
     subjectBox: state.subject.trim() || undefined,
+    designMemory: designMemoryFor(state),
   };
 }
 
@@ -89,7 +91,7 @@ export async function guide(env: Env, body: z.infer<typeof GuideRequest>, overri
   const template = getTemplate(state.style, state.template!)!;
   const { data, model, usage } = await ask(
     env,
-    { system: SYSTEM.replace("{format}", facts.format.toLowerCase()), user: JSON.stringify(facts), schema: GuideOut, name: "guide", effort: "low" },
+    { system: SYSTEM.replace("{format}", facts.format.toLowerCase()) + DESIGN_JUDGMENT, user: JSON.stringify(facts), schema: GuideOut, name: "guide", effort: "low" },
     override,
   );
   return { ideas: cleanIdeas(data.ideas, template), model, usage };

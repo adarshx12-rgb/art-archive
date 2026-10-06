@@ -33,6 +33,28 @@ describe("composePrompt", () => {
     expect(r.notes.join(" ")).toMatch(/Add a subject/);
   });
 
+  it("preserves repeated lettering as placed elements, with size and signed rotation", () => {
+    const s = state({ subject: "", aspect: "4:5", view: "2d" });
+    const camera = shotCamera(s);
+    s.actors = [0.2, 0.4].map((y) => {
+      const text = { ...newActor("text", "what the chat", []), scale: 0.46, stretch: 1.2 };
+      return applyLayerEdit(camera, text, { x: 0.25, y, rotation: -20 });
+    });
+    const { prompt, notes } = composePrompt(s);
+    expect(prompt).toContain("An image of a typography composition");
+    expect(prompt).not.toContain("[describe your subject]");
+    expect(notes.join(" ")).not.toContain("Add a subject");
+    expect(prompt).toContain("Text layout: exactly 2 placed text elements");
+    expect(prompt).toContain('Text element 1: "what the chat"; centre 25% from the left and 20% from the top; unrotated width 96.7%');
+    expect(prompt).toContain("letter height 8% of the frame height; 20 degrees counterclockwise (rising to the right)");
+    expect(prompt).toContain("centre 25% from the left and 40% from the top");
+    expect(prompt).not.toContain("small in the distance");
+    expect(prompt).not.toContain("Composition:");
+    s.task = "restyle";
+    s.preserve = ["composition"];
+    expect(composePrompt(s).prompt).not.toContain("Text layout:");
+  });
+
   it("scales the number of cues with intensity", () => {
     const style = getStyle("steampunk")!;
     const subtle = composePrompt(state({ intensity: "subtle" })).prompt;
@@ -274,7 +296,7 @@ describe("composePrompt", () => {
     const sign = { ...newActor("text", "OPEN LATE", [table]), position: [0, 1.5, 0] as Vec3 };
     const { prompt } = composePrompt(state({ subject: "", text: "EST. 1920", actors: [table, sign] }));
     expect(prompt).toContain("An image of a table, in the Steampunk style.");
-    expect(prompt).toMatch(/Layout: .*the text "OPEN LATE"/);
+    expect(prompt).toContain('Text element 1: "OPEN LATE"');
     expect(prompt).toMatch(/Lettering: set exactly these texts: "OPEN LATE" and "EST\. 1920" in /);
   });
 

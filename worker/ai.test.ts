@@ -5,6 +5,8 @@ import type { Env } from "./env";
 import { suggestSchemes } from "./palette";
 import { perfectPrompt } from "./prompt";
 import { concepts } from "./concepts";
+import { composePrompt } from "../src/lib/prompt/compose";
+import { decodeState } from "../src/lib/prompt/state";
 
 const env = (patch: Partial<Env> = {}): Env =>
   ({
@@ -111,6 +113,34 @@ describe("model chain", () => {
 describe("prompt task", () => {
   const query = "s=gothic&sc=" + encodeURIComponent("person~old knight~0~0~0~0~0~0~1~stand~1");
   const complete = "An old knight standing in the centre, Gothic style, #0F0D0E #5A1520 #A88A4E. Avoid: bright pastels.";
+
+  it("repairs a restyle that introduces new paper and ink colours despite preservation", async () => {
+    const fixed = "Restyle in Pop Art using existing source colours only. Outline with the source's darkest existing tone. Avoid: soft gradients.";
+    const calls = fakeFetch({ openrouter: (_body, n) => openRouterReply(JSON.stringify({ prompt: n ? fixed : "Pop Art with black ink outlines on yellowed paper. Avoid: soft gradients." })) });
+    const result = await perfectPrompt(env(), { query: "s=pop-art&t=restyle&k=colours" });
+    expect(result.prompt).toBe(fixed);
+    expect(result.warnings).toEqual([]);
+    expect(calls).toHaveLength(2);
+  });
+
+  it("falls back to the board facts when rewrites keep the words but lose text geometry", async () => {
+    const query = "s=gothic&sc=" + encodeURIComponent("text~what the chat~0~1~0~0~0~-20~0.46~stand~1");
+    const facts = composePrompt(decodeState(new URLSearchParams(query)).state).prompt;
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: 'Gothic style. "what the chat" as a headline with tiny scattered repeats. #0F0D0E #5A1520 #A88A4E. Avoid: pastels.' })) });
+    const result = await perfectPrompt(env({ ANTHROPIC_API_KEY: undefined }), { query });
+    expect(result.prompt).toBe(facts);
+    expect(result.warnings.join(" ")).toContain("changed the placed text layout");
+  });
+
+  it("accepts a rewrite that preserves every text placement instruction", async () => {
+    const query = "s=gothic&sc=" + encodeURIComponent("text~what the chat~0~1~0~0~0~-20~0.46~stand~1");
+    const facts = composePrompt(decodeState(new URLSearchParams(query)).state).prompt;
+    const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: facts })) });
+    const result = await perfectPrompt(env(), { query });
+    expect(result.warnings).toEqual([]);
+    expect(result.prompt).toContain("20 degrees counterclockwise");
+    expect(calls).toHaveLength(1);
+  });
 
   it("moves to the next model when a valid prompt still leaves something out", async () => {
     // Gemini leaves out the knight twice (first draft and repair); the next model gets it right.

@@ -34,6 +34,9 @@ const finish = entry("finish");
 const needsWords = (c: CraftEntry): CraftEntry => ({ ...c, lettering: true });
 
 export const craft: CraftEntry[] = [
+  technique("natural-photograph", "photography", "natural photographic tonal detail and light, without an added print effect", ["photographic"]),
+  needsWords(technique("smooth-lettering", "smooth type", "smooth anti-aliased lettering with consistent edge quality", ["typographic", "digital"])),
+  device("uniform-repeat", "equal repetition", "equal-sized elements repeated with a consistent angle and spacing, clipped at the frame edges, without a separate hero or an exceptional cell", ["typographic", "geometric"]),
   // ——— Techniques: how the hero is made ———
   technique("halftone-screen", "halftone", "coarse halftone-dot screen across the image, dots visible at arm's length", ["photographic", "textured", "restrained"], "the dot screen shimmers as things move"),
   technique("one-bit-dither", "1-bit dither", "1-bit dithered rendering: pure black and white pixels in an ordered dither pattern", ["digital", "restrained", "geometric"], "the dither pattern crawls between frames"),

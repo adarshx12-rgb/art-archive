@@ -114,6 +114,23 @@ export function describeScene(projected: Projected[], aspect: number): string {
     .join("; ");
 }
 
+/** Text geometry in picture coordinates, not vague distance/size categories. */
+export function describeTextLayout(projected: Projected[], aspect: number): string[] {
+  const texts = projected.filter((p) => isText(p.glyph));
+  if (!texts.length) return [];
+  const percent = (n: number) => `${Math.round(n * 1000) / 10}%`;
+  return [
+    `Text layout: exactly ${texts.length} placed text ${texts.length === 1 ? "element" : "elements"}. Preserve their positions, sizes, angles, spacing and edge crops. Do not add a headline, extra copies or a smaller background pattern. Leave unoccupied areas empty. These measurements override style or concept layout suggestions; they are instructions, not text to print.`,
+    ...texts.map((p, i) => {
+      // Storyboard draws text once, stretched across its box, even when count > 1.
+      const width = p.size * widthRatio(p.glyph, p.label) * (p.stretch ?? 1) * (p.count + 0.15 * (p.count - 1)) / aspect;
+      const angle = Math.round((((p.rotation + 180) % 360 + 360) % 360 - 180) * 10) / 10;
+      const rotation = angle === 0 ? "horizontal" : `${Math.abs(angle)} degrees ${angle < 0 ? "counterclockwise (rising to the right)" : "clockwise (falling to the right)"}`;
+      return `Text element ${i + 1}: "${p.label}"; centre ${percent(p.x)} from the left and ${percent(p.y)} from the top; unrotated width ${percent(width)} of the frame width, letter height ${percent(p.size)} of the frame height; ${rotation}. Clip at the frame edges without shrinking or moving it.`;
+    }),
+  ];
+}
+
 /** The subject drawn on top at a point of the frame, if any. Projected subjects come furthest first, the order they're drawn in. */
 export function subjectAt(x: number, y: number, projected: Projected[], aspect: number): Projected | undefined {
   return [...projected]

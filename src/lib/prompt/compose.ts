@@ -20,7 +20,7 @@ import {
   type PreserveId,
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
-import { describeComments, describeScene, referenceImages } from "../scene/describe";
+import { describeComments, describeScene, describeTextLayout, referenceImages } from "../scene/describe";
 import { typedWords } from "../art/brief";
 import { withArticle } from "../sketch/layers";
 import { cleanComment, cleanSubject, MAX_COMMENTS, styleFor, type BuilderState } from "./state";
@@ -156,11 +156,12 @@ export function composePrompt(state: BuilderState): ComposeResult {
   // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
   const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
   const placedNames = joinList([...byPriority(projected).filter((p) => p.glyph !== "text" && p.glyph !== "image").map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
-  const subject = placedNames || "[describe your subject]";
+  const texts = typedWords(state);
+  const subject = placedNames || (texts.length ? "a typography composition" : "[describe your subject]");
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
   // Restyle prompts describe the source only when a subject is given, so they have no placeholder.
-  if (!placedNames && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
+  if (!placedNames && !texts.length && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
   const preserve = new Set<PreserveId>(
     isRestyle ? state.preserve.filter((id) => isVideo || id !== "timing") : [],
   );
@@ -169,7 +170,6 @@ export function composePrompt(state: BuilderState): ComposeResult {
   const keepTiming = isVideo && preserve.has("timing");
   // Text placed on the sketch, then any still in the box. It replaces the source's lettering, so "keep existing text" no longer applies.
   const template = state.template ? getTemplate(style.slug, state.template) : undefined;
-  const texts = typedWords(state);
   if (texts.length && preserve.delete("text")) notes.push("The text you typed replaces the source’s lettering, so “Text & logos” is not preserved.");
 
   const lines: string[] = [];
@@ -239,7 +239,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
         : findOption(compositionOptions, state.composition)!.phrase;
     const aspect = findOption(aspectOptions, state.aspect)!.phrase;
     // A style-default composition already expressed by the cues only needs the frame.
-    if (state.composition === "style" && isRedundant(comp, seen)) add("Framing", `${aspect}.`);
+    if (!comp || (state.composition === "style" && (projected.length > 0 || isRedundant(comp, seen)))) add("Framing", `${aspect}.`);
     else add("Composition", `${comp}, in ${aspect}.`);
   }
 
@@ -269,12 +269,13 @@ export function composePrompt(state: BuilderState): ComposeResult {
   }
 
   // 5c. Layout of subjects placed on the sketch; added pictures get their own line
-  const sceneOnly = projected.filter((p) => p.glyph !== "image");
+  const sceneOnly = projected.filter((p) => p.glyph !== "image" && p.glyph !== "text");
   if (sceneOnly.length && !keepComposition) {
     add("Layout", `${describeScene(sceneOnly, aspectOf(state.aspect))}.`);
   } else if (sceneOnly.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
+  if (!keepComposition) describeTextLayout(projected, aspectOf(state.aspect)).forEach((line) => add("", line));
   // Pictures added to the sketch: what each is for (a face to keep, a logo to reproduce…), in the order to attach them.
   const references = referenceImages(projected, aspectOf(state.aspect));
   references.forEach((line) => add("", line));
@@ -289,7 +290,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
   // 6. Lighting
   const lighting =
     state.lighting === "style" ? style.look.lighting : findOption(lightingOptions, state.lighting)!.phrase;
-  if (state.lighting !== "style" || !isRedundant(lighting, seen)) add("Lighting", `${lighting}.`);
+  if (lighting && (state.lighting !== "style" || !isRedundant(lighting, seen))) add("Lighting", `${lighting}.`);
 
   // 7. Typography: the exact text typed, or guidance only when text is likely to appear
   if (texts.length) {

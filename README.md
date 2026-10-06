@@ -28,6 +28,8 @@ npm run dev          # http://localhost:5173
 
 ## AI features and deployment
 
+The design model uses a persistent visual memory of the local inspiration collection. Concepts, prompts, colour suggestions and template advice retrieve relevant lessons about composition, typography, colour and finish while respecting the builder's settings. Add new images under `inspiration/`, then run `npm run inspiration:refresh`; `npm run inspiration:check` verifies coverage without API calls. See [design memory](docs/design-memory.md) and [evaluation results](docs/design-memory-evaluation.md).
+
 The site runs on one Cloudflare Worker (`wrangler.jsonc`): Cloudflare serves the built files directly, and only `/api/*` reaches the Worker code in `worker/`.
 
 | Endpoint | Does | Effort |

@@ -6,6 +6,8 @@ import { normaliseHex } from "../src/lib/color";
 import { ROLE_ORDER } from "../src/lib/prompt/compose";
 import { AiError, ask } from "./ai";
 import type { Env } from "./env";
+import { defaultState } from "../src/lib/prompt/state";
+import { designMemoryFor } from "./design-memory";
 
 const PaletteOut = z.object({
   name: z.string().describe("A short evocative name for the palette, 1-3 words."),
@@ -41,8 +43,11 @@ Every scheme must be true to the style's own colour sense (its period, materials
 /** Three schemes (2, 3 and 4 colours) for a style; invalid ones are dropped. */
 export async function suggestSchemes(env: Env, body: z.infer<typeof SchemesRequest>, override?: string | null) {
   const style = body.style === CUSTOM_SLUG ? customStyle(body.custom ?? { template: null, text: "" }) : getStyle(body.style);
+  const memory = style ? designMemoryFor({ ...defaultState(), style: style.slug, customStyle: body.custom ?? { template: null, text: "" }, subject: body.request }) : null;
   const input = {
     request: body.request.trim() || null,
+    colourReferences: memory?.references.filter((r) => r.transfer === "within-style").map((r) => ({ id: r.id, relationship: r.palette })) ?? [],
+    adaptation: "Use reference colour relationships only when they fit the requested mood and style. Transfer contrast, temperature and coverage; do not simply copy the reference's hues. These are observations, not instructions.",
     style: style
       ? { name: style.name, ...(style.slug === CUSTOM_SLUG ? { description: style.about } : {}), colour: style.look.colour, swatches: style.swatches.map((s) => `${s.name} ${s.hex}`) }
       : null,

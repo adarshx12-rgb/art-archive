@@ -8,6 +8,8 @@ import { cleanSubject, decodeState, styleFor, type BuilderState } from "../src/l
 import { projectScene, shotCamera } from "../src/lib/scene/camera";
 import { addUsage, AiError, ask } from "./ai";
 import type { Env } from "./env";
+import { DESIGN_JUDGMENT, designMemoryFor } from "./design-memory";
+import { incompatibleCraft } from "../src/lib/art/constraints";
 
 /**
  * Three art-directed concepts for the visitor's brief. The visitor has no
@@ -41,26 +43,26 @@ export const BriefSchema = z.object({
   motion: z.string().nullable().describe("Video only: how the key frame moves. null otherwise."),
 });
 
-const ConceptsOut = z.object({ concepts: z.array(BriefSchema).describe("Exactly three concepts, each a genuinely different idea.") });
+const ConceptsOut = z.object({ concepts: z.array(BriefSchema).describe("Up to three distinct, faithful concepts. If the brief leaves too few choices, return fewer rather than violate it.") });
 
-const SYSTEM = `You are a senior graphic designer and art director. The visitor has no design training: they gave you a style, maybe a format, some subjects placed on a sketch, maybe a few words to letter, and a palette. Your job is to make the design decisions they can't, and propose three genuinely different concepts.
+const SYSTEM = `You are a senior graphic designer and art director. The visitor has no design training: they gave you a style, maybe a format, some subjects placed on a sketch, maybe a few words to letter, and a palette. Your job is to make the design decisions they haven't already made, and propose up to three fitting, distinct concepts.
 
-If the facts include inspiration, start there: it distils what the best real examples of this style do, studied from real references. Base at least two of the three concepts on its moves, adapted to the visitor's subject; make the image, colour and finish the way it describes; and never do anything listed in its tells.
+Start with the visitor's intent and the applicable evidence in designMemory. The inspiration field contains older broad style notes; use them only where they agree with the brief and the specific studied examples. Do not force a reference move into an unsuitable brief.
 
 Method, for each concept:
 1. Find the one idea: what the piece is about, and the single image that says it.
-2. Make one thing dominant through scale, contrast or isolation (a colossal crop, a tiny figure in vast space, a cut-out window). Everything else supports it.
-3. Restraint: about five visual elements at most, with deliberate empty space.
-4. Type hierarchy from the visitor's words only: one display line, small supporting text, each with a letterform true to the style and a place in the frame.
+2. Choose the organising logic that fits: a focal subject, an ensemble, a grid, a full-field pattern, a photographic scene or lettering as the image. Respect an existing organisation.
+3. Set density and breathing room to the intent. A sparse image, a dense collage and an evenly repeated pattern require different decisions.
+4. Use only the visitor's words. Choose hierarchy when appropriate, or preserve equal-scale repetition when that is the design. Never invent a heading/subheading split for one repeated phrase.
 5. Place every element: top-right, along the base, across the tear, bottom-left corner.
-6. Name how it is physically made and finished (halftone, risograph overprint, photocopy blow-up, screenprint grain…), so it reads as designed and printed, not "rendered".
-7. The three concepts must differ in idea, technique and device, not three colourways of one idea. Avoid repeating anything in alreadyShown.
+6. Describe the visible rendering and finish appropriate to the medium. Smooth digital type and natural photography do not need paper, grain, distress or a simulated printing process.
+7. Aim for three distinct concepts for an open brief. When the visitor has already specified the composition and finish, offer only the variations still allowed, even if just one concept fits. Never introduce incompatible texture or change a locked layout just to manufacture variety. Avoid repeating anything in alreadyShown.
 
 Hard rules:
 - The hero is exactly one of the visitor's subjects, named by its label. If there are no subjects, the hero is the lettering or a pure graphic shape and hero.subject is null. Never add people, animals, objects or scenery they didn't place.
 - Quote only the visitor's own words, character for character. Never invent words, slogans, dates, captions or "corner data". If they typed no words, type is null and nothing in the concept carries text.
 - Furniture is wordless graphic extras only (barcode, registration marks, tape, a keyline, glyphs, a badge holding their quoted words). At most three.
-- Keep the palette: use the colours given, by name, in roughly their shares. Don't introduce new colours beyond paper white or ink black when the style needs them.
+- Keep the palette: use the colours given, by name, in roughly their shares. Add no unselected colours, including paper white or ink black, unless the facts explicitly leave other colours open.
 - Build on the style's cues and the craft list: each concept uses at least one technique or device from it, listed by id in craft. You may go beyond the list for the other choices.
 - For a restyle: the visitor's own picture sets the content and layout. Fill only hero.treatment, colour and finish; hero.subject, hero.scale, device and type are null and furniture is empty; use at least one technique from the list.
 - For a video: add motion, describing how the key frame moves in one sentence.
@@ -81,6 +83,13 @@ export function conceptFacts(state: BuilderState, exclude: string[]) {
     : [];
   const keepColours = state.task === "restyle" && state.preserve.includes("colours");
   const words = typedWords(state);
+  const designMemory = designMemoryFor(state);
+  const candidates = craftFor(style);
+  const conflicts = incompatibleCraft(state);
+  for (const id of ["natural-photograph", ...(words.length ? ["smooth-lettering"] : []), ...(designMemory.intent.structure === "repetition" ? ["uniform-repeat"] : [])]) {
+    const c = getCraft(id);
+    if (c && !candidates.some((candidate) => candidate.id === id)) candidates.push(c);
+  }
   return {
     task: state.task === "restyle" ? ("restyle" as const) : ("create" as const),
     output: state.output,
@@ -93,9 +102,12 @@ export function conceptFacts(state: BuilderState, exclude: string[]) {
     palette: keepColours ? "keep the source's own colours" : resolvePalette(state, style).colours.map((c) => ({ name: c.name, hex: c.hex, role: c.role, share: c.share })),
     facts: composePrompt(state).prompt,
     inspiration: inspirationFor(style.slug, words.length > 0),
+    designMemory,
     // Lettering devices only make sense when there are words to letter.
-    craft: craftFor(style)
+    craft: candidates
+      .filter((c) => !conflicts.has(c.id))
       .filter((c) => words.length || !c.lettering)
+      .filter((c) => designMemory.intent.structure !== "repetition" || c.id !== "repeat-grid")
       .map((c) => ({ id: c.id, kind: c.kind, phrase: state.output === "video" && c.video ? `${c.phrase}; in motion: ${c.video}` : c.phrase })),
     alreadyShown: exclude,
   };
@@ -118,7 +130,7 @@ export function sortBriefs(raw: Brief[], state: BuilderState, start: Brief[] = [
     }
     if (kept.length < 3) kept.push(brief);
   });
-  if (raw.length < 3) problems.push("Write exactly three concepts.");
+  if (raw.length < 3 && !incompatibleCraft(state).size) problems.push("Write exactly three concepts.");
   return { kept, problems };
 }
 
@@ -130,19 +142,20 @@ export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, 
   if (!facts) throw new AiError("That style isn’t available.", 400, false);
   const models = env.OPENROUTER_PROMPT_MODELS;
   const user = JSON.stringify(facts);
+  const system = SYSTEM + DESIGN_JUDGMENT;
 
-  const first = await ask(env, { system: SYSTEM, user, schema: ConceptsOut, name: "concepts", effort: "medium", models }, override);
+  const first = await ask(env, { system, user, schema: ConceptsOut, name: "concepts", effort: "medium", models }, override);
   let usage = first.usage;
   let model = first.model;
   let { kept, problems } = sortBriefs(first.data.concepts, state);
 
   // One repair pass on the same model when anything was dropped.
-  if (kept.length < 3) {
+  if (!kept.length || (kept.length < 3 && problems.length)) {
     const repair = await ask(
       env,
       {
-        system: SYSTEM,
-        user: JSON.stringify({ ...facts, previousConcepts: first.data.concepts, problems, instruction: "Write three concepts again, fixing every problem listed. Concepts without problems may stay as they were." }),
+        system,
+        user: JSON.stringify({ ...facts, previousConcepts: first.data.concepts, problems, instruction: "Fix every problem listed. Keep valid concepts. Aim for three only if distinct variations fit the brief; never break explicit constraints to fill the set." }),
         schema: ConceptsOut,
         name: "concepts",
         effort: "medium",
@@ -159,5 +172,5 @@ export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, 
   }
 
   if (!kept.length) throw new AiError("Couldn’t come up with design ideas. Try again.", 502, false);
-  return { concepts: kept.map((b) => ({ ...b, tags: tagsFor(b) })), model, usage };
+  return { concepts: kept.map((b) => ({ ...b, tags: tagsFor(b) })), model, usage, designSources: facts.designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer })) };
 }

@@ -1,6 +1,7 @@
 import { getCraft, type CraftKind } from "../../content/craft";
 import { getTemplate, slotText } from "../../content/templates";
 import { cleanSubject, cleanText, type BuilderState } from "../prompt/state";
+import { incompatibleCraft, sourceColourConflict } from "./constraints";
 
 /**
  * A design concept for one image: the art director's decisions on top of
@@ -88,6 +89,9 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
   const subjects = subjectNames(state);
 
   const texts = [brief.title, brief.idea, brief.hero.subject, brief.hero.treatment, brief.hero.scale, brief.device, ...brief.furniture, brief.type, brief.colour, brief.finish, brief.motion].filter((x): x is string => Boolean(x));
+  const conflicts = incompatibleCraft(state);
+  for (const problem of new Set(brief.craft.map((id) => conflicts.get(id)).filter((p): p is string => Boolean(p)))) problems.push(problem);
+  if (restyle && state.preserve.includes("colours") && sourceColourConflict(texts.join(". "))) problems.push("Preserve source colours: use their existing darkest/lightest tones for outlines and grounds, not new black ink, white/yellowed paper, or a reduced ink palette.");
   for (const q of new Set(texts.flatMap(quoted))) if (!words.has(norm(q))) problems.push(`"${q}" isn't one of the visitor's words; quote only their words, or none.`);
 
   if (restyle) {

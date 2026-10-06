@@ -1,12 +1,12 @@
 /**
- * What the best real examples of a style do, distilled from the reference
+ * Legacy handwritten style summaries, distilled from the reference
  * images in inspiration/<slug> (kept locally, never shipped). The concept
  * and prompt models build from these moves and steer clear of the tells, so
  * their ideas look like the genre at its best rather than its average.
  *
- * Written only for styles with enough references (about ten or more); add a
- * style here once its folder is full. Never name real people, brands or
- * works: describe what the images do.
+ * These predate the complete per-image studies in worker/data/design-memory.json.
+ * They are supplementary style notes, not a coverage report. The worker retrieves
+ * specific evidence from the full collection, including folders with one image.
  */
 
 export interface Inspiration {

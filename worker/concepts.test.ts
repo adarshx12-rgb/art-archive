@@ -27,7 +27,10 @@ describe("conceptFacts", () => {
     expect(f.subjects.map((s) => s.label)).toEqual(["woman dancing"]);
     expect(f.words).toEqual(["Night Shift"]);
     expect(Array.isArray(f.palette) && f.palette[0]!.hex).toBe("#F0EEE7");
-    expect(f.craft).toHaveLength(30);
+    expect(f.craft.length).toBeLessThanOrEqual(33);
+    expect(new Set(f.craft.map((c) => c.id)).size).toBe(f.craft.length);
+    expect(f.craft.some((c) => c.id === "smooth-lettering")).toBe(true);
+    expect(f.designMemory.references.length).toBeGreaterThan(0);
     expect(f.alreadyShown).toEqual(["Old idea"]);
   });
 

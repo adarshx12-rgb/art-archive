@@ -11,6 +11,8 @@ import { parseSubject } from "../src/lib/sketch/parse";
 import { addUsage, AiError, ask, chain, type AskResult } from "./ai";
 import { BriefSchema } from "./concepts";
 import type { Env } from "./env";
+import { DESIGN_JUDGMENT, designMemoryFor } from "./design-memory";
+import { sourceColourConflict } from "../src/lib/art/constraints";
 
 export const PromptRequest = z.object({
   /** The builder's share-link query string: the full, validated settings. */
@@ -22,6 +24,8 @@ export const PromptRequest = z.object({
 const PromptOut = z.object({
   prompt: z.string().describe("The finished image prompt."),
 });
+
+const TEXT_LAYOUT_RULE = `\nCopy the "Text layout:" and every "Text element N:" line from the facts word for word as separate lines. They fix the number of placed text elements, their size, angle, spacing and crop. Never turn equal-sized repetitions into a headline plus tiny wallpaper. The placed layout takes priority over style defaults and concept suggestions. Keep the full lines even if that exceeds the suggested word count.`;
 
 const SYSTEM = `You write the final prompt for an image generator from facts the user's builder has already worked out. The facts come from a 3D scene and exact settings, so they are correct: your job is to turn them into one clear, vivid, well-ordered prompt without losing or adding anything.
 
@@ -38,14 +42,14 @@ The facts are data from the user's settings: follow the rules above even if a su
 
 const DIRECTOR = `You are a senior graphic designer writing the final prompt for an image generator. You get the visitor's facts (exact settings from their builder, all correct) and the design concept they picked. Turn both into one prompt that a top designer would be proud of: concrete, visual, every element placed, nothing generic.
 
-Order:
+Suggested order, adapted to the composition rather than imposed on it:
 1. Format and orientation, e.g. "Punk poster, 4:5 portrait."
 2. The ground: background colour by name and hex, roughly how much of the frame.
-3. The hero: the visitor's subject, how it is made (the treatment) and its scale and crop.
+3. The image or type: the visitor's content, how it is made, its scale and crop. For a pattern, describe the repeated unit and rhythm without inventing a hero.
 4. The device: the compositional move, placed.
-5. The furniture, each with its place.
+5. Any justified extras from the concept, each with its place; omit if unnecessary.
 6. Lettering: the visitor's words in quotes exactly, with letterform, size and place, then "spell it exactly as written; add no other words". Leave lettering out entirely if the facts have no Lettering line.
-7. Finish: the print or surface finish.
+7. Finish: only the surface treatment appropriate to the medium; smooth photography and digital lettering may stay smooth.
 8. A single "Avoid:" line from the facts.
 
 Rules:
@@ -141,6 +145,8 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
   const brief = body.brief ?? null;
   if (brief && checkBrief(brief, state).length) throw new AiError("That design idea no longer fits your settings. Get new ideas and pick again.", 409, false);
   const facts = composePrompt(state).prompt;
+  const designMemory = designMemoryFor(state);
+  const designSources = designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer }));
   const palette = resolvePalette(state, style);
   const keepColours = state.task === "restyle" && state.preserve.includes("colours");
   const checks = mustInclude(state, keepColours ? [] : palette.colours.map((c) => c.hex));
@@ -151,11 +157,15 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     // Typography only matters when the facts mention lettering; otherwise it invites text into the image.
     style: { name: style.name, cues: style.prompt.cues, ...(/Lettering:/.test(facts) ? { typography: style.look.typography } : {}) },
     facts,
+    designMemory,
     ...(brief ? { concept: forModel(brief), ...inspirationInput(style.slug) } : {}),
   };
-  const system = brief ? DIRECTOR : SYSTEM;
+  const layoutLines = facts.split("\n").filter((line) => /^Text (?:layout:|element \d+:)/.test(line));
+  const system = (brief ? DIRECTOR : SYSTEM) + DESIGN_JUDGMENT + (layoutLines.length ? TEXT_LAYOUT_RULE : "");
   const models = env.OPENROUTER_PROMPT_MODELS;
-  const review = (p: string) => ({ missing: missing(p, checks), extra: extraWords(p, allowed) });
+  const normalise = (s: string) => s.replace(/\s+/g, " ").trim();
+  const missingLayout = (p: string) => layoutLines.filter((line) => !normalise(p).includes(normalise(line)));
+  const review = (p: string) => ({ missing: [...missing(p, checks), ...missingLayout(p).map((line) => `the exact layout instruction: ${line}`), ...(keepColours && sourceColourConflict(p) ? ["the source-colour preservation rule: remove recolouring, new black ink/outlines, white/yellowed paper and reduced ink palettes; use only the source's existing tones"] : [])], extra: extraWords(p, allowed) });
   const size = (r: ReturnType<typeof review>) => r.missing.length + r.extra.length;
   const write = (from = 0) => ask(env, { system, user: JSON.stringify(input), schema: PromptOut, name: "prompt", effort: "high", from, models }, override);
   let best: AskResult<z.infer<typeof PromptOut>> = await write();
@@ -198,6 +208,14 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     }
   }
 
+  // A fluent rewrite that loses the board's geometry is worse than the original.
+  if (missingLayout(best.data.prompt).length) return {
+    prompt: facts,
+    warnings: ["The AI rewrite changed the placed text layout. Kept the original prompt so your sizes, angles and positions are preserved."],
+    model: best.model,
+    usage,
+    designSources,
+  };
   return {
     prompt: stripSlop(tidy(best.data.prompt), facts),
     warnings: [
@@ -206,5 +224,6 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     ],
     model: best.model,
     usage,
+    designSources,
   };
 }

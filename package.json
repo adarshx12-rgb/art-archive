@@ -12,7 +12,10 @@
     "test": "vitest run",
     "e2e": "node scripts/e2e.mjs",
     "eval:ai": "node scripts/eval-ai.mjs",
-    "templates": "node scripts/check-templates.mjs"
+    "templates": "node scripts/check-templates.mjs",
+    "inspiration:refresh": "python scripts/prepare-inspiration.py && node scripts/study-inspiration.mjs",
+    "inspiration:check": "node scripts/check-inspiration.mjs",
+    "eval:design": "node scripts/eval-design-memory.mjs after"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.128.0",

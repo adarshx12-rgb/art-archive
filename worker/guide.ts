@@ -2,6 +2,7 @@ import { z } from "zod";
 import { formatInfo, getTemplate, isTextBlock, slotText } from "../src/content/templates";
 import type { StyleTemplate } from "../src/content/types";
 import { projectScene, shotCamera } from "../src/lib/scene/camera";
+import { promptStyle } from "../src/lib/prompt/compose";
 import { decodeState, styleFor, type BuilderState } from "../src/lib/prompt/state";
 import { ask } from "./ai";
 import type { Env } from "./env";
@@ -46,8 +47,8 @@ If nothing is placed yet, the first idea should place a strong main subject that
 /** What the model is told: the layout, the words in use and where each subject sits. */
 export function guideFacts(state: BuilderState) {
   const template = state.template ? getTemplate(state.style, state.template) : undefined;
-  const style = styleFor(state);
-  if (!template || !style) return null;
+  if (!template || !styleFor(state)) return null;
+  const { style } = promptStyle(state);
   const words = slotText(template, state.templateText);
   const r = (n: number) => Math.round(n * 100) / 100;
   const subjects = state.actors.length

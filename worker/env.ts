@@ -9,6 +9,12 @@ export interface Env {
   OPENROUTER_MODELS?: string;
   /** The same for writing final prompts, which a different model may do best; empty uses OPENROUTER_MODELS. */
   OPENROUTER_PROMPT_MODELS?: string;
+  /** The same for design ideas (the art director); empty uses OPENROUTER_PROMPT_MODELS. */
+  OPENROUTER_DIRECTOR_MODELS?: string;
+  /** The same for reading pictures; these models must accept images. */
+  OPENROUTER_VISION_MODELS?: string;
+  /** The same for the content planner; empty skips the model and uses the rules plan. */
+  OPENROUTER_PLANNER_MODELS?: string;
   /** Anthropic model used directly as the last resort. */
   AI_MODEL?: string;
   /** Sent to OpenRouter for app attribution. */

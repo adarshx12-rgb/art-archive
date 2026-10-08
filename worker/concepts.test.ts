@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Brief } from "../src/lib/art/brief";
 import { decodeState } from "../src/lib/prompt/state";
+import { imageActor } from "../src/lib/scene/model";
 import { conceptFacts, sortBriefs } from "./concepts";
+import { basePlan } from "../src/lib/plan/plan";
 
 const state = decodeState(new URLSearchParams("s=punk&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1"))).state;
 const brief = (title: string, craft: string[], patch: Partial<Brief> = {}): Brief => ({
@@ -38,6 +40,24 @@ describe("conceptFacts", () => {
     const silent = decodeState(new URLSearchParams("s=swiss&fm=poster&q=a%20cat")).state;
     expect(conceptFacts(silent, [])!.craft.map((c) => c.id)).not.toEqual(expect.arrayContaining(["giant-glyph"]));
     expect(conceptFacts(silent, [])!.craft.some((c) => ["giant-glyph", "stacked-column", "type-behind", "type-as-image"].includes(c.id))).toBe(false);
+  });
+
+  it("gives the director the content plan: the rules plan by default, or the one passed in", () => {
+    const poster = decodeState(new URLSearchParams("s=swiss&fm=poster&q=a%20cat&tx=" + encodeURIComponent("Cat Show\nSunday 10am"))).state;
+    expect(conceptFacts(poster, [])!.plan).toEqual(basePlan(poster));
+    const planned = { ...basePlan(poster), message: "A cat show this Sunday.", source: "ai" as const };
+    expect(conceptFacts(poster, [], planned)!.plan).toBe(planned);
+    const restyle = decodeState(new URLSearchParams("s=swiss&t=restyle&k=composition&q=a%20cat")).state;
+    expect(conceptFacts(restyle, [])!.plan.layout).toBe("preserve");
+  });
+
+  it("treats a text-source picture as words: lettering devices on, sources named", () => {
+    const silent = decodeState(new URLSearchParams("s=swiss&fm=poster")).state;
+    const withSource = { ...silent, actors: [imageActor({ key: "k", ratio: 1, use: "text" }, [])] };
+    const facts = conceptFacts(withSource, [])!;
+    expect(facts.textSources).toEqual(["image 1"]);
+    expect(facts.craft.some((c) => c.id === "smooth-lettering")).toBe(true);
+    expect(conceptFacts(silent, [])!.textSources).toEqual([]);
   });
 
   it("passes the style's inspiration, with lettering moves only when there are words", () => {

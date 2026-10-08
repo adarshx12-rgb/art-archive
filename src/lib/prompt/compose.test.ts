@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { composePrompt, resolvePalette, themePrompt } from "./compose";
-import { decodeState, defaultState, encodeState, MAX_COMMENTS, type BuilderState } from "./state";
+import { COPY_LINES, COPY_MAX, decodeState, defaultState, encodeState, MAX_COMMENTS, type BuilderState } from "./state";
 import { projectScene, shotCamera } from "../scene/camera";
 import { getStyle } from "../../content/styles";
-import { imageActor, newActor, type Actor, type Vec3 } from "../scene/model";
+import { imageActor, newActor, type Actor, type ImageUse, type Vec3 } from "../scene/model";
 import { applyLayerEdit } from "../scene/convert";
 
 const state = (patch: Partial<BuilderState> = {}): BuilderState => ({
@@ -172,8 +172,19 @@ describe("composePrompt", () => {
       ],
     });
     const { prompt } = composePrompt(withNotes);
-    expect(prompt).toContain("Notes: 1) the boat: make the boat old pirate type; 2) the upper left of the frame: a stormy sky here.");
-    expect(composePrompt(s).prompt).not.toContain("Notes:");
+    expect(prompt).toContain("Instructions from the user (carry out each one): 1) the boat: make the boat old pirate type; 2) the upper left of the frame: a stormy sky here.");
+    expect(composePrompt(s).prompt).not.toContain("Instructions from the user");
+  });
+
+  it("keeps several lines of copy through a share link, cleaned and capped", () => {
+    const long = Array.from({ length: 20 }, (_, i) => `line ${i}\u0007`).join("\n");
+    const back = decodeState(new URLSearchParams(encodeState(state({ text: `HEADLINE\n\n  sub line  \n${long}` })).toString())).state;
+    const lines = back.text.split("\n");
+    expect(lines.slice(0, 3)).toEqual(["HEADLINE", "sub line", "line 0"]);
+    expect(lines).toHaveLength(COPY_LINES);
+    expect(back.text.length).toBeLessThanOrEqual(COPY_MAX);
+    const { prompt } = composePrompt(state({ text: "HEADLINE\nsub line" }));
+    expect(prompt).toContain('Lettering: set exactly these texts: "HEADLINE" and "sub line"');
   });
 
   it("keeps comments in the share link, cleaned and capped", () => {
@@ -193,7 +204,7 @@ describe("composePrompt", () => {
     const onMan = projectScene(cam, [man])[0]!;
     const top = onMan.y - onMan.size / 2;
     /** An image dropped at a point of the frame, small, like a sticker. */
-    const at = (x: number, y: number, use?: "face" | "logo" | "product" | "look", n = 0) => {
+    const at = (x: number, y: number, use?: ImageUse, n = 0) => {
       const img = { ...imageActor({ key: `k${n}`, ratio: 1, use }, [man]), id: `img${n}`, label: `image ${n || 1}`, scale: 0.15 };
       return applyLayerEdit(cam, img, { x, y });
     };
@@ -229,6 +240,76 @@ describe("composePrompt", () => {
     it("keeps the chosen use in a share link", () => {
       const back = decodeState(new URLSearchParams(encodeState({ ...base, actors: [man, at(0.5, 0.5, "logo")] }).toString())).state;
       expect(back.actors.find((a) => a.glyph === "image")?.image?.use).toBe("logo");
+    });
+
+    it("a text source lends its words, set in the style, not its layout or colours", () => {
+      const p = lines([man, at(0.85, 0.85, "text")]);
+      expect(p).toMatch(/Image 1: a source of text\. Use its words exactly/);
+      expect(p).toContain("do not copy its layout, colours, fonts or graphics");
+    });
+
+    it("a text source is lettering: no placeholder, and a Lettering line in the style's type", () => {
+      const { prompt, notes } = composePrompt({ ...base, actors: [at(0.5, 0.5, "text")] });
+      expect(prompt).toMatch(/^An image of a typography composition,/);
+      expect(notes.join(" ")).not.toMatch(/Add a subject/);
+      expect(prompt).toMatch(/Lettering: set the words from image 1 exactly as they appear in it, in .+; spell them exactly and add no other words\./);
+    });
+
+    it("a comment on an image sets its role when none is chosen", () => {
+      const logo = at(0.2, 0.2, undefined, 1);
+      const info = at(0.8, 0.8, undefined, 2);
+      const p = composePrompt({
+        ...base,
+        actors: [man, logo, info],
+        comments: [
+          { id: "a", x: 0.2, y: 0.2, text: "this is company logo. do not alter it" },
+          { id: "b", x: 0.8, y: 0.8, text: "keep the text information" },
+        ],
+      }).prompt;
+      expect(p).toMatch(/Image 1: a logo or symbol [^.]*\. Reproduce it exactly/);
+      expect(p).toMatch(/Image 2: a source of text\./);
+      // A role picked by hand wins over the comment.
+      const chosen = composePrompt({ ...base, actors: [man, at(0.2, 0.2, "look", 1)], comments: [{ id: "a", x: 0.2, y: 0.2, text: "our logo" }] }).prompt;
+      expect(chosen).toContain("Image 1: use only its look");
+    });
+  });
+
+  describe("which image tool to use", () => {
+    it("points exact-text, logo or own-palette jobs to the tool that followed briefs best", () => {
+      const tip = (s: BuilderState) => composePrompt(s).notes.find((n) => /followed briefs/.test(n));
+      expect(tip(state({ text: "OPEN LATE" }))).toMatch(/Nano Banana 2/);
+      expect(tip(state({ paletteMode: "custom", custom: ["#0B0B0B", "#A6E22E", "#FFFFFF", "#333333"] }))).toMatch(/Nano Banana 2/);
+      // A loose brief with the style's colours has no exact demands to follow.
+      expect(tip(state())).toBeUndefined();
+      expect(tip(state({ text: "OPEN LATE", output: "video" }))).toBeUndefined();
+    });
+
+    it("asks for a proofread whenever the image carries words", () => {
+      expect(composePrompt(state({ text: "OPEN LATE" })).notes.join(" ")).toMatch(/Proofread/);
+      expect(composePrompt(state()).notes.join(" ")).not.toMatch(/Proofread/);
+    });
+  });
+
+  describe("custom colours on a style with its own colours", () => {
+    const custom = state({ style: "blueprint", paletteMode: "custom", count: 3, custom: ["#0B0B0B", "#A6E22E", "#FFFFFF", "#333333"] });
+
+    it("writes the chosen colours straight into the style's own lines", () => {
+      const { prompt } = composePrompt(custom);
+      expect(prompt).toContain("in the Blueprint style.");
+      expect(prompt).toMatch(/Colour palette: black \(#0B0B0B\) as the background/);
+      expect(prompt).toContain("Style: fine yellow-green technical linework on black, orthographic views");
+      // No instructions about the swap for a writer to copy into the image prompt.
+      expect(prompt).not.toMatch(/Colour translation|its own colours|matching palette colour/);
+      // The style's own hues appear only in the Avoid line, so the generator's habit of blue blueprints is named.
+      const [body, avoid] = prompt.split("\nAvoid: ");
+      expect(body).not.toMatch(/Prussian|chalk white|faded blue|deep blue/i);
+      expect(avoid).toMatch(/Prussian blue/);
+    });
+
+    it("leaves the style's own colours untouched", () => {
+      const own = composePrompt(state({ style: "blueprint" })).prompt;
+      expect(own).toContain("fine white technical linework on Prussian blue");
+      expect(own.split("\nAvoid: ")[1]).not.toMatch(/Prussian/);
     });
   });
 
@@ -285,7 +366,7 @@ describe("composePrompt", () => {
   });
 
   it("sets the exact text the user typed", () => {
-    const { prompt } = composePrompt(state({ subject: "a quiet harbour", text: "  Harbour\n  Lights " }));
+    const { prompt } = composePrompt(state({ subject: "a quiet harbour", text: "  Harbour   Lights " }));
     expect(prompt).toMatch(/Lettering: set exactly this text: "Harbour Lights" in .+; spell it exactly as written and add no other words\./);
     expect(prompt).not.toContain("if text appears");
     expect(prompt.match(/Lettering:/g)).toHaveLength(1);

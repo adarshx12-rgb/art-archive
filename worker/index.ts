@@ -7,6 +7,7 @@ import { SchemesRequest, suggestSchemes } from "./palette";
 import { draw, DrawRequest } from "./draw";
 import { guide, GuideRequest } from "./guide";
 import { perfectPrompt, PromptRequest } from "./prompt";
+import { READ_IMAGE_MAX, readImage, ReadRequest } from "./read";
 import { buildScene, SceneRequest } from "./scene";
 import { swapColour, SwapRequest } from "./swap";
 
@@ -21,9 +22,12 @@ import { swapColour, SwapRequest } from "./swap";
  *   POST /api/guide    builder settings     -> ideas for the template design
  *   POST /api/draw     a subject's name     -> a storyboard line drawing of it
  *   POST /api/swap     palette + one colour -> three palettes rebuilt around it
+ *   POST /api/read     a picture            -> the lines of text in it
  */
 
 const MAX_BODY = 32_000;
+/** Only a picture to read may be larger. */
+const maxBody = (path: string) => (path === "/api/read" ? READ_IMAGE_MAX + 1_000 : MAX_BODY);
 const ids = <T extends { id: string | number }>(list: readonly T[]) => list.map((o) => String(o.id)) as [string, ...string[]];
 
 const SceneBody = SceneRequest.extend({
@@ -51,7 +55,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
   if (origin && new URL(origin).host !== url.host) return fail("Not allowed.", 403);
 
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > MAX_BODY) return fail("Request too large.", 413);
+  if (length > maxBody(url.pathname)) return fail("Request too large.", 413);
 
   if (env.AI_LIMIT) {
     const who = request.headers.get("cf-connecting-ip") ?? "local";
@@ -62,7 +66,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
   let raw: unknown;
   try {
     const text = await request.text();
-    if (text.length > MAX_BODY) return fail("Request too large.", 413);
+    if (text.length > maxBody(url.pathname)) return fail("Request too large.", 413);
     raw = JSON.parse(text);
   } catch {
     return fail("Send JSON.", 400);
@@ -103,6 +107,11 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const body = SwapRequest.safeParse(raw);
       if (!body.success) return fail("That colour swap request isn’t valid.", 400);
       return json(await swapColour(env, body.data, override));
+    }
+    case "/api/read": {
+      const body = ReadRequest.safeParse(raw);
+      if (!body.success) return fail("That picture can’t be read. Use a PNG, JPEG or WebP image.", 400);
+      return json(await readImage(env, body.data, override));
     }
     default:
       return fail("Not found.", 404);

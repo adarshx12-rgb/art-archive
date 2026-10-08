@@ -107,3 +107,8 @@ export function aiGuide(state: BuilderState) {
 export function aiDraw(label: string, detail: "quick" | "full") {
   return post<{ strokes: Drawing | null }>("/api/draw", { label, detail });
 }
+
+/** The lines of text in a picture the visitor added, read by a vision model. */
+export function aiReadImage(image: string) {
+  return post<{ lines: string[] }>("/api/read", { image });
+}

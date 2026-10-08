@@ -76,3 +76,28 @@ export function useImages(keys: string[]): Record<string, string> {
   }, [want]);
   return found;
 }
+
+/**
+ * A smaller JPEG of a picture for sending to the server: text stays legible
+ * at this size and the upload stays well under the server's limit.
+ */
+export function shrinkForUpload(dataUrl: string, maxSide = 1280): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * k));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("canvas"));
+      // JPEG has no transparency: put see-through parts on white so dark text stays readable.
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => reject(new Error("image"));
+    img.src = dataUrl;
+  });
+}

@@ -103,6 +103,10 @@ export const COMMENT_MAX = 200;
 export const SUBJECT_MAX = 400;
 /** Matches the longest name a subject on the sketch can have, so placed text is never cut. */
 export const TEXT_MAX = 80;
+/** The text box holds several lines of copy (a headline, services, an address…), each lettered as its own block. */
+export const COPY_MAX = 600;
+export const COPY_LINES = 12;
+const COPY_LINE_MAX = 120;
 
 const firstStyle = styles[0]!;
 
@@ -158,6 +162,23 @@ export const cleanComment = (input: string) => cleanSubject(input.replace(/[~|]/
 
 /** The same cleaning for the text to letter, with its own cap. */
 export const cleanText = (input: string) => cleanSubject(input, TEXT_MAX);
+
+/** The text box's lines, each cleaned, blanks dropped, capped in number and in total length. */
+export function copyLines(input: string): string[] {
+  const lines: string[] = [];
+  let total = 0;
+  for (const raw of input.split(/\r?\n/)) {
+    const line = cleanSubject(raw, COPY_LINE_MAX);
+    if (!line) continue;
+    if (lines.length >= COPY_LINES || total + line.length + lines.length > COPY_MAX) break;
+    lines.push(line);
+    total += line.length;
+  }
+  return lines;
+}
+
+/** The text box as stored: its cleaned lines, one per line. */
+export const cleanCopy = (input: string) => copyLines(input).join("\n");
 
 /** The style record in use: a catalogue style, or one built from the visitor's description. */
 export function styleFor(state: Pick<BuilderState, "style" | "customStyle">): StyleRecord {
@@ -300,7 +321,7 @@ export function decodeState(params: URLSearchParams): DecodeResult {
   const subject = params.get(KEYS.subject);
   if (subject !== null) state.subject = cleanSubject(subject);
   const text = params.get(KEYS.text);
-  if (text !== null) state.text = cleanText(text);
+  if (text !== null) state.text = cleanCopy(text);
   state.intensity = pick<Intensity>(KEYS.intensity, intensities, "Intensity") ?? state.intensity;
   state.paletteMode = pick<PaletteMode>(KEYS.paletteMode, paletteModes, "Palette mode") ?? state.paletteMode;
 

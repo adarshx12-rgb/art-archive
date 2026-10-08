@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { decodeState } from "../prompt/state";
-import { checkBrief, checkSet, quoted, stripSlop, subjectNames, tidyBrief, typedWords, type Brief } from "./brief";
+import { decodeState, defaultState } from "../prompt/state";
+import { imageActor } from "../scene/model";
+import { checkBrief, checkSet, quoted, stripSlop, subjectNames, textSources, tidyBrief, typedWords, type Brief } from "./brief";
 
 const punk = decodeState(new URLSearchParams("s=punk&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1"))).state;
 const brief = (patch: Partial<Brief> = {}): Brief => ({
@@ -21,6 +22,11 @@ describe("the visitor's words and subjects", () => {
   it("collects typed words and subject labels", () => {
     expect(typedWords(punk)).toEqual(["Night Shift"]);
     expect(subjectNames(punk)).toEqual(["woman dancing"]);
+  });
+
+  it("treats each line of the text box as its own block of copy", () => {
+    const copy = { ...defaultState(), text: "TRANSPORT • LOGISTICS\n  JOHOR • SINGAPORE  \n\nseyon_services@yahoo.com" };
+    expect(typedWords(copy)).toEqual(["TRANSPORT • LOGISTICS", "JOHOR • SINGAPORE", "seyon_services@yahoo.com"]);
   });
 
   it("finds straight and curly quoted text", () => {
@@ -63,6 +69,16 @@ describe("checkBrief", () => {
     expect(checkBrief(graphic, silent)).toEqual([]);
     expect(checkBrief({ ...graphic, type: "a giant stacked headline at top" }, silent).join(" ")).toMatch(/typed no words/);
     expect(checkBrief({ ...graphic, craft: ["vector-flat", "giant-glyph"] }, silent).join(" ")).toMatch(/needs lettering: giant-glyph/);
+  });
+
+  it("counts the words in a text-source image as the visitor's, without letting them be invented", () => {
+    const withSource = { ...defaultState(), style: "blueprint", actors: [imageActor({ key: "k", ratio: 1, use: "text" }, [])] };
+    expect(textSources(withSource)).toEqual(["image 1"]);
+    const lettered = brief({ hero: { subject: null, treatment: "a technical drawing", scale: null }, furniture: [], type: "the words from image 1 as small stencil capitals along the base", craft: ["vector-flat", "edge-tension"] });
+    expect(checkBrief(lettered, withSource)).toEqual([]);
+    expect(checkBrief({ ...lettered, type: '"SEYON TRANSPORT" along the base' }, withSource).join(" ")).toMatch(/isn't one of the visitor's words/);
+    // A picture with no role and no comment is not a text source.
+    expect(textSources({ ...withSource, actors: [imageActor({ key: "k", ratio: 1 }, [])] })).toEqual([]);
   });
 
   it("treats single-quoted text as words", () => {

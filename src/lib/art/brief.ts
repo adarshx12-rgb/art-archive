@@ -1,6 +1,8 @@
 import { getCraft, type CraftKind } from "../../content/craft";
 import { getTemplate, slotText } from "../../content/templates";
-import { cleanSubject, cleanText, type BuilderState } from "../prompt/state";
+import { cleanComment, cleanSubject, copyLines, type BuilderState } from "../prompt/state";
+import { aspectOf, projectScene, shotCamera } from "../scene/camera";
+import { imageUse } from "../scene/describe";
 import { incompatibleCraft, sourceColourConflict } from "./constraints";
 
 /**
@@ -31,7 +33,23 @@ export interface Brief {
 export function typedWords(state: BuilderState): string[] {
   const template = state.template ? getTemplate(state.style, state.template) : undefined;
   const blocks = template ? Object.values(slotText(template, state.templateText)) : [];
-  return [...new Set([...blocks, ...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), cleanText(state.text)].filter(Boolean))];
+  return [...new Set([...blocks, ...state.actors.filter((a) => a.glyph === "text").map((a) => a.label), ...copyLines(state.text)].filter(Boolean))];
+}
+
+/**
+ * Pictures whose words are the visitor's copy ("image 2"): set to "Text /
+ * content only", or pinned with a comment like "keep the text". Their words
+ * count as the visitor's, but nobody here can read them, so they are lettered
+ * by reference, never quoted.
+ */
+export function textSources(state: BuilderState): string[] {
+  if (!state.actors.some((a) => a.glyph === "image")) return [];
+  const projected = projectScene(shotCamera(state), state.actors);
+  const comments = state.comments.map((c) => ({ ...c, text: cleanComment(c.text) })).filter((c) => c.text);
+  return projected
+    .filter((p) => p.glyph === "image" && imageUse(p, projected, aspectOf(state.aspect), comments) === "text")
+    .map((p) => p.label)
+    .sort((a, b) => Number(a.match(/\d+/)?.[0]) - Number(b.match(/\d+/)?.[0]));
 }
 
 /** The visitor's subjects: things placed on the sketch, then the subject box. */
@@ -104,7 +122,7 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
   }
 
   if (brief.furniture.length > 3) problems.push("Use at most 3 furniture items.");
-  if (!words.size) {
+  if (!words.size && !textSources(state).length) {
     if (brief.type) problems.push("The visitor typed no words: set type to null and letter nothing.");
     const lettering = brief.craft.filter((id) => getCraft(id)?.lettering);
     if (lettering.length) problems.push(`The visitor typed no words, so drop the craft that needs lettering: ${lettering.join(", ")}.`);

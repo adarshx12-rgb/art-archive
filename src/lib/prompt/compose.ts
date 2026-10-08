@@ -21,8 +21,11 @@ import {
 } from "./options";
 import { aspectOf, byPriority, effectiveAngle, projectScene, shotCamera } from "../scene/camera";
 import { describeComments, describeScene, describeTextLayout, referenceImages } from "../scene/describe";
-import { typedWords } from "../art/brief";
+import { textDirectives } from "../scene/text-directives";
+import { textSources, typedWords } from "../art/brief";
 import { withArticle } from "../sketch/layers";
+import { BRIEF_FIDELITY } from "../../content/tool-evidence";
+import { colourSwaps, displacedColours, recolourStyle } from "./recolour";
 import { cleanComment, cleanSubject, MAX_COMMENTS, styleFor, type BuilderState } from "./state";
 
 export const ROLE_ORDER: Record<PaletteSize, PaletteRole[]> = {
@@ -104,6 +107,20 @@ export function paletteSentence(palette: ResolvedPalette): string {
   return `${parts.join("; ")}. Keep the image within this palette.`;
 }
 
+/**
+ * The style as this prompt describes it, with the palette that applies. The
+ * style's colours are a suggestion, not a rule: when the user picks other
+ * colours, its looks and cues are rewritten in them (lib/prompt/recolour.ts),
+ * so nothing in the prompt still asks for the style's own hues.
+ */
+export function promptStyle(state: BuilderState) {
+  const source = styleFor(state);
+  const palette = resolvePalette(state, source);
+  const keepColours = state.task === "restyle" && state.preserve.includes("colours");
+  const swaps = keepColours ? [] : colourSwaps(palette, source);
+  return { style: recolourStyle(source, swaps), palette, swaps };
+}
+
 const CUE_COUNT: Record<Intensity, number> = { subtle: 2, balanced: 4, strong: Infinity };
 
 /** "the Bauhaus style", but "the Victorian Style" — never "Style style". */
@@ -151,17 +168,21 @@ export interface ComposeResult {
  * state always yields the same text.
  */
 export function composePrompt(state: BuilderState): ComposeResult {
-  const style = styleFor(state);
+  const { style, palette: chosen, swaps } = promptStyle(state);
   const notes: string[] = [];
   // Subjects in the scene lead, nearest the camera first (the main subject); text still in the box follows.
   const projected = state.actors.length ? projectScene(shotCamera(state), state.actors) : [];
+  const comments = state.comments.map((c) => ({ ...c, text: cleanComment(c.text) })).filter((c) => c.text).slice(0, MAX_COMMENTS);
+  const textEdits = textDirectives(projected, comments, aspectOf(state.aspect));
   const placedNames = joinList([...byPriority(projected).filter((p) => p.glyph !== "text" && p.glyph !== "image").map((p) => withArticle(p.label)), cleanSubject(state.subject)].filter(Boolean));
   const texts = typedWords(state);
-  const subject = placedNames || (texts.length ? "a typography composition" : "[describe your subject]");
+  // Pictures whose words are the copy: lettered by reference, since nobody here can read them.
+  const sources = textSources(state);
+  const subject = placedNames || (texts.length || sources.length ? "a typography composition" : "[describe your subject]");
   const isVideo = state.output === "video";
   const isRestyle = state.task === "restyle";
   // Restyle prompts describe the source only when a subject is given, so they have no placeholder.
-  if (!placedNames && !texts.length && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
+  if (!placedNames && !texts.length && !sources.length && !isRestyle) notes.push("Add a subject to replace the placeholder in brackets.");
   const preserve = new Set<PreserveId>(
     isRestyle ? state.preserve.filter((id) => isVideo || id !== "timing") : [],
   );
@@ -225,7 +246,7 @@ export function composePrompt(state: BuilderState): ComposeResult {
     add("Colour", "keep the original colours of the source; apply the style through form, texture and light only.");
     if (state.paletteMode !== "style") notes.push("“Original colours” is preserved, so the selected palette is not used.");
   } else {
-    add("Colour palette", paletteSentence(resolvePalette(state, style)));
+    add("Colour palette", paletteSentence(chosen));
   }
 
   // 5. Composition and framing
@@ -275,17 +296,24 @@ export function composePrompt(state: BuilderState): ComposeResult {
   } else if (sceneOnly.length) {
     notes.push("Composition is preserved from the source, so the sketch layout is not used.");
   }
-  if (!keepComposition) describeTextLayout(projected, aspectOf(state.aspect)).forEach((line) => add("", line));
+  if (!keepComposition) {
+    describeTextLayout(textEdits.locked, aspectOf(state.aspect), !!textEdits.pattern).forEach((line) => add("", line));
+    textEdits.lines.forEach((line) => add("", line));
+    if (textEdits.pattern) notes.push(`Comment ${textEdits.pattern.comment + 1} fills the canvas with repeated text; the placed copies set its size and angle.`);
+  }
   // Pictures added to the sketch: what each is for (a face to keep, a logo to reproduce…), in the order to attach them.
-  const references = referenceImages(projected, aspectOf(state.aspect));
+  const references = referenceImages(projected, aspectOf(state.aspect), comments);
   references.forEach((line) => add("", line));
   if (references.length) {
     notes.push("Attach the images you added, in number order. The prompt asks for exact faces and logos, but how faithfully they're kept depends on the image tool; a face or character reference feature, where the tool has one, holds a likeness best.");
   }
 
   // 5d. Comments pinned to the preview, tied to whatever is under each one
-  const comments = state.comments.map((c) => ({ ...c, text: cleanComment(c.text) })).filter((c) => c.text).slice(0, MAX_COMMENTS);
-  if (comments.length) add("Notes", `${describeComments(comments, projected, aspectOf(state.aspect)).join("; ")}.`);
+  const remainingComments = keepComposition ? comments : comments.filter((_, index) => !textEdits.handled.has(index));
+  if (remainingComments.length) add("Instructions from the user (carry out each one)", `${describeComments(remainingComments, projected, aspectOf(state.aspect)).join("; ")}.`);
+  // Retain any additional wording in a resolved comment without falsely limiting
+  // its global instruction to the pin's location.
+  if (!keepComposition && textEdits.handled.size) add("Requested text edits", comments.flatMap((c, i) => textEdits.handled.has(i) ? [`${i + 1}) ${c.text}`] : []).join("; "));
 
   // 6. Lighting
   const lighting =
@@ -299,6 +327,9 @@ export function composePrompt(state: BuilderState): ComposeResult {
       ? `change the lettering to read exactly ${quoted}`
       : texts.length > 1 ? `set exactly these texts: ${quoted}` : `set exactly this text: ${quoted}`;
     add("Lettering", `${set}${style.look.typography ? ` in ${style.look.typography}` : ""}; spell ${texts.length > 1 ? "each" : "it"} exactly as written and add no other words.`);
+  } else if (sources.length && !isRestyle) {
+    const from = sources.length > 1 ? `images ${joinList(sources.map((l) => l.replace(/^image /, "")))}` : sources[0];
+    add("Lettering", `set the words from ${from} exactly as they appear in ${sources.length > 1 ? "them" : "it"}${style.look.typography ? `, in ${style.look.typography}` : ""}; spell them exactly and add no other words.`);
   } else if (TEXT_HINT.test(state.subject) || preserve.has("text")) {
     if (preserve.has("text")) add("Lettering", "keep existing lettering exactly as it is.");
     else if (style.look.typography) add("Lettering", `if text appears, ${style.look.typography}.`);
@@ -329,9 +360,20 @@ export function composePrompt(state: BuilderState): ComposeResult {
   // 10. Avoid — drop items that would contradict the user's own choices
   let avoid = style.prompt.avoid;
   // A 1-colour palette leaves the other colours to the style, so its colour advice still applies.
-  if ((state.paletteMode !== "style" && resolvePalette(state, style).colours.length > 1) || keepColours) avoid = avoid.filter((a) => !COLOUR_WORDS.test(a));
+  if ((state.paletteMode !== "style" && chosen.colours.length > 1) || keepColours) avoid = avoid.filter((a) => !COLOUR_WORDS.test(a));
   if (state.lighting !== "style") avoid = avoid.filter((a) => !LIGHT_WORDS.test(a));
+  // The style's own hues the palette replaced: generators drift back to them otherwise.
+  avoid = [...avoid, ...displacedColours(swaps, chosen)];
   if (avoid.length) add("Avoid", `${joinList(avoid)}.`);
+
+  // Exact words, attached pictures or the user's own colours: a job judged on following the brief.
+  if (!isVideo && (texts.length || sources.length || references.length || chosen.source !== "style")) {
+    notes.push(`For exact text, layout and colours, ${BRIEF_FIDELITY.best} followed briefs most faithfully when designers ranked four image tools (${BRIEF_FIDELITY.source}); ${BRIEF_FIDELITY.looks.typography} and ${BRIEF_FIDELITY.looks.mood} did slightly better on looks alone.`);
+  }
+  if (texts.length || sources.length) {
+    const { min, max } = BRIEF_FIDELITY.inventedContent;
+    notes.push(`Proofread the result: designers found invented or garbled content in ${Math.round(min * 100)}–${Math.round(max * 100)}% of renders from every tool they tested.`);
+  }
 
   return { prompt: lines.join("\n"), notes };
 }

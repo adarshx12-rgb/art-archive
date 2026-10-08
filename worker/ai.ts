@@ -24,6 +24,8 @@ export interface AskOptions<T extends z.ZodType> {
   system: string;
   /** The task input, as plain text (usually JSON). */
   user: string;
+  /** Pictures sent with the input, as data URLs (vision models only). */
+  images?: string[];
   schema: T;
   /** Short name for the schema (OpenRouter requires one). */
   name: string;
@@ -174,7 +176,7 @@ async function openRouter<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mo
         models,
         messages: [
           { role: "system", content: opts.system },
-          { role: "user", content: opts.user },
+          { role: "user", content: opts.images?.length ? [{ type: "text", text: opts.user }, ...opts.images.map((url) => ({ type: "image_url", image_url: { url } }))] : opts.user },
         ],
         response_format: { type: "json_schema", json_schema: { name: opts.name, strict: true, schema: strictSchema(opts.schema) } },
         // Only use providers that honour the schema.
@@ -231,6 +233,12 @@ function parseReply<T extends z.ZodType>(content: string | null | undefined, sch
 
 // ——— Anthropic (direct, last resort) ———
 
+/** A data URL as an Anthropic image block. */
+function imageBlock(url: string) {
+  const [, mediaType = "image/png", data = ""] = url.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,(.*)$/) ?? [];
+  return { type: "image" as const, source: { type: "base64" as const, media_type: mediaType as "image/png" | "image/jpeg" | "image/webp" | "image/gif", data } };
+}
+
 async function anthropic<T extends z.ZodType>(env: Env, opts: AskOptions<T>, model: string) {
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: opts.timeout ?? 60_000 });
   try {
@@ -240,7 +248,7 @@ async function anthropic<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mod
       // The instructions are identical on every call, so cache them.
       cache_control: { type: "ephemeral" },
       system: opts.system,
-      messages: [{ role: "user", content: opts.user }],
+      messages: [{ role: "user", content: opts.images?.length ? [...opts.images.map(imageBlock), { type: "text" as const, text: opts.user }] : opts.user }],
       output_config: { format: zodOutputFormat(opts.schema), effort: opts.effort },
     });
     if (response.stop_reason === "refusal") throw new AiError("The model declined this request. Try describing it differently.", 422, false);

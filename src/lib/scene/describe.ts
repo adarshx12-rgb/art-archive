@@ -1,7 +1,7 @@
 import { withArticle } from "../sketch/layers";
 import type { Glyph } from "../sketch/parse";
 import { byPriority, type Projected } from "./camera";
-import { FIGURES, isImage, isSky, isText, widthRatio } from "./model";
+import { FIGURES, isImage, isSky, isText, widthRatio, type ImageUse } from "./model";
 import { describeRig, mirrorRig } from "./rig";
 
 /** Things that have a front, so which way they face is worth saying. */
@@ -115,12 +115,14 @@ export function describeScene(projected: Projected[], aspect: number): string {
 }
 
 /** Text geometry in picture coordinates, not vague distance/size categories. */
-export function describeTextLayout(projected: Projected[], aspect: number): string[] {
+export function describeTextLayout(projected: Projected[], aspect: number, alongsidePattern = false): string[] {
   const texts = projected.filter((p) => isText(p.glyph));
   if (!texts.length) return [];
   const percent = (n: number) => `${Math.round(n * 1000) / 10}%`;
   return [
-    `Text layout: exactly ${texts.length} placed text ${texts.length === 1 ? "element" : "elements"}. Preserve their positions, sizes, angles, spacing and edge crops. Do not add a headline, extra copies or a smaller background pattern. Leave unoccupied areas empty. These measurements override style or concept layout suggestions; they are instructions, not text to print.`,
+    alongsidePattern
+      ? `Text layout: Preserve these ${texts.length} separate text elements at their stated positions, sizes, angles and crops, in addition to the repeating pattern specified below. Do not duplicate these separate elements.`
+      : `Text layout: exactly ${texts.length} placed text ${texts.length === 1 ? "element" : "elements"}. Preserve their positions, sizes, angles, spacing and edge crops. Do not add a headline, extra copies or a smaller background pattern. Leave unoccupied areas empty. These measurements override style or concept layout suggestions; they are instructions, not text to print.`,
     ...texts.map((p, i) => {
       // Storyboard draws text once, stretched across its box, even when count > 1.
       const width = p.size * widthRatio(p.glyph, p.label) * (p.stretch ?? 1) * (p.count + 0.15 * (p.count - 1)) / aspect;
@@ -170,12 +172,32 @@ const theName = (p: Projected) => `the ${p.label.replace(/^(a|an|the|one)\s+/i, 
 const LIKENESS =
   "Keep the exact likeness: the same facial features, face shape, skin tone, hair and age; do not beautify, idealise, replace or stylise away the identity, and let only the lighting and the style's rendering adapt.";
 
+/** Roles a comment pinned on a picture can imply, checked in order: "our logo, don't alter it" is a logo even though it mentions altering. */
+const USE_HINTS: [ImageUse, RegExp][] = [
+  ["logo", /\b(?:logo|logos|brand ?mark|wordmark|emblem)\b/i],
+  ["face", /\b(?:face|likeness)\b/i],
+  ["text", /\b(?:text|words?|wording|copy|information|info|details|lettering|content)\b/i],
+];
+
+/** The role a comment pinned on this picture asks for, if any. */
+function commentedUse(img: Projected, comments: { x: number; y: number; text: string }[], projected: Projected[], aspect: number): ImageUse | undefined {
+  const notes = comments.filter((c) => subjectAt(c.x, c.y, projected, aspect) === img).map((c) => c.text);
+  return USE_HINTS.find(([, hint]) => notes.some((n) => hint.test(n)))?.[0];
+}
+
+/**
+ * What an added picture is for: the role chosen for it, else one a comment
+ * pinned on it asks for, else (on a figure's head) that figure's face.
+ */
+export function imageUse(img: Projected, projected: Projected[], aspect: number, comments: { x: number; y: number; text: string }[] = []): ImageUse | undefined {
+  return img.image?.use ?? commentedUse(img, comments, projected, aspect) ?? (imageTarget(img, projected, aspect).head ? "face" : undefined);
+}
+
 /**
  * Instructions for the pictures added to the sketch, in the order to attach
- * them: an attach line, then one line each saying what to do with it. A
- * picture on a figure's head is that figure's face unless set otherwise.
+ * them: an attach line, then one line each saying what to do with it.
  */
-export function referenceImages(projected: Projected[], aspect: number): string[] {
+export function referenceImages(projected: Projected[], aspect: number, comments: { x: number; y: number; text: string }[] = []): string[] {
   // In number order, the order they're attached in.
   const num = (p: Projected) => Number(p.label.match(/\d+/)?.[0] ?? Infinity);
   const images = projected.filter((p) => isImage(p.glyph)).sort((a, b) => num(a) - num(b));
@@ -185,14 +207,16 @@ export function referenceImages(projected: Projected[], aspect: number): string[
   const lines = [nums.length === 1 ? `Attach image ${list} with this prompt.` : `Attach images ${list} with this prompt, in this order.`];
   images.forEach((img, i) => {
     const name = `Image ${nums[i]}`;
-    const { on, head } = imageTarget(img, projected, aspect);
+    const { on } = imageTarget(img, projected, aspect);
     const place = on ? `on ${theName(on)}` : where(img);
-    const use = img.image?.use ?? (head ? "face" : undefined);
+    const use = imageUse(img, projected, aspect, comments);
     if (use === "face") lines.push(on && FIGURES.has(on.glyph) ? `${name}: ${theName(on)}'s face. ${LIKENESS}` : `${name}: a face, ${where(img)}. ${LIKENESS}`);
     else if (use === "logo")
       lines.push(`${name}: a logo or symbol ${place}. Reproduce it exactly, with the same shapes, letters, colours and proportions; do not redraw, restyle, simplify or add to it, and blend it in by matching the scene's lighting, perspective and surface.`);
     else if (use === "product")
       lines.push(on ? `${name}: ${theName(on)}, exactly as it appears in the image, with the same shape, details, labels and colours.` : `${name}: a product or object, exactly as it appears, with the same shape, details, labels and colours, ${where(img)}.`);
+    else if (use === "text")
+      lines.push(`${name}: a source of text. Use its words exactly, spelled as written, and set them in the style's own lettering and the chosen palette, arranged as the design needs; do not copy its layout, colours, fonts or graphics.`);
     else if (use === "look") lines.push(`${name}: use only its look (colours, mood, texture); do not copy what it shows.`);
     else lines.push(`${name}: include exactly what it shows, ${place}.`);
   });

@@ -20,7 +20,7 @@ import { getStyle, styles } from "../content/styles";
 import { CUSTOM_SLUG, customStyle, type CustomStyleSpec } from "../content/styles/custom";
 import { formatInfo, TEMPLATE_FORMATS } from "../content/templates";
 import type { Hex, PaletteSize, StyleKind, TemplateFormat } from "../content/types";
-import { aiConcepts, aiPrompt, aiScene, aiSchemes, type Concept } from "../lib/ai";
+import { aiConcepts, aiPrompt, aiReadImage, aiScene, aiSchemes, type Concept } from "../lib/ai";
 import { copyText, downloadText, slugify } from "../lib/clipboard";
 import { inkOn, normaliseHex } from "../lib/color";
 import { composePrompt, joinList, resolvePalette, ROLE_ORDER } from "../lib/prompt/compose";
@@ -32,13 +32,13 @@ import {
   type PreserveId,
   type Task,
 } from "../lib/prompt/options";
-import { decodeState, defaultState, encodeState, styleFor, SUBJECT_MAX, TEXT_MAX, type BuilderState, type Comment as Note } from "../lib/prompt/state";
+import { cleanCopy, COPY_MAX, decodeState, defaultState, encodeState, styleFor, SUBJECT_MAX, type BuilderState, type Comment as Note } from "../lib/prompt/state";
 import { aspectOf, byPriority, projectScene, shotCamera } from "../lib/scene/camera";
 import { subjectAt } from "../lib/scene/describe";
 import { applyLayerEdit, placeInFrame } from "../lib/scene/convert";
 import { fillText, needsLayout } from "../lib/scene/instruction";
 import { actorFromText, FIGURES, imageActor, MAX_ACTORS, MAX_IMAGES, newActor, textActor, type Actor } from "../lib/scene/model";
-import { newImageKey, saveImage, useImages } from "../lib/images";
+import { loadImage, newImageKey, saveImage, shrinkForUpload, useImages } from "../lib/images";
 import type { Layer } from "../lib/sketch/layers";
 import { AI_DRAWN } from "../lib/sketch/drawing";
 import { useDrawings } from "../lib/sketch/useDrawings";
@@ -216,7 +216,7 @@ export function Builder() {
   const [confirm, setConfirm] = useState<null | "regenerate" | "reset">(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const subjectRef = useRef<HTMLTextAreaElement>(null);
-  const letteringRef = useRef<HTMLInputElement>(null);
+  const letteringRef = useRef<HTMLTextAreaElement>(null);
   // The transform panel sits in the empty space left of the preview when it fits.
   const stageRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -448,6 +448,8 @@ export function Builder() {
     setSelectedId(actor.id);
   };
 
+  // Several lines of copy are lettered by the prompt, not placed on the sketch as one long label.
+  const multiLine = state.text.trim().includes("\n");
   const addText = () => {
     const raw = textActor(state.text, state.actors);
     if (!raw || state.actors.length >= MAX_ACTORS) return;
@@ -465,6 +467,8 @@ export function Builder() {
       onDelete={() => deleteActor(a.id)}
       onDuplicate={() => duplicateActor(a.id)}
       onClose={() => setSelectedId(null)}
+      onReadText={() => void readText(a)}
+      readingText={readingId === a.id}
     />
   );
   const updateActor = (id: string, patch: Partial<Actor>) => setActors((as) => as.map((a) => (a.id === id ? { ...a, ...patch } : a)));
@@ -484,6 +488,32 @@ export function Builder() {
   // ——— AI (server side; see worker/) ———
   const [aiBusy, setAiBusy] = useState<null | "scene" | "prompt" | "concepts">(null);
   const [aiNote, setAiNote] = useState<{ text: string; undo?: () => void } | null>(null);
+  // A picture of copy being read into the text box, so the prompt can quote its words exactly.
+  const [readingId, setReadingId] = useState<string | null>(null);
+  const readText = async (a: Actor) => {
+    if (!a.image || readingId) return;
+    const url = images[a.image.key] ?? (await loadImage(a.image.key));
+    if (!url) return toast("This picture isn’t stored in this browser any more, so it can’t be read.", "error");
+    setReadingId(a.id);
+    try {
+      const res = await aiReadImage(await shrinkForUpload(url));
+      if (!res.ok) return toast(res.error, "error");
+      if (!res.data.lines.length) return toast("No text found in this picture.", "error");
+      const before = { text: state.text, actors: state.actors };
+      setState((s) => ({
+        ...s,
+        text: cleanCopy([s.text, ...res.data.lines].join("\n")),
+        // Its words are now the copy, so the picture is a text source rather than something to include as it is.
+        actors: s.actors.map((x) => (x.id === a.id && x.image && !x.image.use ? { ...x, image: { ...x.image, use: "text" as const } } : x)),
+      }));
+      const n = res.data.lines.length;
+      setAiNote({ text: `Read ${n} ${n === 1 ? "line" : "lines"} into “Text in the image”. Check the spelling: the prompt quotes them exactly.`, undo: () => setState((s) => ({ ...s, ...before })) });
+    } catch {
+      toast("Couldn’t prepare this picture to read. Try again.", "error");
+    } finally {
+      setReadingId(null);
+    }
+  };
   const [promptWarnings, setPromptWarnings] = useState<string[]>([]);
   // Design ideas: three concepts, the titles shown so far, the prompt they were made for, and the one picked.
   const [concepts, setConcepts] = useState<Concept[] | null>(null);
@@ -781,30 +811,47 @@ export function Builder() {
             />
           </Group>
 
-          <Group legend={isRestyle ? "New text (optional)" : "Text in the image (optional)"} hint={state.text ? `${state.text.length}/${TEXT_MAX} characters. Spelled exactly as typed; + places it on the sketch.` : "A title, sign or slogan to letter in the style’s type. + places it on the sketch."}>
+          <Group
+            legend={isRestyle ? "New text (optional)" : "Text in the image (optional)"}
+            hint={
+              multiLine
+                ? `${state.text.length}/${COPY_MAX} characters. Each line is lettered as its own block, spelled exactly as typed.`
+                : state.text
+                  ? `${state.text.length}/${COPY_MAX} characters. Spelled exactly as typed; + places it on the sketch, Shift+Enter adds a line.`
+                  : "A title, sign or slogan to letter in the style’s type, or several lines of copy. + places one line on the sketch."
+            }
+          >
             <label htmlFor="text" className="sr-only">
               Text in the image
             </label>
-            <div className="flex gap-2">
-              <input
+            <div className="flex items-start gap-2">
+              <textarea
                 id="text"
                 ref={letteringRef}
-                className="field min-w-0 flex-1"
-                maxLength={TEXT_MAX}
+                className="field min-w-0 flex-1 resize-y"
+                rows={Math.min(Math.max(state.text.split("\n").length, 1), 6)}
+                maxLength={COPY_MAX}
                 placeholder={isRestyle ? "e.g. OPEN LATE" : "e.g. NEON RUSH"}
                 autoComplete="off"
                 name="text"
                 value={state.text}
                 onChange={(e) => set("text", e.target.value)}
                 onKeyDown={(e) => {
-                  // Enter places the text on the sketch, like ADD for subjects.
-                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  // Enter places a single line on the sketch, like ADD for subjects; Shift+Enter (or Enter in several lines of copy) adds a line.
+                  if (e.key === "Enter" && !e.shiftKey && !multiLine && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     addText();
                   }
                 }}
               />
-              <button type="button" className="btn btn-primary shrink-0 px-3" disabled={!state.text.trim() || state.actors.length >= MAX_ACTORS} onClick={addText} aria-label="Place the text on the sketch" title="Place the text on the sketch">
+              <button
+                type="button"
+                className="btn btn-primary shrink-0 px-3"
+                disabled={!state.text.trim() || multiLine || state.actors.length >= MAX_ACTORS}
+                onClick={addText}
+                aria-label="Place the text on the sketch"
+                title={multiLine ? "Several lines are lettered by the prompt; place single lines on the sketch one at a time" : "Place the text on the sketch"}
+              >
                 <Plus size={16} aria-hidden />
               </button>
             </div>

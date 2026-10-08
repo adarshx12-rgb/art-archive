@@ -98,14 +98,18 @@ function Scrub({
 /** True in the narrow panel beside the preview: each row puts its values under its name. */
 const Vertical = createContext(false);
 
-function Row({ name, onReset, children }: { name: string; onReset: () => void; children: React.ReactNode }) {
+function Row({ name, onReset, children }: { name: string; onReset?: () => void; children: React.ReactNode }) {
   const vertical = useContext(Vertical);
   return (
     <div className={`flex min-h-9 gap-2 border-t border-rule py-1.5 first:border-t-0 ${vertical ? "flex-col gap-1" : "items-center"}`}>
       <span className="flex items-center gap-2">
-        <button type="button" onClick={onReset} className="text-muted hover:text-ink" title={`Reset ${name.toLowerCase()}`} aria-label={`Reset ${name.toLowerCase()}`}>
-          <RotateCcw size={13} aria-hidden />
-        </button>
+        {onReset ? (
+          <button type="button" onClick={onReset} className="text-muted hover:text-ink" title={`Reset ${name.toLowerCase()}`} aria-label={`Reset ${name.toLowerCase()}`}>
+            <RotateCcw size={13} aria-hidden />
+          </button>
+        ) : (
+          <span className="w-[13px]" aria-hidden />
+        )}
         <span className="w-20 shrink-0 text-sm">{name}</span>
       </span>
       <span className={`flex flex-wrap items-baseline gap-x-3 ${vertical ? "pl-5" : ""}`}>{children}</span>
@@ -135,11 +139,14 @@ export interface TransformPanelProps {
   onClose: () => void;
   /** Narrow and stacked, for the space beside the preview. */
   vertical?: boolean;
+  /** For a picture of copy: read its words into the text box. */
+  onReadText?: () => void;
+  readingText?: boolean;
 }
 
 
 /** Transform controls for the selected subject, modelled on After Effects / Premiere "Effect Controls". */
-export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose, flat = false, vertical = false }: TransformPanelProps) {
+export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose, flat = false, vertical = false, onReadText, readingText = false }: TransformPanelProps) {
   const [px, py, pz] = actor.position;
   const [rx, ry, rz] = actor.rotation;
   const setPos = (i: 0 | 1 | 2, v: number) => onChange({ position: actor.position.map((p, j) => (j === i ? Math.round(v * 100) / 100 : p)) as Vec3 });
@@ -220,13 +227,26 @@ export function TransformPanel({ actor, onChange, onDelete, onDuplicate, onClose
               className="rounded border border-rule-strong bg-transparent px-1.5 py-1 text-sm"
               title="What the image model should do with this picture"
             >
-              <option value="">Auto (a face on a head)</option>
+              <option value="">Auto (from a comment, or a face on a head)</option>
               {IMAGE_USES.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.label}
                 </option>
               ))}
             </select>
+          </Row>
+        )}
+        {actor.image && onReadText && (!actor.image.use || actor.image.use === "text") && (
+          <Row name="Words">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onReadText}
+              disabled={readingText}
+              title="Read the words in this picture into the text box, so the prompt quotes them exactly"
+            >
+              {readingText ? "Reading…" : "Read text"}
+            </button>
           </Row>
         )}
         {FIGURES.has(actor.glyph) && (

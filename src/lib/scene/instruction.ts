@@ -29,7 +29,7 @@ export function needsLayout(input: string): boolean {
 export function fillText(input: string, lettering: string): { request: string; used: boolean; missing?: true } {
   PLACEHOLDER.lastIndex = 0;
   if (!PLACEHOLDER.test(input)) return { request: input, used: false };
-  const words = lettering.trim();
+  const words = lettering.replace(/\s+/g, " ").trim();
   if (!words) return { request: input, used: false, missing: true };
   return { request: input.replace(PLACEHOLDER, `"${words.replace(/"/g, "'")}"`), used: true };
 }

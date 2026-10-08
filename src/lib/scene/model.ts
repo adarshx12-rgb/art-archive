@@ -34,12 +34,13 @@ export interface Actor {
 /** Subjects drawn as stick figures, which the puppet tool can pose. */
 export const FIGURES = new Set<Glyph>(["person", "child", "robot"]);
 
-/** What an added picture is for: a face to keep, a logo to reproduce, a product to show, or only its look. */
-export type ImageUse = "face" | "logo" | "product" | "look";
+/** What an added picture is for: a face to keep, a logo to reproduce, a product to show, its words, or only its look. */
+export type ImageUse = "face" | "logo" | "product" | "text" | "look";
 export const IMAGE_USES: { id: ImageUse; label: string }[] = [
   { id: "face", label: "Face (keep likeness)" },
   { id: "logo", label: "Logo / symbol (exact)" },
   { id: "product", label: "Product / object (exact)" },
+  { id: "text", label: "Text / content only" },
   { id: "look", label: "Look only" },
 ];
 

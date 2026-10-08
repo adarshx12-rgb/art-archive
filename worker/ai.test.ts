@@ -6,7 +6,8 @@ import { suggestSchemes } from "./palette";
 import { perfectPrompt } from "./prompt";
 import { concepts } from "./concepts";
 import { composePrompt } from "../src/lib/prompt/compose";
-import { decodeState } from "../src/lib/prompt/state";
+import { decodeState, encodeState } from "../src/lib/prompt/state";
+import { basePlan } from "../src/lib/plan/plan";
 
 const env = (patch: Partial<Env> = {}): Env =>
   ({
@@ -123,6 +124,36 @@ describe("prompt task", () => {
     expect(calls).toHaveLength(2);
   });
 
+  it("plans the content first and hands the plan to the writer, charging both", async () => {
+    const query = "s=swiss&fm=poster&q=a%20cat&tx=" + encodeURIComponent("Cat Show\nSunday 10am");
+    const state = decodeState(new URLSearchParams(query)).state;
+    const facts = composePrompt(state).prompt;
+    const planned = basePlan(state).items.map(({ ref, role, priority }) => ({ ref, role, priority }));
+    const calls = fakeFetch({
+      openrouter: (body) =>
+        body.response_format && JSON.stringify(body.response_format).includes("content_plan")
+          ? openRouterReply(JSON.stringify({ message: "A cat show this Sunday.", items: planned }), "google/gemini-3.5-flash-lite")
+          : openRouterReply(JSON.stringify({ prompt: facts })),
+    });
+    const result = await perfectPrompt(env({ OPENROUTER_PLANNER_MODELS: "google/gemini-3.5-flash-lite" }), { query });
+    expect(calls).toHaveLength(2);
+    const writer = JSON.stringify(calls[1]!.body.messages);
+    expect(writer).toContain("A cat show this Sunday.");
+    expect(writer).toContain("readingOrder");
+    expect(result.usage.cost).toBeCloseTo(0.0002);
+  });
+
+  it("repairs a rewrite that brings back a style colour the user replaced", async () => {
+    const base = decodeState(new URLSearchParams("s=blueprint&q=a%20cargo%20truck")).state;
+    const query = encodeState({ ...base, paletteMode: "custom", count: 3, custom: ["#0B0B0B", "#A6E22E", "#FFFFFF", "#333333"] }).toString();
+    const leaked = "A cargo truck in Blueprint style: black (#0B0B0B) replaces Prussian blue, yellow-green (#A6E22E) linework, off-white (#FFFFFF) notes. Avoid: Prussian blue.";
+    const fixed = "A cargo truck in Blueprint style: black (#0B0B0B) ground, yellow-green (#A6E22E) linework, off-white (#FFFFFF) notes. Avoid: Prussian blue.";
+    const calls = fakeFetch({ openrouter: (_body, n) => openRouterReply(JSON.stringify({ prompt: n ? fixed : leaked })) });
+    const result = await perfectPrompt(env(), { query });
+    expect(result.prompt).toBe(fixed);
+    expect(calls).toHaveLength(2);
+  });
+
   it("falls back to the board facts when rewrites keep the words but lose text geometry", async () => {
     const query = "s=gothic&sc=" + encodeURIComponent("text~what the chat~0~1~0~0~0~-20~0.46~stand~1");
     const facts = composePrompt(decodeState(new URLSearchParams(query)).state).prompt;
@@ -139,6 +170,32 @@ describe("prompt task", () => {
     const result = await perfectPrompt(env(), { query });
     expect(result.warnings).toEqual([]);
     expect(result.prompt).toContain("20 degrees counterclockwise");
+    expect(calls).toHaveLength(1);
+  });
+
+  it.each(["missing", "contradictory"])("protects fill and blend comments against a %s AI rewrite", async (failure) => {
+    const query = "s=gothic&ar=16:9&sc=" + encodeURIComponent("text~what the chat~0~1~0~0~0~-20~0.46~stand~1")
+      + "&nt=" + encodeURIComponent("0.2~0.2~blend the etxt with the background|0.1~0.3~fill entire canvas with the same text diagaonally");
+    const facts = composePrompt(decodeState(new URLSearchParams(query)).state).prompt;
+    expect(facts).toContain("Text pattern:");
+    expect(facts).toContain("Text treatment:");
+    const draft = failure === "missing" ? facts.split("\n").filter((line) => !/^Text (pattern|treatment):/.test(line)).join("\n")
+      : facts + "\nExactly five text copies. One ghost line blends into green. Leave the lower half empty.";
+    const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: draft })) });
+    const result = await perfectPrompt(env({ ANTHROPIC_API_KEY: undefined }), { query });
+    expect(calls.length).toBeGreaterThan(1);
+    expect(result.prompt).toBe(facts);
+    expect(result.warnings.join(" ")).toContain("text comment");
+  });
+
+  it("accepts a faithful fill-and-blend rewrite without needless retries", async () => {
+    const query = "s=gothic&sc=" + encodeURIComponent("text~what the chat~0~1~0~0~0~-20~0.46~stand~1")
+      + "&nt=" + encodeURIComponent("0.2~0.2~blend the etxt with the background|0.1~0.3~fill entire canvas with the same text diagaonally");
+    const facts = composePrompt(decodeState(new URLSearchParams(query)).state).prompt;
+    const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: facts })) });
+    const result = await perfectPrompt(env(), { query });
+    expect(result.prompt).toBe(facts);
+    expect(result.warnings).toEqual([]);
     expect(calls).toHaveLength(1);
   });
 

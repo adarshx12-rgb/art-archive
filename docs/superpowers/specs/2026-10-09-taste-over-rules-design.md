@@ -22,11 +22,11 @@ In the A/B test of 2026-10-09 (planner + gold prompts against the old chain) the
 
 Learn the way a child does: look at good art, understand it, try, get feedback, practise.
 
-- **Look:** the director and the critic see the actual images of the closest references for each brief, not only text about them (section 2).
+- **Look:** the director and the critic see the actual images of the 4–5 closest references for each brief. Looking at images is the main path; text alone is only a fallback when images cannot be loaded (section 2).
 - **Understand:** each image comes with its study and gold prompt, and the director writes what makes each one work before it sketches (section 2).
 - **Try freely:** the rulebook is replaced by a creative standard, and the director sketches widely before choosing (section 1).
 - **Feedback:** an art-director critique compares the concepts with the reference images and improves them (section 3).
-- **Practise:** a repeatable offline round recreates references, the user renders them, and a vision model records what was missed, feeding the gold prompts (section 4).
+- **Practise:** a repeatable offline round recreates references, the user renders them, and a vision model records what was missed, feeding the gold prompts (section 4). Practice starts only after everything else is set up, an end-to-end check shows it works without glitches or failures, and the user confirms.
 
 A stronger director model (option C) is deferred.
 
@@ -70,17 +70,18 @@ A stronger director model (option C) is deferred.
 - A private Cloudflare R2 bucket `inspiration-refs`, bound to the Worker as `REFS` (`wrangler.jsonc` `r2_buckets`). It is never public and never served to the browser.
 - Contents: one JPEG per usable reference (gold prompt compiled), keyed by the reference `id` (`<id>.jpg`), resized to at most 768 px on the long side, quality about 80 (roughly 40–80 KB each; about 15 MB for the current 215).
 - `scripts/upload-refs.py` (Python with Pillow, like `prepare-inspiration.py`) resizes each usable reference's study thumbnail (`inspiration/.study/<hash>.jpg`) to 768 px and uploads it as `<id>.jpg` with `wrangler r2 object put`, `--local` or `--remote`. It runs after `gold-prompts.mjs`; a manifest (`inspiration/.study/refs-uploaded.json`, id → hash) skips unchanged images and deletes objects for references no longer usable.
-- Locally (`npm run dev`) the bucket is the Wrangler local R2 store, filled by the same script with `--local`. Creating the remote bucket (`wrangler r2 bucket create inspiration-refs`) is a one-off step the user approves, since it changes their Cloudflare account.
+- Locally (`npm run dev`) the bucket is the Wrangler local R2 store, filled by the same script with `--local`. Creating the remote bucket (`wrangler r2 bucket create inspiration-refs`) was approved by the user on 2026-10-09.
 
 ### Use
 
-- `worker/refs.ts`: `referenceImages(env, ids): Promise<string[]>` fetches the images from `REFS` as data URLs (`data:image/jpeg;base64,…`), in order, skipping any missing object; at most 3; a missing binding or any error returns `[]` (the chain then works from text, as today).
-- Director: the picked gold references (up to 3) are sent as images with the request, in the same order as `goldPrompts` (G1, G2, G3), using `ask`'s existing `images` option. The director's text says: "The images are the references G1–G3. Study them: what makes each work. Then make something new for this brief at that level; never copy one."
+- `worker/refs.ts`: `referenceImages(env, ids): Promise<string[]>` fetches the images from `REFS` as data URLs (`data:image/jpeg;base64,…`), in order, skipping any missing object; at most 5; a missing binding or any error returns `[]` (fallback: the chain then works from text, as today).
+- Gold retrieval for the director returns up to 5 references (was 3); all are sent as images with the request, in the same order as `goldPrompts` (G1–G5), using `ask`'s existing `images` option. The director's text says: "The images are the references G1–G5. Look at each one closely: what makes it work. Then make something new for this brief at that level; never copy one." Each concept still adapts a different reference in `distinct` mode.
 - Understand step: `ConceptsOut` gains `observations: { ref: string; works: string }[]`: one line per reference on what makes it work (composition, layering, type, colour, detail), written before `sketches`.
+- Inspection is enforced: when images were sent, the answer must have an observation for every ref G1…Gn that was shown; a missing one is a problem for the existing repair pass ("Look at image G3 and write what makes it work"). `/api/concepts` returns `imagesSeen: number` (the count actually attached), so a silent text fallback is visible in tests, logs and the comparison run.
 - Structure-only references are sent as images too; the text still says to borrow only their structure.
 - Models: the director chain must accept images. `OPENROUTER_DIRECTOR_MODELS` (Sonnet 5.5, Kimi K3) both do; the Anthropic last resort does too. If the provider rejects images, the call is retried once without them.
-- Cost: about half a cent per image per call; about 3 cents more per set of ideas with the critique.
-- Privacy: the user agreed (2026-10-09) to store the thumbnails in private R2 and to send 2–3 of them to the model provider per ideas request.
+- Cost: about half a cent per image per call; with 5 images in the director and critique calls, about 5 cents more per set of ideas.
+- Privacy: the user agreed (2026-10-09) to set up the private R2 bucket and to send 4–5 thumbnails to the model provider per ideas request.
 
 ## 3. Art-director critique
 
@@ -97,7 +98,7 @@ After the director's concepts pass the code checks, one more call reviews and im
 
 ## 4. Practice rounds (offline, repeatable)
 
-The trying-out loop, done over time, extending the gold trial of 2026-10-09.
+The trying-out loop, done over time, extending the gold trial of 2026-10-09. Built and run last: only after sections 1–3 are set up, an end-to-end check passes without glitches or failures, and the user confirms.
 
 - `scripts/practice.mjs pick --n 6` chooses references (rotating through styles, least-practised first) and writes `output/practice/<date>/sheet.md`: each reference's gold prompt with placeholders shown as role names, and the file name to render (`practice-<id>.png`).
 - The user renders them (Claude never generates images).
@@ -105,7 +106,11 @@ The trying-out loop, done over time, extending the gold trial of 2026-10-09.
 - Recurring misses across rounds (e.g. "colour mode", "vertical type orientation") are added to the gold-prompt instructions, as was done by hand after the trial.
 - Cost: about 1 cent per reviewed pair; the user's rendering time is the real cost, so rounds are small and occasional.
 
-## 5. Comparison test
+## 5. End-to-end check, then the comparison test
+
+Before the comparison: run the real chain locally (Vite dev, local R2 filled) on at least 8 briefs across styles and confirm: every run returns concepts; `imagesSeen` equals the references picked (4–5 when the style has them); observations cover every image; the critique runs and its output passes the checks; no errors or fallbacks in the logs. The remote bucket is created and filled and checked too. Any glitch is fixed before moving on.
+
+### Comparison test
 
 - Same 8 briefs and inputs as `output/abtest/briefs.json`.
 - Then: the chain on `main` before this work (planner, gold prompts `distinct`, current rules). Now: this work with the critique on.

@@ -14,11 +14,11 @@
 
 - Hard promises stay code checks: only the visitor's words quoted; hero is the visitor's subject; palette, locked layouts, restyle limits and placed text kept; supporting elements (`furniture`) carry no words of their own.
 - R2 bucket `inspiration-refs`, binding `REFS`, private; thumbnails `<id>.jpg`, ≤768 px, JPEG quality ~80. Never in `public/` or the browser bundle.
-- At most 3 reference images per call, in G1–G3 order.
+- Up to 5 reference images per call (4–5 when the style has them), in G1–G5 order. Image inspection is the main path; text is only a fallback when images cannot be loaded.
 - `CONCEPT_CRITIQUE`: `"on"` (default) | `"off"`.
 - Artist word guidance: about 180–320 words.
 - A critique can never make the result worse than skipping it: on failure, invalid output, or fewer valid concepts, the originals are used.
-- Creating the remote R2 bucket needs the user's approval at that step.
+- Creating the remote R2 bucket was approved by the user on 2026-10-09.
 - Claude never generates images; the user renders.
 - Match surrounding code: short "why" comments; CRLF files stay CRLF.
 
@@ -143,15 +143,15 @@ it("gives the artist room for a rich design and every supporting element", async
 
 **Files:** Create `worker/refs.ts`, `worker/refs.test.ts`; modify `worker/env.ts` (`REFS?: R2Bucket`), `wrangler.jsonc` (`"r2_buckets": [{ "binding": "REFS", "bucket_name": "inspiration-refs" }]`), `worker/concepts.ts` (send images), `worker/ai.ts` (retry without images); tests in `worker/ai.test.ts`.
 
-**Produces:** `referenceImages(env: Env, ids: string[]): Promise<string[]>`.
+**Produces:** `referenceImages(env: Env, ids: string[]): Promise<string[]>` (at most 5); `concepts()` returns `imagesSeen: number`; director gold retrieval limit 5.
 
 - [ ] **Step 1: Failing tests** (`refs.test.ts`):
 
 ```ts
 const bucket = (objects: Record<string, string>) => ({ get: async (key: string) => (key in objects ? { arrayBuffer: async () => new TextEncoder().encode(objects[key]).buffer } : null) }) as unknown as R2Bucket;
-it("returns data URLs in order, skipping missing objects, at most three", async () => {
-  const env = { REFS: bucket({ "a.jpg": "A", "c.jpg": "C", "d.jpg": "D", "e.jpg": "E" }) } as Env;
-  expect(await referenceImages(env, ["a", "b", "c", "d", "e"])).toEqual(["data:image/jpeg;base64,QQ==", "data:image/jpeg;base64,Qw==", "data:image/jpeg;base64,RA=="]);
+it("returns data URLs in order, skipping missing objects, at most five", async () => {
+  const env = { REFS: bucket({ "a.jpg": "A", "c.jpg": "C", "d.jpg": "D", "e.jpg": "E", "f.jpg": "F", "g.jpg": "G" }) } as Env;
+  expect(await referenceImages(env, ["a", "b", "c", "d", "e", "f", "g"])).toEqual(["A", "C", "D", "E", "F"].map((c) => `data:image/jpeg;base64,${btoa(c)}`));
 });
 it("returns nothing without a binding or when the bucket fails", async () => {
   expect(await referenceImages({} as Env, ["a"])).toEqual([]);
@@ -159,7 +159,7 @@ it("returns nothing without a binding or when the bucket fails", async () => {
 });
 ```
 
-  In `ai.test.ts` (gold block): with a gold pool and an `env({ REFS: bucket({ "g-a.jpg": "A" }) })`, the director's user message is an array containing an `image_url` part; with no gold (restyle query), no image part. In the `ask` tests: an OpenRouter 400 whose error mentions "image" retries once without images (second body has a string `content`).
+  In `ai.test.ts` (gold block): with a pool of 6 punk gold references and a bucket holding all of them, the director's user message has 5 `image_url` parts, `goldPrompts` has G1–G5 and the result has `imagesSeen: 5`; an answer whose `observations` miss G4 triggers the repair pass with "Look at image G4"; with no gold (restyle query) there are no image parts and `imagesSeen: 0`; with no `REFS` binding the call still succeeds from text and `imagesSeen: 0`. In the `ask` tests: an OpenRouter 400 whose error mentions "image" retries once without images (second body has a string `content`).
 
 - [ ] **Step 2: Run** — FAIL.
 - [ ] **Step 3: Implement.**
@@ -168,13 +168,13 @@ it("returns nothing without a binding or when the bucket fails", async () => {
 // worker/refs.ts
 import type { Env } from "./env";
 
-/** Up to three reference images from the private bucket, as data URLs, in the order asked. Any problem means none: the director then works from text. */
+/** Up to five reference images from the private bucket, as data URLs, in the order asked. Any problem means none: the director then works from text. */
 export async function referenceImages(env: Env, ids: string[]): Promise<string[]> {
   if (!env.REFS) return [];
   try {
     const out: string[] = [];
     for (const id of ids) {
-      if (out.length === 3) break;
+      if (out.length === 5) break;
       const object = await env.REFS.get(`${id}.jpg`);
       if (!object) continue;
       const bytes = new Uint8Array(await object.arrayBuffer());
@@ -189,7 +189,7 @@ export async function referenceImages(env: Env, ids: string[]): Promise<string[]
 }
 ```
 
-  - `concepts()`: `const images = picked.length ? await referenceImages(env, picked.map((p) => p.gold.id)) : [];` pass `images` to the director `ask` (and the repair call). Add to `GOLD_RULES`: "When images are attached they are the references G1–G3 in order: study them, write what makes each work, then make something new at that level; never copy one."
+  - `concepts()`: `retrieveGold(state, plan, undefined, 5)`; `const images = picked.length ? await referenceImages(env, picked.map((p) => p.gold.id)) : [];` pass `images` to the director `ask` (and the repair call); return `imagesSeen: images.length`. When `images.length`, add `Look at image G<n> and write what makes it work in observations.` to the problems for every G1…Gn without an observation, so the repair pass fills them. Add to `GOLD_RULES`: "When images are attached they are the references G1–G5 in order: look at each one closely, write what makes it work, then make something new at that level; never copy one."
   - `ask` (OpenRouter path): if the response status is 400/415 and the error text matches `/image/i` and `opts.images?.length`, retry once with `images: undefined`.
 - [ ] **Step 4: Run** `npx vitest run` and `npx tsc -p worker/tsconfig.json` — PASS. **Commit:** `Director sees the reference images`.
 
@@ -228,7 +228,7 @@ const CRITIC = `You are the creative director at a top studio reviewing your des
 - [ ] **Step 3: Remote — ASK THE USER FIRST:** `npx wrangler r2 bucket create inspiration-refs`, then `python scripts/upload-refs.py --remote`. Skip if the user declines; local dev still works.
 - [ ] **Step 4: Commit** the script. **Commit:** `Upload reference thumbnails to the private bucket`.
 
-### Task 7: Practice rounds
+### Task 9: Practice rounds (last; only after Task 7 passes and the user confirms)
 
 **Files:** Create `worker/practice.ts`, `worker/practice.test.ts`, `scripts/practice.mjs`.
 
@@ -238,6 +238,12 @@ const CRITIC = `You are the creative director at a top studio reviewing your des
 - [ ] **Step 2: Run** — FAIL.
 - [ ] **Step 3: Implement** the two pure functions (imports with `.ts` extensions so the script can load them); `scripts/practice.mjs pick --n 6` writes `output/practice/<date>/sheet.md` and updates `inspiration/.study/practice-history.json`; `review <date>` sends each `practice-<id>.png` with its original thumbnail to the vision model (`google/gemini-3.8-flash`, JSON schema `{ similar, missed, corrected: GoldSchema }`), writes `review.md`, saves `<hash>.gold-v1.prev.json` and the updated record, then runs `node scripts/gold-prompts.mjs --compile-only`. Prints cost.
 - [ ] **Step 4: Run** tests — PASS; `node scripts/practice.mjs pick --n 6` — writes a sheet. **Commit:** `Practice rounds: recreate, render, review, improve gold prompts`.
+
+### Task 7: End-to-end check
+
+- [ ] **Step 1:** Local: `python scripts/upload-refs.py --local`, `npm run dev`, then a harness over 8+ briefs across styles against `http://localhost:5173/api/concepts` and `/api/prompt`. For each: concepts returned; `imagesSeen` = picked references (4–5 where the style has them); observations cover every image; critique ran (`critique` not null); prompt returned with no invented-word warnings. Report in `output/e2e/report.md`.
+- [ ] **Step 2:** Remote: `npx wrangler r2 bucket create inspiration-refs` (approved), `python scripts/upload-refs.py --remote`, and check two objects with `wrangler r2 object get`. Deploy only if the user asks.
+- [ ] **Step 3:** Fix every glitch (failing test first), rerun until the report is clean. **Commit** fixes.
 
 ### Task 8: Comparison test
 

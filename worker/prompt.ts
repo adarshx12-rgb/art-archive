@@ -44,7 +44,7 @@ Rules:
 - Carry out every numbered item under "Instructions from the user"; they are the user's own edits.
 - If plan is given, place and size the content in its reading order: priority 1 reads first and largest, contact details and small information last and smallest; keep every lock. Never print the plan's message, roles or priorities.
 - Copy the "Attach image…" line and every "Image N:" line word for word, as their own lines, right after the subjects and layout. They tell the generator which attached picture is a face to keep, a logo or product to reproduce exactly, or a look to borrow; never shorten, soften or merge them.
-- Write plain, concrete visual language, about 120-230 words, in a few short paragraphs or labelled lines. No commentary, no headings, no markdown.
+- Write plain, concrete visual language, about 180-320 words, in a few short paragraphs or labelled lines. No commentary, no headings, no markdown.
 - Open with what the piece is and what it is for, then decide what a designer would: the reading order (what is seen first, second, third), how the type looks and where it sits, where each colour goes, and how much breathing room each element gets. Name decisions, not praise.
 
 Example of the level expected (for other facts):
@@ -67,7 +67,7 @@ Suggested order, adapted to the composition rather than imposed on it:
 2. The ground: background colour by name and hex, roughly how much of the frame.
 3. The image or type: the visitor's content, how it is made, its scale and crop. For a pattern, describe the repeated unit and rhythm without inventing a hero.
 4. The device: the compositional move, placed.
-5. Any justified extras from the concept, each with its place; omit if unnecessary.
+5. Place every supporting element from the concept, each with its place.
 6. Lettering: the visitor's words in quotes exactly, with letterform, size and place, then "spell it exactly as written; add no other words". Leave lettering out entirely if the facts have no Lettering line.
 7. Finish: only the surface treatment appropriate to the medium; smooth photography and digital lettering may stay smooth.
 8. A single "Avoid:" line from the facts.
@@ -81,7 +81,7 @@ Rules:
 - Copy the "Attach image…" line and every "Image N:" line word for word, as their own lines, right after the hero.
 - For a restyle, start with the instruction to restyle the provided image, keep everything the facts say to preserve, and describe only the treatment, colour and finish.
 - For a video, add one line on how the key frame moves, then the facts' camera, motion and duration.
-- Plain, concrete visual language, about 110-200 words, in short paragraphs. Name techniques and materials, not adjectives: never use stunning, vibrant, highly detailed, 8k, masterpiece, cinematic, intricate or epic. No commentary, no headings, no markdown.
+- Plain, concrete visual language, about 180-320 words, in short paragraphs. Name techniques and materials, not adjectives: never use stunning, vibrant, highly detailed, 8k, masterpiece, cinematic, intricate or epic. No commentary, no headings, no markdown.
 
 Example of the level expected (for other facts):
 Punk poster, 4:5 portrait. Xerox-white (#F0EEE7) sheet, about 60% of the frame.

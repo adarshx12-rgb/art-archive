@@ -260,6 +260,15 @@ describe("prompt task", () => {
     };
     const directed = 'Punk poster, 4:5. Xerox white (#F0EEE7) sheet. A woman dancing, photocopied huge in toner black (#0F0F0F), torn down the middle. "Night Shift" in ransom letters with fluoro pink (#FF2E88). Avoid: polished gradients.';
 
+    it("gives the artist room for a rich design and every supporting element", async () => {
+      const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+      await perfectPrompt(env(), { query: punk, brief });
+      const system = String((calls[0]!.body.messages as { content: string }[])[0]!.content);
+      expect(system).toContain("about 180-320 words");
+      expect(system).toContain("Place every supporting element from the concept");
+      expect(system).not.toContain("omit if unnecessary");
+    });
+
     it("writes it as an art director, with the concept in the input", async () => {
       const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
       const r = await perfectPrompt(env(), { query: punk, brief });

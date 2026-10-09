@@ -110,6 +110,11 @@ describe("checkBrief", () => {
     expect(checkBrief(brief({ furniture: ["a banner reading the headline"] }), punk).join(" ")).toMatch(/carries words/);
   });
 
+  it("reads design acronyms (HUD, CRT, VHS) as vocabulary, not printed words", () => {
+    expect(checkBrief(brief({ furniture: ["a framed HUD box lower right", "a thin strip of CRT scanlines across the top", "VHS tracking noise along the base", "an RGB split on the edges"] }), punk)).toEqual([]);
+    expect(checkBrief(brief({ furniture: ["a sticker shouting SALE"] }), punk).join(" ")).toMatch(/carries words/);
+  });
+
   it("accepts furniture that says it has no words", () => {
     expect(checkBrief(brief({ furniture: ["older torn scraps peeking out under the flyer edges, with no readable words", "blank paper tags without text"] }), punk)).toEqual([]);
     expect(checkBrief(brief({ furniture: ["a sticker with words on it"] }), punk).join(" ")).toMatch(/carries words/);

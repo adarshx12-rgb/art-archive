@@ -117,9 +117,13 @@ const WORDED = /\b(reading|saying|says|text|lettering|words?|caption|slogan|tagl
 /** Prices, long numbers and capitalised words: text in disguise. */
 const FIGURES = /\$\d|\d{3,}|\b[A-Z]{2,}\b/;
 // Negations ("with no readable words") and references to the visitor's own copy ("holding the price",
-// "behind the footer text") describe a wordless element; only new text it would carry counts.
+// "behind the footer text") describe a wordless element, as do design acronyms (HUD, CRT, VHS); only new
+// text it would carry counts.
 const affirmative = (s: string) =>
-  s.replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ").replace(/\b(?:the|their|its)\s+(?:\w+\s+){0,2}(?:text|lettering|words?|price|date|numbers?|copy|details?|headline|line)\b/gi, " ");
+  s
+    .replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ")
+    .replace(/\b(?:the|their|its)\s+(?:\w+\s+){0,2}(?:text|lettering|words?|price|date|numbers?|copy|details?|headline|line)\b/gi, " ")
+    .replace(/\b(?:HUD|CRT|VHS|RGB|CMYK|LED|LCD|UV|UI|QR|GIF|DVD|CD|TV|3D|2D)\b/g, " ");
 
 /** What's wrong with a brief, as instructions the model can act on. Empty when it's fine. */
 export function checkBrief(brief: Brief, state: BuilderState): string[] {

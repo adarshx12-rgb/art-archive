@@ -457,6 +457,15 @@ describe("concepts task", () => {
       expect(r.critique).toEqual(notes);
     });
 
+    it("gives back the designer's concept only in a slot that clashes with another", async () => {
+      // Improved concept 3 reuses concept 1's technique and device.
+      const clash = better.map((c, i) => (i === 2 ? { ...c, craft: better[0]!.craft } : c));
+      fakeFetch({ openrouter: (_b, n) => (n ? critique(clash) : reply(...three)) });
+      const r = await concepts(env({ CONCEPT_CRITIQUE: "on" }), { query, exclude: [] });
+      expect(r.concepts.map((c) => c.title)).toEqual([better[0]!.title, better[1]!.title, three[2]!.title]);
+      expect(r.critique).toEqual(notes);
+    });
+
     it("keeps the original concepts when the critique breaks a promise or fails", async () => {
       const invented = better.map((c) => ({ ...c, type: '"FREE BEER" across the top' }));
       fakeFetch({ openrouter: (_b, n) => (n ? critique(invented) : reply(...three)) });

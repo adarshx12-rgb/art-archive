@@ -62,9 +62,15 @@ export async function critiqueConcepts(
     });
     if (failed.length) console.warn(`critique kept the designer's version where its own failed the checks: ${failed.join(" | ")}`);
     if (!merged.some((m) => m.improved)) return null;
-    // The mix must still be a valid, distinct set.
-    const set = args.check(merged.map((m) => m.brief));
+    // The mix must still be a valid, distinct set. A slot that clashes with another gets the
+    // designer's concept back; then the set is checked once more.
+    let set = args.check(merged.map((m) => m.brief));
     if (set.kept.length < args.concepts.length) {
+      const clashing = new Set(set.problems.map((p) => Number(p.match(/^Concept (\d+):/)?.[1]) - 1).filter((i) => i >= 0));
+      for (const i of clashing) if (merged[i]?.improved) merged[i] = { brief: args.concepts[i]!, improved: false };
+      set = args.check(merged.map((m) => m.brief));
+    }
+    if (set.kept.length < args.concepts.length || !merged.some((m) => m.improved)) {
       console.warn(`critique kept the designer's concepts: the mixed set failed: ${set.problems.join(" | ")}`);
       return null;
     }

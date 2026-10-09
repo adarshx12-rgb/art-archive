@@ -6,7 +6,9 @@ Agreed in session on 2026-10-09.
 
 Design ideas should look like what a high-paid graphic designer would deliver for the same brief: rich, layered compositions with depth, a supporting system of details, energy and texture, and one clear focal point. The director should work from what it has learned (references, gold prompts, style briefs) and its own taste, not from one fixed set of design rules applied to every brief.
 
-The user's words: the sneaker concepts were "very generic, not much creativity"; the composition "could have been better with more elements"; creative means "what a high paying graphic designer would make" and "not sticking to one design rule" but operating "on own based on what the model learnt and taste".
+The guiding idea, in the user's words: treat the models like children. A child learns by looking at good art, understanding it and trying it out; feeding the models good reference images is key to better prompts and better taste.
+
+The user's words on the sneaker test: the sneaker concepts were "very generic, not much creativity"; the composition "could have been better with more elements"; creative means "what a high paying graphic designer would make" and "not sticking to one design rule" but operating "on own based on what the model learnt and taste".
 
 ## Why the current chain falls short
 
@@ -18,7 +20,15 @@ In the A/B test of 2026-10-09 (planner + gold prompts against the old chain) the
 
 ## Approach
 
-A: replace the rulebook with a creative standard and let the director explore widely before choosing. Plus an art-director critique pass that improves the concepts before they are shown. A stronger director model (option C) is deferred.
+Learn the way a child does: look at good art, understand it, try, get feedback, practise.
+
+- **Look:** the director and the critic see the actual images of the closest references for each brief, not only text about them (section 2).
+- **Understand:** each image comes with its study and gold prompt, and the director writes what makes each one work before it sketches (section 2).
+- **Try freely:** the rulebook is replaced by a creative standard, and the director sketches widely before choosing (section 1).
+- **Feedback:** an art-director critique compares the concepts with the reference images and improves them (section 3).
+- **Practise:** a repeatable offline round recreates references, the user renders them, and a vision model records what was missed, feeding the gold prompts (section 4).
+
+A stronger director model (option C) is deferred.
 
 ## 1. Taste over rules
 
@@ -53,20 +63,49 @@ A: replace the rulebook with a creative standard and let the director explore wi
 - The artist places every supporting element from the concept; the "omit if unnecessary" wording for extras goes.
 - The learn-not-copy rule for gold prompts stays.
 
-## 2. Art-director critique
+## 2. Look and understand: reference images at request time
+
+### Storage
+
+- A private Cloudflare R2 bucket `inspiration-refs`, bound to the Worker as `REFS` (`wrangler.jsonc` `r2_buckets`). It is never public and never served to the browser.
+- Contents: one JPEG per usable reference (gold prompt compiled), keyed by the reference `id` (`<id>.jpg`), resized to at most 768 px on the long side, quality about 80 (roughly 40–80 KB each; about 15 MB for the current 215).
+- `scripts/upload-refs.mjs` uploads missing or changed thumbnails with `wrangler r2 object put` (local and remote), from `inspiration/.study/<hash>.jpg` thumbnails resized with Pillow via `scripts/prepare-inspiration.py` output or a small resize step. It runs after `gold-prompts.mjs`. A manifest of uploaded ids and hashes avoids re-uploading.
+- Locally (`npm run dev`) the bucket is the Wrangler local R2 store, filled by the same script with `--local`.
+
+### Use
+
+- `worker/refs.ts`: `referenceImages(env, ids): Promise<string[]>` fetches the images from `REFS` as data URLs (`data:image/jpeg;base64,…`), in order, skipping any missing object; at most 3; a missing binding or any error returns `[]` (the chain then works from text, as today).
+- Director: the picked gold references (up to 3) are sent as images with the request, in the same order as `goldPrompts` (G1, G2, G3), using `ask`'s existing `images` option. The director's text says: "The images are the references G1–G3. Study them: what makes each work. Then make something new for this brief at that level; never copy one."
+- Understand step: `ConceptsOut` gains `observations: { ref: string; works: string }[]`: one line per reference on what makes it work (composition, layering, type, colour, detail), written before `sketches`.
+- Structure-only references are sent as images too; the text still says to borrow only their structure.
+- Models: the director chain must accept images. `OPENROUTER_DIRECTOR_MODELS` (Sonnet 5.5, Kimi K3) both do; the Anthropic last resort does too. If the provider rejects images, the call is retried once without them.
+- Cost: about half a cent per image per call; about 3 cents more per set of ideas with the critique.
+- Privacy: the user agreed (2026-10-09) to store the thumbnails in private R2 and to send 2–3 of them to the model provider per ideas request.
+
+## 3. Art-director critique
 
 After the director's concepts pass the code checks, one more call reviews and improves them.
 
 - Models: `OPENROUTER_DIRECTOR_MODELS` (Sonnet 5.5, then Kimi K3), same chain as the director.
 - Role: "You are the creative director at a top studio reviewing your designer's three concepts before they go to the client."
-- Input: the same facts the director had (including plan, gold prompts, design memory, style notes) plus the kept concepts.
+- Input: the same facts the director had (including plan, gold prompts, design memory, style notes), the same reference images, plus the kept concepts. Its first question for each concept: set beside the reference images, does it reach that level, and if not, what is missing?
 - Output schema `CritiqueOut`: `{ notes: { title: string; generic: string; push: string; cut: string }[]; concepts: Brief[] }`: per concept what is generic or weak, what a top studio would add or push, what is clutter; then the improved concepts, strongest first.
 - The improved concepts go through `sortBriefs` (all hard checks). If the call fails, returns no valid concepts, or drops below the number kept before, the original concepts are used. A critique can never make the result worse than skipping it.
 - `/api/concepts` returns `critique: notes[] | null` and the usage includes the critique call.
 - Setting `CONCEPT_CRITIQUE`: `"on"` (default) or `"off"`, in `wrangler.jsonc` and `Env`.
 - Cost: about 3–4 cents more per set of ideas; latency about 10–20 seconds more.
 
-## 3. Comparison test
+## 4. Practice rounds (offline, repeatable)
+
+The trying-out loop, done over time, extending the gold trial of 2026-10-09.
+
+- `scripts/practice.mjs pick --n 6` chooses references (rotating through styles, least-practised first) and writes `output/practice/<date>/sheet.md`: each reference's gold prompt with placeholders shown as role names, and the file name to render (`practice-<id>.png`).
+- The user renders them (Claude never generates images).
+- `scripts/practice.mjs review <date>` sends each render and its original to a vision model, which returns: a similarity verdict, what the prompt missed (`missed: string[]`), and a corrected gold prompt. The review is written to `output/practice/<date>/review.md` and each corrected gold prompt to the gold cache (`<hash>.gold-v1.json`, keeping the previous one as `<hash>.gold-v1.prev.json`); then gold prompts recompile.
+- Recurring misses across rounds (e.g. "colour mode", "vertical type orientation") are added to the gold-prompt instructions, as was done by hand after the trial.
+- Cost: about 1 cent per reviewed pair; the user's rendering time is the real cost, so rounds are small and occasional.
+
+## 5. Comparison test
 
 - Same 8 briefs and inputs as `output/abtest/briefs.json`.
 - Then: the chain on `main` before this work (planner, gold prompts `distinct`, current rules). Now: this work with the critique on.
@@ -84,6 +123,9 @@ After the director's concepts pass the code checks, one more call reviews and im
 | Freedom breaks visitor promises | All promise checks stay in code; critique output is re-checked and falls back on failure |
 | Longer prompts drop details | Existing missing-item checks and the repair pass are unchanged |
 | Cost and latency | Critique adds one call; `CONCEPT_CRITIQUE=off` disables it |
+| Images leak publicly | R2 bucket is private, read only through the Worker binding; never in `public/` or the browser bundle |
+| Images unavailable (local dev, missing object) | `referenceImages` returns `[]`; the chain works from text |
+| The director copies what it sees | The learn-not-copy rule, the 8-word copy check, and the critique's "never copy one" question |
 
 ## Testing
 
@@ -93,5 +135,9 @@ Unit tests (vitest):
 - `ConceptsOut` carries `sketches`; `/api/concepts` returns them.
 - Critique: with `CONCEPT_CRITIQUE` on, a second call is made with the concepts in its input and the improved concepts are returned with notes; with it off, no second call; a critique that invents words or fails falls back to the originals; usage adds both calls.
 - Artist system texts carry the new word range and the "place every supporting element" rule.
+- `referenceImages`: returns data URLs in order from a fake R2 binding; skips missing objects; returns `[]` without a binding or on error.
+- Director call carries the images (`images` option) in G1–G3 order when gold references are picked, and none when there are none; `observations` are returned.
+- A provider rejection of images retries once without them.
+- `practice.mjs`: picking rotates styles and skips recently practised references; review writes the corrected gold prompt and keeps the previous one (tested with a fake model response).
 
 Plus both typechecks and the production build.

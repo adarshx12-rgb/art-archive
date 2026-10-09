@@ -312,6 +312,13 @@ describe("prompt task", () => {
       expect(calls).toHaveLength(0);
     });
 
+    it("recognises a style name written without its curly apostrophe", async () => {
+      const retro = "s=70s-retro&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1");
+      fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace("Punk poster", "70s retro poster") })) });
+      const r = await perfectPrompt(env(), { query: retro, brief });
+      expect(r.warnings.join(" ")).not.toMatch(/Retro style/);
+    });
+
     it("does not warn when the visitor's phrase is split into its own words", async () => {
       fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace('"Night Shift" in ransom letters', '"Night" stacked over "Shift" in ransom letters') })) });
       const r = await perfectPrompt(env(), { query: punk, brief });

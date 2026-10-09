@@ -116,7 +116,10 @@ export function tidyBrief(b: Brief): Brief {
 const WORDED = /\b(reading|saying|says|text|lettering|words?|caption|slogan|tagline|labell?ed|price|date|numbers?|numerals?|digits?)\b|\bstamp(?:ed)? with\b/i;
 /** Prices, long numbers and capitalised words: text in disguise. */
 const FIGURES = /\$\d|\d{3,}|\b[A-Z]{2,}\b/;
-const affirmative = (s: string) => s.replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ");
+// Negations ("with no readable words") and references to the visitor's own copy ("holding the price",
+// "behind the footer text") describe a wordless element; only new text it would carry counts.
+const affirmative = (s: string) =>
+  s.replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ").replace(/\b(?:the|their|its)\s+(?:\w+\s+){0,2}(?:text|lettering|words?|price|date|numbers?|copy|details?|headline|line)\b/gi, " ");
 
 /** What's wrong with a brief, as instructions the model can act on. Empty when it's fine. */
 export function checkBrief(brief: Brief, state: BuilderState): string[] {

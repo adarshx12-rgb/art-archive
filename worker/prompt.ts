@@ -112,7 +112,9 @@ function mustInclude(state: BuilderState, colours: string[]): { label: string; a
   for (const hex of colours) checks.push({ label: `colour ${hex}`, any: [hex.toLowerCase()] });
   const style = styleFor(state);
   // A custom style's name ("Custom", "Canvas") needn't appear; its description is in the facts.
-  if (state.style !== CUSTOM_SLUG) checks.push({ label: `the ${style.name} style`, any: [style.name.toLowerCase(), style.name.split(/[\s/]+/)[0]!.toLowerCase()] });
+  // "70’s Retro" is often written "70s retro".
+  const plain = style.name.toLowerCase().replace(/[’'`]/g, "");
+  if (state.style !== CUSTOM_SLUG) checks.push({ label: `the ${style.name} style`, any: [style.name.toLowerCase(), style.name.split(/[\s/]+/)[0]!.toLowerCase(), plain, plain.split(/[\s/]+/)[0]!] });
   // Typed copy may be set split into its own words ("Night" over "Shift").
   for (const line of copyLines(state.text)) checks.push({ label: `the text "${line}"`, any: [line.toLowerCase()], split: true });
   const template = state.template ? getTemplate(state.style, state.template) : undefined;
@@ -155,7 +157,7 @@ const splitAcrossQuotes = (prompt: string, line: string) => {
 };
 
 const missing = (prompt: string, checks: ReturnType<typeof mustInclude>) => {
-  const text = prompt.toLowerCase();
+  const text = prompt.toLowerCase().replace(/[’'`]/g, "") + " " + prompt.toLowerCase();
   return checks.filter((c) => !c.any.some((w) => text.includes(w)) && !(c.split && splitAcrossQuotes(prompt, c.any[0]!))).map((c) => c.label);
 };
 

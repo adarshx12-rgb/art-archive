@@ -103,6 +103,13 @@ describe("checkBrief", () => {
     expect(checkBrief(brief({ furniture: ['a pill badge holding "Night Shift"'] }), punk)).toEqual([]);
   });
 
+  it("lets supporting elements frame the visitor's own copy, but not carry new text", () => {
+    expect(checkBrief(brief({ furniture: ["a small rust red tab in the top right corner holding the price", "a heavy black bar behind the footer text", "a torn strip as a dark rest for the detail words"] }), punk)).toEqual([]);
+    expect(checkBrief(brief({ furniture: ["a price tag on the shoe"] }), punk).join(" ")).toMatch(/carries words/);
+    expect(checkBrief(brief({ furniture: ["random numbers down the edge"] }), punk).join(" ")).toMatch(/carries words/);
+    expect(checkBrief(brief({ furniture: ["a banner reading the headline"] }), punk).join(" ")).toMatch(/carries words/);
+  });
+
   it("accepts furniture that says it has no words", () => {
     expect(checkBrief(brief({ furniture: ["older torn scraps peeking out under the flyer edges, with no readable words", "blank paper tags without text"] }), punk)).toEqual([]);
     expect(checkBrief(brief({ furniture: ["a sticker with words on it"] }), punk).join(" ")).toMatch(/carries words/);

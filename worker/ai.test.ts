@@ -1,10 +1,12 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { ask, chain } from "./ai";
 import type { Env } from "./env";
 import { suggestSchemes } from "./palette";
 import { perfectPrompt } from "./prompt";
 import { concepts } from "./concepts";
+import { setGoldPool } from "./gold";
+import type { GoldReference } from "./gold-schema";
 import { composePrompt } from "../src/lib/prompt/compose";
 import { decodeState, encodeState } from "../src/lib/prompt/state";
 import { basePlan } from "../src/lib/plan/plan";
@@ -48,7 +50,12 @@ function fakeFetch(handlers: { openrouter?: (body: Record<string, unknown>, n: n
   return calls;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+// The compiled gold prompts change as the inspiration folder grows; tests choose their own.
+beforeEach(() => setGoldPool([]));
+afterEach(() => {
+  vi.unstubAllGlobals();
+  setGoldPool(null);
+});
 
 describe("model chain", () => {
   it("lists OpenRouter models in order, then Anthropic directly; skips providers without a key", () => {
@@ -377,6 +384,57 @@ describe("concepts task", () => {
     const calls = fakeFetch({ openrouter: () => reply(...three) });
     await concepts(env(), { query, exclude: ["Big numeral"] });
     expect(JSON.stringify(calls[0]!.body)).toContain("Big numeral");
+  });
+
+  describe("with gold prompts", () => {
+    const sections = {
+      format: "Club night poster, 4:5 portrait.",
+      ground: "Newsprint grey (#CFCBC2) ground, about 60%, xerox speckle.",
+      hero: "A dancer photocopied huge, blown highlights, cropped at the knees, filling the right two thirds.",
+      layout: "[HEADLINE] stacked down the left edge reads first; the dancer's arm cuts across it.",
+      lettering: "[HEADLINE] in ransom-note cut-out capitals.",
+      finish: "Toner specks, uneven black, a strip of tape top-right.",
+      avoid: "Avoid: gradients, glossy finishes and clean vector type.",
+    };
+    const gold = (id: string, patch: Partial<GoldReference> = {}): GoldReference => ({ id, folders: ["punk"], kind: "poster", roles: ["headline", "hero"], textLoad: "light", medium: "photograph", structure: "single-focus", density: "dense", quality: "strong", colours: [{ name: "newsprint grey", hex: "#CFCBC2" }], sections, prompt: Object.values(sections).join("\n"), ...patch });
+    const userOf = (body: Record<string, unknown>) => JSON.parse(String((body.messages as { content: string }[]).at(-1)!.content));
+    const systemOf = (body: Record<string, unknown>) => String((body.messages as { content: string }[])[0]!.content);
+
+    it("gives the director the closest gold prompts, one per concept", async () => {
+      setGoldPool([gold("g-a"), gold("g-b", { roles: ["headline"] })]);
+      const calls = fakeFetch({ openrouter: () => reply(...three.map((c, i) => ({ ...c, reference: { ref: `G${i + 1}`, takes: "the stacked headline" } }))) });
+      const r = await concepts(env(), { query, exclude: [] });
+      const input = userOf(calls[0]!.body);
+      expect(input.goldPrompts.map((g: { ref: string }) => g.ref)).toEqual(["G1", "G2"]);
+      expect(input.goldPrompts[0].prompt).toContain("ransom-note");
+      expect(systemOf(calls[0]!.body)).toContain("Each concept adapts a different goldPrompt");
+      // A reference the director was not given is dropped, the concept kept.
+      expect(r.concepts.map((c) => c.reference?.ref ?? null)).toEqual(["G1", "G2", null]);
+      expect(r.goldSources).toEqual([{ ref: "G1", id: "g-a", folders: ["punk"], transfer: "within-style" }, { ref: "G2", id: "g-b", folders: ["punk"], transfer: "within-style" }]);
+    });
+
+    it("asks every concept to riff on the best match in single mode", async () => {
+      setGoldPool([gold("g-a")]);
+      const calls = fakeFetch({ openrouter: () => reply(...three) });
+      await concepts(env({ GOLD_CONCEPT_MODE: "single" }), { query, exclude: [] });
+      expect(systemOf(calls[0]!.body)).toContain("Every concept adapts G1");
+    });
+
+    it("leaves the director's input as before when gold prompts are off or none fit", async () => {
+      const plain = fakeFetch({ openrouter: () => reply(...three) });
+      await concepts(env(), { query, exclude: [] });
+      setGoldPool([gold("g-a")]);
+      const off = fakeFetch({ openrouter: () => reply(...three) });
+      await concepts(env({ GOLD_CONCEPT_MODE: "off" }), { query, exclude: [] });
+      setGoldPool([gold("g-z", { folders: ["acid"], structure: "repetition" })]);
+      const none = fakeFetch({ openrouter: () => reply(...three) });
+      await concepts(env(), { query, exclude: [] });
+      for (const calls of [off, none]) {
+        expect(systemOf(calls[0]!.body)).toBe(systemOf(plain[0]!.body));
+        expect(userOf(calls[0]!.body)).toEqual(userOf(plain[0]!.body));
+        expect(userOf(calls[0]!.body)).not.toHaveProperty("goldPrompts");
+      }
+    });
   });
 
   it("accepts restyle concepts that only change the making", async () => {

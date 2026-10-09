@@ -27,6 +27,8 @@ export interface Brief {
   craft: string[];
   /** Video only: how the key frame moves. */
   motion: string | null;
+  /** The gold prompt this concept adapts (worker/gold.ts), and what it takes from it. */
+  reference?: { ref: string; takes: string } | null;
 }
 
 /** Every word the visitor asked to letter: template blocks, text on the sketch, then the text box. */
@@ -91,6 +93,7 @@ export function tidyBrief(b: Brief): Brief {
     finish: cut(b.finish.trim(), 160),
     craft: [...new Set(b.craft.map((c) => c.trim()).filter(Boolean))],
     motion: opt(b.motion, 220),
+    reference: b.reference ? { ref: cut(b.reference.ref.trim(), 8), takes: cut(b.reference.takes.trim(), 160) } : null,
   };
 }
 

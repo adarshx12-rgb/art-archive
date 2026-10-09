@@ -27,6 +27,8 @@
     "OPENROUTER_VISION_MODELS": "google/gemini-3.5-flash-lite,anthropic/claude-haiku-5.5",
     // Planning the content (what is said, in what order) before the director designs it.
     "OPENROUTER_PLANNER_MODELS": "google/gemini-3.5-flash-lite,anthropic/claude-haiku-5.5",
+    // Design ideas adapt gold prompts from the inspiration folder: "distinct" (a different one per concept), "single" or "off".
+    "GOLD_CONCEPT_MODE": "distinct",
     // Last resort, called on Anthropic directly if OpenRouter is down.
     "AI_MODEL": "claude-sonnet-5-5",
     // The live address, for OpenRouter's app attribution.

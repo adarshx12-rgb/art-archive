@@ -15,6 +15,8 @@ export interface Env {
   OPENROUTER_VISION_MODELS?: string;
   /** The same for the content planner; empty skips the model and uses the rules plan. */
   OPENROUTER_PLANNER_MODELS?: string;
+  /** How design ideas use gold prompts: "distinct" (one reference per concept), "single" (all riff on the best match) or "off". */
+  GOLD_CONCEPT_MODE?: string;
   /** Anthropic model used directly as the last resort. */
   AI_MODEL?: string;
   /** Sent to OpenRouter for app attribution. */

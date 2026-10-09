@@ -18,6 +18,8 @@ const env = (patch: Partial<Env> = {}): Env =>
     ANTHROPIC_API_KEY: "sk-test",
     OPENROUTER_MODELS: "google/gemini-3.8-flash,anthropic/claude-sonnet-5",
     AI_MODEL: "claude-sonnet-5",
+    // Each test that wants the art-director pass switches it on.
+    CONCEPT_CRITIQUE: "off",
     ...patch,
   }) as Env;
 
@@ -410,6 +412,42 @@ describe("concepts task", () => {
     motion: null,
   });
   const reply = (...cs: unknown[]) => openRouterReply(JSON.stringify({ observations: [], sketches: [], concepts: cs }));
+
+  describe("art-director critique", () => {
+    const better = three.map((c) => ({ ...c, title: c.title + " (pushed)", furniture: [...c.furniture, "motion streaks behind her"] }));
+    const notes = three.map((c) => ({ title: c.title, generic: "centred and safe", push: "layer the type behind her", cut: "nothing" }));
+    const critique = (cs: unknown[] = better) => openRouterReply(JSON.stringify({ notes, concepts: cs }));
+
+    it("reviews the concepts as a creative director and returns the improved ones", async () => {
+      const calls = fakeFetch({ openrouter: (_b, n) => (n ? critique() : reply(...three)) });
+      const r = await concepts(env({ CONCEPT_CRITIQUE: "on" }), { query, exclude: [] });
+      expect(calls).toHaveLength(2);
+      expect(String((calls[1]!.body.messages as { content: string }[])[0]!.content)).toContain("creative director at a top studio");
+      expect(JSON.stringify(calls[1]!.body.messages)).toContain("Torn in two");
+      expect(r.concepts.map((c) => c.title)).toEqual(better.map((c) => c.title));
+      expect(r.critique).toEqual(notes);
+      expect(r.usage.cost).toBeCloseTo(0.0002);
+    });
+
+    it("skips the critique when it is off", async () => {
+      const calls = fakeFetch({ openrouter: () => reply(...three) });
+      const r = await concepts(env(), { query, exclude: [] });
+      expect(calls).toHaveLength(1);
+      expect(r.critique).toBeNull();
+    });
+
+    it("keeps the original concepts when the critique breaks a promise or fails", async () => {
+      const invented = better.map((c) => ({ ...c, type: '"FREE BEER" across the top' }));
+      fakeFetch({ openrouter: (_b, n) => (n ? critique(invented) : reply(...three)) });
+      const broken = await concepts(env({ CONCEPT_CRITIQUE: "on" }), { query, exclude: [] });
+      expect(broken.concepts.map((c) => c.title)).toEqual(three.map((c) => c.title));
+      expect(broken.critique).toBeNull();
+      fakeFetch({ openrouter: (_b, n) => (n ? new Response(JSON.stringify({ error: { message: "down" } }), { status: 500 }) : reply(...three)) });
+      const failed = await concepts(env({ CONCEPT_CRITIQUE: "on", AI_MODEL: undefined, ANTHROPIC_API_KEY: undefined }), { query, exclude: [] });
+      expect(failed.concepts.map((c) => c.title)).toEqual(three.map((c) => c.title));
+      expect(failed.critique).toBeNull();
+    });
+  });
 
   it("works to a creative standard, not a rulebook", async () => {
     const calls = fakeFetch({ openrouter: () => reply(...three) });

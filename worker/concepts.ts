@@ -13,6 +13,7 @@ import { DESIGN_JUDGMENT, designMemoryFor } from "./design-memory";
 import { planFor } from "./plan";
 import { goldForModel, retrieveGold } from "./gold";
 import { referenceImages } from "./refs";
+import { critiqueConcepts } from "./critique";
 import { basePlan, type ContentPlan } from "../src/lib/plan/plan";
 import { incompatibleCraft } from "../src/lib/art/constraints";
 
@@ -214,10 +215,21 @@ export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, 
   }
 
   if (!kept.length) throw new AiError("Couldn’t come up with design ideas. Try again.", 502, false);
+
+  // The art-director pass: same brief, same images; its concepts must pass the same checks.
+  const reviewed = env.CONCEPT_CRITIQUE === "off" ? null : await critiqueConcepts(
+    env,
+    { system, facts, concepts: kept, images, models, briefSchema: BriefSchema as unknown as z.ZodType<Brief>, check: (cs) => sortBriefs(cs, state).kept },
+    override,
+  );
+  if (reviewed) {
+    kept = reviewed.concepts;
+    usage = addUsage(usage, reviewed.usage);
+  }
   // A reference the director was not given cannot be followed; the concept stands without it.
   const refs = new Set(gold.map((g) => g.ref));
   const checked = kept.map((b) => ({ ...b, reference: b.reference && refs.has(b.reference.ref) ? b.reference : null }));
   const goldSources = gold.map(({ ref, transfer }, i) => ({ ref, id: picked[i]!.gold.id, folders: picked[i]!.gold.folders, transfer }));
   const idOf = new Map(goldSources.map((g) => [g.ref, g.id]));
-  return { concepts: checked.map((b) => ({ ...b, tags: tagsFor(b), goldId: (b.reference && idOf.get(b.reference.ref)) ?? null })), model, usage, goldSources, observations, sketches: first.data.sketches ?? [], imagesSeen: images.length, designSources: facts.designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer })) };
+  return { concepts: checked.map((b) => ({ ...b, tags: tagsFor(b), goldId: (b.reference && idOf.get(b.reference.ref)) ?? null })), model, usage, goldSources, observations, sketches: first.data.sketches ?? [], imagesSeen: images.length, critique: reviewed?.notes ?? null, designSources: facts.designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer })) };
 }

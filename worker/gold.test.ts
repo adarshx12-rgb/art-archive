@@ -96,6 +96,9 @@ describe("gold checks", () => {
     expect(referenceColours(p, g, ["#F0EEE7", "xerox white"])).toEqual(["safety orange", "#FF6A00"]);
     expect(referenceColours(p, g, ["#FF6A00", "safety orange"])).toEqual([]);
     expect(referenceColours("Avoid: safety orange.", g, [])).toEqual([]);
+    // "Teal" from the reference is not a new colour when the visitor chose "deep teal".
+    const teal = ref("teal", { colours: [{ name: "Teal", hex: "#2A6F6B" }] });
+    expect(referenceColours("Deep teal (#23535E) halftone on the shadows.", teal, ["deep teal", "#23535E"])).toEqual([]);
   });
 
   it("finds a run of eight or more words copied from the reference", () => {

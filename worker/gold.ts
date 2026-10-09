@@ -68,8 +68,10 @@ export function referenceColours(prompt: string, gold: GoldReference, chosen: st
   const body = ` ${prompt.split(/\bAvoid:/i)[0]!.toLowerCase()} `;
   const mine = new Set(chosen.map((c) => c.toLowerCase()));
   const found: string[] = [];
+  // "Teal" is not the reference's colour coming back when the visitor chose "deep teal" (or the other way round).
+  const shared = (n: string) => [...mine].some((c) => !c.startsWith("#") && (c.includes(n) || n.includes(c)));
   for (const { name, hex } of gold.colours) {
-    if (!mine.has(name.toLowerCase()) && new RegExp(`[^a-z]${name.toLowerCase().replace(/[^a-z0-9 ]/g, "")}[^a-z]`).test(body)) found.push(name);
+    if (!shared(name.toLowerCase()) && new RegExp(`[^a-z]${name.toLowerCase().replace(/[^a-z0-9 ]/g, "")}[^a-z]`).test(body)) found.push(name);
     if (!mine.has(hex.toLowerCase()) && body.includes(hex.toLowerCase())) found.push(hex);
   }
   return found;

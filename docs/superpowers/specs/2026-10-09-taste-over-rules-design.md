@@ -69,8 +69,8 @@ A stronger director model (option C) is deferred.
 
 - A private Cloudflare R2 bucket `inspiration-refs`, bound to the Worker as `REFS` (`wrangler.jsonc` `r2_buckets`). It is never public and never served to the browser.
 - Contents: one JPEG per usable reference (gold prompt compiled), keyed by the reference `id` (`<id>.jpg`), resized to at most 768 px on the long side, quality about 80 (roughly 40–80 KB each; about 15 MB for the current 215).
-- `scripts/upload-refs.mjs` uploads missing or changed thumbnails with `wrangler r2 object put` (local and remote), from `inspiration/.study/<hash>.jpg` thumbnails resized with Pillow via `scripts/prepare-inspiration.py` output or a small resize step. It runs after `gold-prompts.mjs`. A manifest of uploaded ids and hashes avoids re-uploading.
-- Locally (`npm run dev`) the bucket is the Wrangler local R2 store, filled by the same script with `--local`.
+- `scripts/upload-refs.py` (Python with Pillow, like `prepare-inspiration.py`) resizes each usable reference's study thumbnail (`inspiration/.study/<hash>.jpg`) to 768 px and uploads it as `<id>.jpg` with `wrangler r2 object put`, `--local` or `--remote`. It runs after `gold-prompts.mjs`; a manifest (`inspiration/.study/refs-uploaded.json`, id → hash) skips unchanged images and deletes objects for references no longer usable.
+- Locally (`npm run dev`) the bucket is the Wrangler local R2 store, filled by the same script with `--local`. Creating the remote bucket (`wrangler r2 bucket create inspiration-refs`) is a one-off step the user approves, since it changes their Cloudflare account.
 
 ### Use
 

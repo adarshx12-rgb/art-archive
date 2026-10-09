@@ -339,4 +339,22 @@ export const fontSuggestions: Record<string, FontSuggestion[]> = {
     paid("Trajan", "Headlines", "Carol Twombly's capitals from the Trajan Column, grand and classical.", "Adobe", "https://fonts.adobe.com/fonts/trajan"),
     paid("Adobe Jenson", "Body", "Renaissance roman type with the warmth of early printed books.", "Adobe", "https://fonts.adobe.com/fonts/adobe-jenson"),
   ],
+  "concert-poster": [
+    free("Anton", "Headlines", "A heavy condensed sans that fills the width of a tour poster."),
+    free("Inter", "Details", "A neutral sans for dates and venues set small and tracked."),
+    paid("Druk", "Headlines", "Commercial Type's ultra-heavy condensed face, a staple of modern tour posters.", "Commercial Type", "https://commercialtype.com/catalog/druk"),
+    paid("Neue Haas Grotesk", "Details", "Christian Schwartz's revival of the original Helvetica, for tight small print.", "Monotype"),
+  ],
+  "film-still-poster": [
+    free("Archivo Black", "Headlines", "A wide, heavy grotesque for a single spot-colour title."),
+    free("Courier Prime", "Details", "A typewriter face for credits and taglines, like a studio script."),
+    paid("Druk Wide", "Headlines", "The extended cut of Druk, for titles spread across the full width.", "Commercial Type", "https://commercialtype.com/catalog/druk"),
+    paid("Helvetica Now Display", "Details", "A tight display grotesque for small, carefully spaced credits.", "Monotype"),
+  ],
+  "streetwear-poster": [
+    free("Bebas Neue", "Headlines", "Tall condensed capitals for the giant word."),
+    free("Kaushan Script", "Details", "A fast brush script for the line that breaks the type clash."),
+    paid("Knockout", "Headlines", "Hoefler & Co.'s family of condensed sans widths, made for loud, mixed headlines.", "Hoefler&Co.", "https://www.typography.com/fonts/knockout/overview"),
+    paid("Druk Text", "Body", "Druk's sturdier text cut for the quote lines between the shouting.", "Commercial Type", "https://commercialtype.com/catalog/druk"),
+  ],
 };

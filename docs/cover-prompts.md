@@ -1284,7 +1284,7 @@ Avoid: the likeness of a real person, real newspaper or brand names, paragraphs 
 - Slug: `concert-poster`
 - Artwork: Contemporary tour poster (Black-and-white live photography with layered type)
 - Format: tall 2:3
-- Save as: `covers-src/concert-poster.png`
+- Cover: `covers-src/concert-poster.png`
 
 ```text
 An original tour poster for an invented singer, built from black-and-white live concert photography on a near-black ground.
@@ -1311,7 +1311,7 @@ Avoid: the likeness of a real person, real artist or brand names, colourful stag
 - Slug: `film-still-poster`
 - Artwork: Alternative movie poster (Black-and-white film still with a spot-colour title)
 - Format: tall 2:3
-- Save as: `covers-src/film-still-poster.png`
+- Cover: `covers-src/film-still-poster.png`
 
 ```text
 An original alternative movie poster for an invented 1960s European thriller, made from a black-and-white film still with the title added in one spot colour.
@@ -1338,7 +1338,7 @@ Avoid: the likeness of a real actor, any real film's title or still, full colour
 - Slug: `streetwear-poster`
 - Artwork: Streetwear quote poster (Cut-out classical sculpture with clashing type)
 - Format: tall 2:3
-- Save as: `covers-src/streetwear-poster.png`
+- Cover: `covers-src/streetwear-poster.png`
 
 ```text
 An original streetwear quote poster that remixes a classical marble sculpture with a loud, modern quote.

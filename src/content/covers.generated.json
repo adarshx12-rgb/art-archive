@@ -95,6 +95,14 @@
       "height": 1536
     }
   ],
+  "concert-poster": [
+    {
+      "src": "/covers/concert-poster.webp",
+      "file": "concert-poster.png",
+      "width": 1020,
+      "height": 1536
+    }
+  ],
   "cyberminimalism": [
     {
       "src": "/covers/cyberminimalism.webp",
@@ -124,6 +132,14 @@
       "src": "/covers/deconstructivism.webp",
       "file": "deconstructivism.png",
       "width": 1024,
+      "height": 1536
+    }
+  ],
+  "film-still-poster": [
+    {
+      "src": "/covers/film-still-poster.webp",
+      "file": "film-still-poster.png",
+      "width": 1020,
       "height": 1536
     }
   ],
@@ -285,6 +301,14 @@
       "file": "steampunk.png",
       "width": 1080,
       "height": 1080
+    }
+  ],
+  "streetwear-poster": [
+    {
+      "src": "/covers/streetwear-poster.webp",
+      "file": "streetwear-poster.png",
+      "width": 1020,
+      "height": 1536
     }
   ],
   "surreal-design": [

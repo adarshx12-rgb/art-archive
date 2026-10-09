@@ -158,7 +158,7 @@ it("leaves look-only pictures out: they are not content", () => { … });
 
 ## Status (2026-10-09)
 
-Tasks 1–6 built and verified; 490 tests pass, both typechecks clean. Not committed.
+Tasks 1–6 built, verified and committed (31cbe4d).
 
 Changes from the plan, found while building:
 - **Mining:** batches of 10 (Flash-Lite truncated larger JSON answers); a batch failing 3 times is left out and counted. Result: 718 of 720 briefs labelled for $0.15.
@@ -169,4 +169,4 @@ Changes from the plan, found while building:
 
 Live check (real chain, three briefs): planner ≈ $0.0005–0.0008 and 1–2 s; director (Sonnet 5.5) $0.033–0.038 and 12–15 s; artist (Kimi K3) $0.013–0.026 and 7–33 s; about 5–7¢ and under a minute per prompt with design ideas.
 
-Task 7 (TASTE scorer) not started: needs approval for image spend and the model download.
+Task 7 prep (2026-10-09): the first A/B prompt run showed the planner adding little and sometimes hurting. Flash-Lite kept the rules' roles it was given (so the first typed line stayed the headline), missed brand names and mastheads, and garbled "·" when copying lines back, which got the whole answer rejected. Fixes: the model now answers by item number and gets no starting roles; the rules spot business names (brand, priority 1 when the rest is lists), issue lines (detail), and lists of services or classes (never the headline when a short display line exists). Re-run: all five plans from the model, with the right headlines. The blind A/B prompts are in output/task7/prompts.md (key.json holds the answer key). The user renders the images in GPT, then they get scored.

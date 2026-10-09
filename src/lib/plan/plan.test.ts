@@ -52,6 +52,18 @@ describe("roleOf", () => {
     expect(roleOf("TRANSPORTATION • LOGISTICS")).toBeNull();
     expect(roleOf("JOHOR • SINGAPORE • MALAYSIA")).toBeNull();
   });
+
+  it("spots a business name as the brand and an issue line as a detail", () => {
+    expect(roleOf("SEYON SERVICES")).toBe("brand");
+    expect(roleOf("Golden Hour Café")).toBe("brand");
+    expect(roleOf("Kopi Lane Sdn Bhd")).toBe("brand");
+    expect(roleOf("Still Room Studio")).toBe("brand");
+    expect(roleOf("ISSUE 07 · AUTUMN")).toBe("detail");
+    expect(roleOf("Vol. 3")).toBe("detail");
+    expect(roleOf("seyon_services@yahoo.com")).toBe("contact");
+    expect(roleOf("We are the best transport services in the whole of Johor")).toBeNull();
+    expect(roleOf("THE SLOW CITY")).toBeNull();
+  });
 });
 
 describe("basePlan", () => {
@@ -74,6 +86,31 @@ describe("basePlan", () => {
     const plan = basePlan({ ...defaultState(), format: "poster", text: "Sat 14 Nov, 8pm\nKUALA LUMPUR JAZZ NIGHT\nTickets at kljazz.com\nFree entry before 9pm" });
     expect(plan.items[0]).toMatchObject({ ref: "KUALA LUMPUR JAZZ NIGHT", role: "headline", priority: 1 });
     expect(plan.items.find((i) => i.ref === "Sat 14 Nov, 8pm")).toMatchObject({ role: "detail", priority: 3 });
+  });
+
+  it("does not make a list of classes the headline when a real line exists", () => {
+    const plan = basePlan({ ...defaultState(), format: "flyer", text: "Vinyasa · Yin · Hatha\nBreathe In\nFirst class free for new students\nBook your mat today\n012-345 6789 · stillroom.yoga" });
+    expect(plan.items.find((i) => i.ref === "Breathe In")).toMatchObject({ role: "headline", priority: 1 });
+    expect(plan.items.find((i) => i.ref === "Vinyasa · Yin · Hatha")).toMatchObject({ role: "subhead", priority: 2 });
+  });
+
+  it("leads with the business name when the rest of the copy is lists", () => {
+    const plan = basePlan({ ...defaultState(), format: "poster", text: [SEYON[0], SEYON[1], "SEYON SERVICES", ...SEYON.slice(2)].join("\n") });
+    expect(plan.items.find((i) => i.ref === "SEYON SERVICES")).toMatchObject({ role: "brand", priority: 1 });
+    expect(plan.items.find((i) => i.ref === SEYON[0])).toMatchObject({ role: "headline" });
+  });
+
+  it("prefers a short display line over a long sentence for the headline", () => {
+    const plan = basePlan({ ...defaultState(), format: "magazine", text: "ISSUE 07 · AUTUMN\n12 neighbourhoods worth getting lost in\nTHE SLOW CITY\nWhy we walk again\nRM 18" });
+    expect(plan.items.find((i) => i.ref === "THE SLOW CITY")).toMatchObject({ role: "headline", priority: 1 });
+    expect(plan.items.find((i) => i.ref === "ISSUE 07 · AUTUMN")).toMatchObject({ role: "detail", priority: 3 });
+    expect(plan.items.find((i) => i.ref === "12 neighbourhoods worth getting lost in")).toMatchObject({ role: "subhead" });
+  });
+
+  it("keeps a café's name as the brand and its campaign line as the headline", () => {
+    const plan = basePlan({ ...defaultState(), format: "poster", text: "Order at the counter\nGolden Hour Café\nIced Latte Season\nAny 2 drinks RM12" });
+    expect(plan.items.find((i) => i.ref === "Golden Hour Café")).toMatchObject({ role: "brand", priority: 2 });
+    expect(plan.items.find((i) => i.ref === "Iced Latte Season")).toMatchObject({ role: "headline", priority: 1 });
   });
 
   it("treats a text-source picture as copy, the headline when nothing is typed", () => {

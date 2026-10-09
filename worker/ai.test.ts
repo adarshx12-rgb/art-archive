@@ -128,7 +128,7 @@ describe("prompt task", () => {
     const query = "s=swiss&fm=poster&q=a%20cat&tx=" + encodeURIComponent("Cat Show\nSunday 10am");
     const state = decodeState(new URLSearchParams(query)).state;
     const facts = composePrompt(state).prompt;
-    const planned = basePlan(state).items.map(({ ref, role, priority }) => ({ ref, role, priority }));
+    const planned = basePlan(state).items.map(({ role, priority }, i) => ({ id: i + 1, role, priority }));
     const calls = fakeFetch({
       openrouter: (body) =>
         body.response_format && JSON.stringify(body.response_format).includes("content_plan")

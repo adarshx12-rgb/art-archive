@@ -25,16 +25,19 @@ function fake(handler: (body: Record<string, unknown>) => Response) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+/** The model's answer: items by their number in the input (1-based), not by copying their text. */
+const byId = (base: ReturnType<typeof basePlan>, items = base.items) => items.map((i) => ({ id: base.items.indexOf(i) + 1, role: i.role, priority: i.priority }));
+
 describe("planFor", () => {
   it("uses the planner's valid answer, on the planner models", async () => {
     const state = poster("lanterns over food stalls");
     const base = basePlan(state);
-    const items = [...base.items].reverse().map(({ ref, role, priority }) => ({ ref, role, priority }));
-    const bodies = fake(() => reply({ message: "A weekly night market: come on Friday evening.", items }));
+    const reversed = [...base.items].reverse();
+    const bodies = fake(() => reply({ message: "A weekly night market: come on Friday evening.", items: byId(base, reversed) }));
     const { plan, usage, model } = await planFor(env(), state);
     expect(plan.source).toBe("ai");
     expect(plan.message).toBe("A weekly night market: come on Friday evening.");
-    expect(plan.items.map((i) => i.ref)).toEqual(items.map((i) => i.ref));
+    expect(plan.items.map((i) => i.ref)).toEqual(reversed.map((i) => i.ref));
     expect(plan.items.find((i) => i.ref === "Night Market")!.locked).toBe("exact words");
     expect(usage?.cost).toBe(0.0007);
     expect(model).toBe("google/gemini-3.5-flash-lite");
@@ -43,9 +46,26 @@ describe("planFor", () => {
     expect(JSON.stringify(bodies[0]!.messages)).toContain("readingOrderPrior");
   });
 
-  it("falls back to the rules plan when the answer invents an item", async () => {
+  it("gets items by number, so a garbled copy of the text cannot sink the answer", async () => {
+    const state: BuilderState = { ...defaultState(), format: "flyer", subject: "a yoga mat", text: ["Vinyasa · Yin · Hatha", "Breathe In", "012-345 6789 · stillroom.yoga"].join("\n") };
+    const base = basePlan(state);
+    const bodies = fake(() => reply({ message: "m", items: byId(base) }));
+    expect((await planFor(env(), state)).plan.source).toBe("ai");
+    // The model decides roles itself: it is not handed the rules' roles to copy.
+    const input = JSON.parse(String((bodies[0]!.messages as { content: string }[]).at(-1)!.content));
+    expect(input.items[0]).toEqual({ id: 1, text: base.items[0]!.ref, kind: base.items[0]!.kind, locked: base.items[0]!.locked });
+  });
+
+  it("falls back to the rules plan when the answer names an item that does not exist", async () => {
+    const state = poster("a big wheel");
+    const base = basePlan(state);
+    fake(() => reply({ message: "m", items: [...byId(base).slice(1), { id: 99, role: "detail", priority: 3 }] }));
+    expect((await planFor(env(), state)).plan).toEqual(base);
+  });
+
+  it("falls back to the rules plan when the answer drops items", async () => {
     const state = poster("a ferris wheel");
-    fake(() => reply({ message: "x", items: [{ ref: "FREE ENTRY", role: "offer", priority: 2 }] }));
+    fake(() => reply({ message: "x", items: [{ id: 1, role: "offer", priority: 2 }] }));
     const { plan } = await planFor(env(), state);
     expect(plan).toEqual(basePlan(state));
   });
@@ -61,7 +81,7 @@ describe("planFor", () => {
 
   it("tries once more after a passing hiccup", async () => {
     const state = poster("a helter-skelter");
-    const items = basePlan(state).items.map(({ ref, role, priority }) => ({ ref, role, priority }));
+    const items = byId(basePlan(state));
     let n = 0;
     fake(() => (n++ ? reply({ message: "m", items }) : new Response(JSON.stringify({ error: { message: "busy" } }), { status: 502 })));
     expect((await planFor(env(), state)).plan.source).toBe("ai");
@@ -77,7 +97,7 @@ describe("planFor", () => {
   it("plans the same content once per isolate", async () => {
     const state = poster("a noodle stall");
     const base = basePlan(state);
-    const bodies = fake(() => reply({ message: "m", items: base.items.map(({ ref, role, priority }) => ({ ref, role, priority })) }));
+    const bodies = fake(() => reply({ message: "m", items: byId(base) }));
     await planFor(env(), state);
     const again = await planFor(env(), { ...state });
     expect(bodies).toHaveLength(1);

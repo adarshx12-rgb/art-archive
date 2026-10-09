@@ -59,14 +59,28 @@ function isWhen(line: string): boolean {
   return rest.split(/\s+/).filter((w) => /[a-z]/i.test(w)).length <= 1;
 }
 
-/** A line's role when its wording gives it away: contact details, a call to action, an offer, or a date. */
+// An issue or volume line on a cover ("ISSUE 07 · AUTUMN", "Vol. 3").
+const ISSUE = /^(?:issue|vol\.?|volume|no\.|edition|episode|ep\.?)\s*\d+/i;
+// A short line ending in a business word is the company's name ("SEYON SERVICES", "Golden Hour Café").
+const BRAND = /\b(?:services|cafe|café|coffee|bakery|kitchen|studio|studios|restaurant|bistro|co\.?|company|ltd\.?|sdn\.? bhd\.?|bhd\.?|inc\.?|llc|group|enterprises?|trading|records|agency|clinic|salon|academy)$/i;
+const words = (line: string) => line.trim().split(/\s+/).length;
+
+/** A line's role when its wording gives it away: contact details, a call to action, an offer, a date, an issue line or a business name. */
 export function roleOf(line: string): Role | null {
+  // A name like "Kopi Lane Sdn Bhd" has a street word but no number: it is the brand, not an address.
+  if (BRAND.test(line.trim()) && words(line) <= 5 && !/\d|@|www\./i.test(line)) return "brand";
   if (CONTACT.some((re) => re.test(line))) return "contact";
   if (CTA.test(line.trim())) return "cta";
   if (OFFER.test(line)) return "offer";
-  if (isWhen(line)) return "detail";
+  if (isWhen(line) || ISSUE.test(line.trim())) return "detail";
   return null;
 }
+
+/** A run of short items between separators ("Vinyasa · Yin · Hatha"): it lists, it does not headline. */
+const isList = (line: string) => {
+  const parts = line.split(/\s+[•·|↔/]\s+/);
+  return parts.length >= 2 && parts.every((p) => words(p) <= 3);
+};
 
 const KINDS_BY_FORMAT: Record<NonNullable<BuilderState["format"]>, DesignKind> = { poster: "poster", flyer: "flyer", magazine: "magazine", thumbnail: "thumbnail" };
 
@@ -77,17 +91,22 @@ export function basePlan(state: BuilderState): ContentPlan {
   const items: PlanItem[] = [];
   const add = (ref: string, kind: PlanItem["kind"], role: Role, locked: string | null) => items.push({ ref, kind, role, priority: PRIORITY[role], locked });
 
-  // Copy: lines whose wording names their role first, then headline, subhead and body in the order given.
+  // Copy: lines whose wording names their role first. Of the rest, the headline is the first short
+  // line that is not a list (a display line, not a sentence or a list of services), then the subhead, then body.
   const copy: { ref: string; kind: PlanItem["kind"]; locked: string }[] = [
     ...typedWords(state).map((w) => ({ ref: w, kind: "words" as const, locked: placed.has(w) ? "exact words, placed position" : "exact words" })),
     ...textSources(state).map((label) => ({ ref: `words from ${label}`, kind: "image" as const, locked: "exact words" })),
   ];
-  const plain = ["headline", "subhead"] as const;
-  let next = 0;
-  for (const c of copy) {
-    const role = (c.kind === "words" ? roleOf(c.ref) : null) ?? plain[next++] ?? "body";
-    add(c.ref, c.kind, role, c.locked);
-  }
+  const known = new Map(copy.map((c) => [c, c.kind === "words" ? roleOf(c.ref) : null]));
+  const plain = copy.filter((c) => !known.get(c));
+  // A picture's words are unseen here: they may headline.
+  const display = (c: (typeof copy)[number]) => c.kind === "image" || (!isList(c.ref) && words(c.ref) <= 5);
+  const headline = plain.find(display) ?? plain.find((c) => c.kind === "image" || !isList(c.ref)) ?? plain[0];
+  const subhead = plain.find((c) => c !== headline);
+  for (const c of copy) add(c.ref, c.kind, known.get(c) ?? (c === headline ? "headline" : c === subhead ? "subhead" : "body"), c.locked);
+  // When the only other copy is lists, the business name is what reads first.
+  const brand = items.find((i) => i.role === "brand");
+  if (brand && (!headline || isList(headline.ref))) brand.priority = 1;
 
   // Pictures by what they are for; a look-only picture lends style, not content.
   const pictures = state.actors.filter((a) => a.glyph === "image");

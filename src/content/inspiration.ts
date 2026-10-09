@@ -271,6 +271,107 @@ export const inspiration: Record<string, Inspiration> = {
       "digital smoothness with no paper edges",
     ],
   },
+  cyberpunk: {
+    studied: 14,
+    moves: [
+      "one figure set against a wall of glowing screens or a neon city, lit only by the signs around them",
+      "a lone small silhouette on a walkway facing something colossal: a hologram, a tower, a giant face",
+      "a portrait sliced by a narrow vertical sidebar of interface data, barcodes and index numbers",
+      "panels stacked like a comic strip: a tight crop on a face, a wide street, a detail of a hand or machine",
+      "a dossier grid of framed boxes holding scans, diagrams and readouts, like a security file",
+    ],
+    image: "anime-style illustration or neon-lit photography, often duotone or false-colour (thermal, infrared), with chrome or liquid-metal forms and thin wireframe grids laid over the scene",
+    lettering: {
+      moves: [
+        "one giant ultra-condensed word behind the figure, its head overlapping the letters",
+        "vertical katakana or rotated monospace running down a side column",
+        "small interface labels, coordinates and index numbers scattered like HUD readouts",
+      ],
+      letterforms: "ultra-condensed geometric sans, angular custom logotypes with speed cuts, pixel or terminal monospace for data",
+    },
+    colour: "near-black and deep violet grounds lit by electric magenta, cyan and acid lime; sometimes one strict duotone (lilac on black, magenta on black)",
+    finish: "scanlines, chromatic fringing, glow halation and fine digital noise; crisp vector overlays on top",
+    tells: [
+      "pseudo-Japanese gibberish and melting signage (an AI giveaway)",
+      "neon on everything at once, with no dark areas to rest the eye",
+      "a generic rain-soaked street with no idea beyond the colour",
+    ],
+  },
+  synthwave: {
+    studied: 18,
+    moves: [
+      "a horizontally sliced sun setting behind mountains or a skyline, over a receding wireframe grid",
+      "a towering city seen from below, one spire piercing the sun",
+      "a single glowing subject (a flower, a figure, a hand) alone on deep black, most of the frame left dark",
+      "a photograph remapped into hot two-tone colour inside a framed panel, with diagrams around it",
+      "a figure stretched or motion-blurred into streaks of light",
+    ],
+    image: "retro-futurist illustration (sunsets, grids, chrome) or photography gradient-mapped into neon duotones; X-ray, solarised and thermal effects on figures",
+    lettering: {
+      moves: [
+        "a wide heavy title across the top with a flowing script laid over it",
+        "a tall outlined title rotated up the left edge, partly cut by the image",
+        "small information blocks in clusters, like the back of a record sleeve",
+      ],
+      letterforms: "wide geometric display sans with square proportions, chrome or gradient-filled italics, neon script, technical monospace for details",
+    },
+    colour: "deep indigo and navy grounds with magenta, hot pink and cyan; a peach-to-magenta sunset gradient in the sun",
+    finish: "soft glow, fine grain, VHS scanlines and slight chromatic blur",
+    tells: [
+      "the stock sunset-and-grid with nothing else going on",
+      "misspelt fake track lists and credits",
+    ],
+  },
+  "luxury-minimal": {
+    studied: 15,
+    moves: [
+      "one object (a glass, a shoe, a bottle) lit like a jewel on a dark set, a long shadow or caustic light falling from it",
+      "a rich interior photographed in low warm light (a staircase, a vaulted ceiling, a door) as the whole background",
+      "a sensual crop of skin, fabric or a hand holding the product, filling the frame",
+      "a narrow solid colour band beside a photographic panel, splitting the page in two",
+      "deliberate motion blur through candles or lights, one area left sharp",
+    ],
+    image: "moody editorial photography: low-key, warm practical light, deep shadow, rich materials (velvet, marble, brass, crystal)",
+    lettering: {
+      moves: [
+        "a high-contrast serif wordmark centred over the photograph, with a small tracked line beneath",
+        "one word set huge and turned on its side in a serif down the colour band",
+        "a flowing script word joined to serif capitals, tiny details tracked wide at the edges",
+      ],
+      letterforms: "high-contrast Didone or modern serifs, flourished scripts, widely tracked small sans for details",
+    },
+    colour: "deep burgundy, oxblood, forest green or black with warm gold, amber and champagne; one dark ground and one metal",
+    finish: "rich film-like shadows, soft bloom on highlights, satin or foil sheen on lettering",
+    tells: [
+      "glossy 3D-rendered products on a beige plinth (an AI giveaway)",
+      "gold everywhere and no darkness, so nothing feels precious",
+    ],
+  },
+  maximalism: {
+    studied: 22,
+    moves: [
+      "a black-and-white portrait cut out at the centre, buried in torn paper, stickers and scrawls",
+      "a classical bust or statue defaced with neon paint, piercings or a split-open skull",
+      "the frame split into hard diagonal fragments, each a different photo or texture",
+      "a silhouette hollowed out and filled with something unexpected: cables, flowers, a galaxy",
+      "a famous painting remixed with graffiti, tattoos and doodles",
+    ],
+    image: "halftone and photocopied photographs collaged with paint strokes, marker scribbles, pixelation and chrome 3D objects",
+    lettering: {
+      moves: [
+        "one word repeated in several typefaces at different scales across the page",
+        "a giant condensed word run vertically up one edge, partly covered by the collage",
+        "ransom-note letters, each in a different face and box",
+      ],
+      letterforms: "compressed distressed grotesques, Didone serifs, brush scripts, stencil and bitmap faces mixed on purpose",
+    },
+    colour: "a black-and-white base hit with two or three fluorescent accents (hot pink, acid yellow, cobalt), or a full clash of saturated colour",
+    finish: "halftone dots, photocopy grit, torn paper edges, tape and spray marks",
+    tells: [
+      "everything the same size and brightness, so nothing leads",
+      "random clip art with no single portrait or idea at the centre",
+    ],
+  },
 };
 
 /** The inspiration a model sees for a style; lettering only when there are words to letter. */

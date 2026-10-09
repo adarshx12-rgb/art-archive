@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GoldSchema, PLACEHOLDER, compileGold, goldText } from "./gold-schema";
+import { GoldSchema, PLACEHOLDER, compileGold, goldText, type GoldAnswer } from "./gold-schema";
 
 const sections = {
   format: "Gig poster, 4:5 portrait, two-colour photocopy print.",
@@ -10,8 +10,8 @@ const sections = {
   finish: "Coarse photocopy toner, dropped-out greys, slight misregistration of the red layer against the black.",
   avoid: "Avoid: gradients, glossy finishes, centred symmetry and clean digital type.",
 };
-const gold = { quality: "strong", qualityReason: "Confident scale contrast and a disciplined two-colour palette.", kind: "poster", roles: ["headline", "hero", "detail"], textLoad: "light", colours: [{ name: "bone white", hex: "#EDE6D6" }, { name: "signal red", hex: "#D7261E" }], sections };
-const record = (id: string, patch = {}) => ({ id, folders: ["concert-poster"], paths: [`concert-poster/${id}.jpg`], study: { medium: "photograph", structure: "single-focus", density: "balanced" }, gold: { ...gold, ...patch } as typeof gold });
+const gold: GoldAnswer = { quality: "strong", qualityReason: "Confident scale contrast and a disciplined two-colour palette.", kind: "poster", roles: ["headline", "hero", "detail"], textLoad: "light", colours: [{ name: "bone white", hex: "#EDE6D6" }, { name: "signal red", hex: "#D7261E" }], sections };
+const record = (id: string, patch: Partial<GoldAnswer> = {}) => ({ id, folders: ["concert-poster"], paths: [`concert-poster/${id}.jpg`], study: { medium: "photograph", structure: "single-focus", density: "balanced" }, gold: { ...gold, ...patch } });
 const padded = { ...sections, hero: sections.hero + " " + sections.hero, layout: sections.layout + " " + sections.layout };
 
 describe("gold schema", () => {

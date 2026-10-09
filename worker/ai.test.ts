@@ -388,7 +388,23 @@ describe("concepts task", () => {
     craft,
     motion: null,
   });
-  const reply = (...cs: unknown[]) => openRouterReply(JSON.stringify({ concepts: cs }));
+  const reply = (...cs: unknown[]) => openRouterReply(JSON.stringify({ observations: [], sketches: [], concepts: cs }));
+
+  it("works to a creative standard, not a rulebook", async () => {
+    const calls = fakeFetch({ openrouter: () => reply(...three) });
+    await concepts(env(), { query, exclude: [] });
+    const system = String((calls[0]!.body.messages as { content: string }[])[0]!.content);
+    expect(system).toContain("You are the designer a brand pays well");
+    expect(system).not.toMatch(/Method, for each concept|At most three|Zero extras|arbitrary decorative extras/);
+  });
+
+  it("returns the director's rough sketches and observations", async () => {
+    const sketches = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ observations: [], sketches, concepts: three })) });
+    const r = await concepts(env(), { query, exclude: [] });
+    expect(r.sketches).toEqual(sketches);
+    expect(r.observations).toEqual([]);
+  });
   const three = [concept("Torn in two", ["photocopy-blowup", "torn-split"]), concept("Through the window", ["halftone-screen", "cutout-window"]), concept("Copier drag", ["one-bit-dither", "motion-sequence"])];
 
   it("returns three checked concepts with tags in one call", async () => {

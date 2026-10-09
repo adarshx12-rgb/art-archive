@@ -27,6 +27,8 @@ export interface PickedGold {
 const textLoadFor = (words: number) => (words === 0 ? "none" : words <= 3 ? "light" : "heavy");
 
 export function retrieveGold(state: BuilderState, plan: ContentPlan, pool: GoldReference[] = override ?? compiled, limit = 3): PickedGold[] {
+  // A restyle's picture and a locked layout already decide the composition; a reference would fight them.
+  if (state.task === "restyle" || plan.layout === "preserve") return [];
   const style = styleFor(state);
   const intent = designIntent(state);
   const words = plan.items.filter((i) => i.kind === "words" || (i.kind === "image" && i.ref.startsWith("words from"))).length;

@@ -459,6 +459,14 @@ describe("concepts task", () => {
       expect(r.goldSources).toEqual([{ ref: "G1", id: "g-a", folders: ["punk"], transfer: "within-style" }, { ref: "G2", id: "g-b", folders: ["punk"], transfer: "within-style" }]);
     });
 
+    it("offers no gold prompt for a restyle, whose layout belongs to the visitor's picture", async () => {
+      setGoldPool([gold("g-a", { folders: ["pop-art"] })]);
+      const restyle = { ...three[0], hero: { subject: null, treatment: "Ben-Day dots everywhere", scale: null }, device: null, furniture: [], type: null, craft: ["halftone-screen"] };
+      const calls = fakeFetch({ openrouter: () => reply(restyle, { ...restyle, title: "Riso", craft: ["riso-overprint"] }, { ...restyle, title: "Copy", craft: ["photocopy-blowup"] }) });
+      await concepts(env(), { query: "s=pop-art&t=restyle", exclude: [] });
+      expect(userOf(calls[0]!.body)).not.toHaveProperty("goldPrompts");
+    });
+
     it("asks every concept to riff on the best match in single mode", async () => {
       setGoldPool([gold("g-a")]);
       const calls = fakeFetch({ openrouter: () => reply(...three) });

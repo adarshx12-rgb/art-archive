@@ -103,12 +103,13 @@ describe("checkBrief", () => {
     expect(checkBrief(brief({ furniture: ['a pill badge holding "Night Shift"'] }), punk)).toEqual([]);
   });
 
-  it("allows at most three furniture items", () => {
-    expect(checkBrief(brief({ furniture: ["a", "b", "c", "d"].map((x) => `tape ${x}`) }), punk).join(" ")).toMatch(/at most 3/);
+  it("accepts a rich concept: many supporting elements and no craft ids", () => {
+    const rich = brief({ furniture: ["thin callout lines to the dancer's feet", "a sizing grid bottom-left", "a ghosted second dancer mid-step", "motion streaks behind her", "a halftone shadow", 'a stamp holding "Night Shift"'], craft: [] });
+    expect(checkBrief(rich, punk)).toEqual([]);
   });
 
-  it("needs a technique or device from the library, and known ids", () => {
-    expect(checkBrief(brief({ craft: ["tape-strips"] }), punk).join(" ")).toMatch(/technique or device/);
+  it("treats craft as optional vocabulary, but still rejects unknown ids", () => {
+    expect(checkBrief(brief({ craft: ["tape-strips"] }), punk)).toEqual([]);
     expect(checkBrief(brief({ craft: ["torn-split", "made-up"] }), punk).join(" ")).toMatch(/Unknown craft ids: made-up/);
   });
 
@@ -117,7 +118,7 @@ describe("checkBrief", () => {
     const ok = brief({ hero: { subject: null, treatment: "Ben-Day dots over the whole picture", scale: null }, device: null, furniture: [], type: null, colour: "flat primaries", craft: ["halftone-screen"] });
     expect(checkBrief(ok, restyle)).toEqual([]);
     expect(checkBrief({ ...ok, device: "torn split" }, restyle).join(" ")).toMatch(/restyle keeps/);
-    expect(checkBrief({ ...ok, craft: ["torn-split"] }, restyle).join(" ")).toMatch(/at least one technique/);
+    expect(checkBrief({ ...ok, craft: [] }, restyle)).toEqual([]);
   });
 });
 

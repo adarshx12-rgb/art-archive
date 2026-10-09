@@ -124,7 +124,6 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
     problems.push("There are no subjects, so the hero must be the lettering or a pure graphic shape: set hero.subject to null.");
   }
 
-  if (brief.furniture.length > 3) problems.push("Use at most 3 furniture items.");
   if (!words.size && !textSources(state).length) {
     if (brief.type) problems.push("The visitor typed no words: set type to null and letter nothing.");
     const lettering = brief.craft.filter((id) => getCraft(id)?.lettering);
@@ -134,10 +133,6 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
 
   const unknown = brief.craft.filter((id) => !getCraft(id));
   if (unknown.length) problems.push(`Unknown craft ids: ${unknown.join(", ")}. Use ids from the craft list.`);
-  const kinds = new Set(brief.craft.map((id) => getCraft(id)?.kind));
-  if (restyle ? !kinds.has("technique") : !kinds.has("technique") && !kinds.has("device")) {
-    problems.push(restyle ? "Use at least one technique from the craft list." : "Use at least one technique or device from the craft list.");
-  }
   return problems;
 }
 

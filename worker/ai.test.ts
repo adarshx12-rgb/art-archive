@@ -591,7 +591,7 @@ describe("concepts task", () => {
     });
 
     describe("looking at the reference images", () => {
-      const bucket = (ids: string[]) => ({ get: async (key: string) => (ids.includes(key.replace(".jpg", "")) ? { arrayBuffer: async () => new TextEncoder().encode(key).buffer } : null) }) as unknown as R2Bucket;
+      const bucket = (ids: string[]) => ({ get: async (key: string, type: string) => (type === "arrayBuffer" && ids.includes(key.replace(".jpg", "")) ? new TextEncoder().encode(key).buffer : null) }) as unknown as KVNamespace;
       const six = ["g-1", "g-2", "g-3", "g-4", "g-5", "g-6"];
       const imageParts = (body: Record<string, unknown>) => {
         const content = (body.messages as { content: unknown }[]).at(-1)!.content;

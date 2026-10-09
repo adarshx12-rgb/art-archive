@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { Env } from "./env";
 import { referenceImages } from "./refs";
 
-/** A stand-in for the private R2 bucket: key → file contents. */
+/** A stand-in for the private KV namespace: key → file contents, read as bytes. */
 const bucket = (objects: Record<string, string>) =>
-  ({ get: async (key: string) => (key in objects ? { arrayBuffer: async () => new TextEncoder().encode(objects[key]).buffer } : null) }) as unknown as R2Bucket;
+  ({ get: async (key: string, type: string) => (type === "arrayBuffer" && key in objects ? new TextEncoder().encode(objects[key]).buffer : null) }) as unknown as KVNamespace;
 
 describe("referenceImages", () => {
   it("returns data URLs in order, skipping missing objects, at most five", async () => {

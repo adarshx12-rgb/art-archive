@@ -42,7 +42,8 @@
   // Locally they go in .dev.vars (git ignores it). The ratelimits entry
   // below caps AI calls per visitor.
   // Reference thumbnails the director looks at; private, read only by the Worker (scripts/upload-refs.py fills it).
-  "r2_buckets": [{ "binding": "REFS", "bucket_name": "inspiration-refs" }],
+  // KV for now (no payment method needed); R2 later.
+  "kv_namespaces": [{ "binding": "REFS", "id": "23d2b38f11f542b996330c7b450748ed" }],
   "ratelimits": [{ "name": "AI_LIMIT", "namespace_id": "1001", "simple": { "limit": 12, "period": 60 } }],
   "observability": { "enabled": true }
 }

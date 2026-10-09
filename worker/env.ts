@@ -1,8 +1,8 @@
 /** Bindings and settings the Worker receives (see wrangler.jsonc). */
 export interface Env {
   ASSETS: Fetcher;
-  /** Private bucket of reference thumbnails the director looks at (scripts/upload-refs.py). */
-  REFS?: R2Bucket;
+  /** Private store of reference thumbnails the director looks at (scripts/upload-refs.py). KV for now; R2 later. */
+  REFS?: KVNamespace;
   AI_LIMIT?: RateLimit;
   /** Secrets. Never in code or config files. */
   OPENROUTER_API_KEY?: string;

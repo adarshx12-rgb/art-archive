@@ -67,6 +67,8 @@ A stronger director model (option C) is deferred.
 
 ### Storage
 
+**Changed 2026-10-09:** R2 needs a payment method on the user's Cloudflare account, so the store is a private Workers KV namespace for now (`inspiration-refs`, binding `REFS`, no card needed; free tier 100,000 reads a day, about 20,000 idea requests). Same keys and behaviour; switching to R2 later is a small change in `worker/refs.ts`, `wrangler.jsonc` and `scripts/upload-refs.py`. The R2 text below describes that later setup.
+
 - A private Cloudflare R2 bucket `inspiration-refs`, bound to the Worker as `REFS` (`wrangler.jsonc` `r2_buckets`). It is never public and never served to the browser.
 - Contents: one JPEG per usable reference (gold prompt compiled), keyed by the reference `id` (`<id>.jpg`), resized to at most 768 px on the long side, quality about 80 (roughly 40–80 KB each; about 15 MB for the current 215).
 - `scripts/upload-refs.py` (Python with Pillow, like `prepare-inspiration.py`) resizes each usable reference's study thumbnail (`inspiration/.study/<hash>.jpg`) to 768 px and uploads it as `<id>.jpg` with `wrangler r2 object put`, `--local` or `--remote`. It runs after `gold-prompts.mjs`; a manifest (`inspiration/.study/refs-uploaded.json`, id → hash) skips unchanged images and deletes objects for references no longer usable.

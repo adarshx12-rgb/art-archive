@@ -280,6 +280,7 @@ describe("prompt task", () => {
       const system = String((calls[0]!.body.messages as { content: string }[])[0]!.content);
       expect(system).toContain("about 180-320 words");
       expect(system).toContain("Place every supporting element from the concept");
+      expect(system).toContain("every word stays readable");
       expect(system).not.toContain("omit if unnecessary");
     });
 
@@ -443,6 +444,7 @@ describe("concepts task", () => {
       const r = await concepts(env({ CONCEPT_CRITIQUE: "on" }), { query, exclude: [] });
       expect(calls).toHaveLength(2);
       expect(String((calls[1]!.body.messages as { content: string }[])[0]!.content)).toContain("creative director at a top studio");
+      expect(String((calls[1]!.body.messages as { content: string }[])[0]!.content)).toContain("Would a viewer read every word");
       expect(JSON.stringify(calls[1]!.body.messages)).toContain("Torn in two");
       expect(r.concepts.map((c) => c.title)).toEqual(better.map((c) => c.title));
       expect(r.critique).toEqual(notes);
@@ -491,6 +493,7 @@ describe("concepts task", () => {
     await concepts(env(), { query, exclude: [] });
     const system = String((calls[0]!.body.messages as { content: string }[])[0]!.content);
     expect(system).toContain("You are the designer a brand pays well");
+    expect(system).toContain("every word stays readable");
     expect(system).not.toMatch(/Method, for each concept|At most three|Zero extras|arbitrary decorative extras/);
   });
 

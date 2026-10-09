@@ -67,7 +67,7 @@ Suggested order, adapted to the composition rather than imposed on it:
 2. The ground: background colour by name and hex, roughly how much of the frame.
 3. The image or type: the visitor's content, how it is made, its scale and crop. For a pattern, describe the repeated unit and rhythm without inventing a hero.
 4. The device: the compositional move, placed.
-5. Place every supporting element from the concept, each with its place.
+5. Place every supporting element from the concept, each with its place. Layering may tuck the subject in front of the type, but every word stays readable: no letter fully hidden, and the overlap only where the word can still be read at a glance.
 6. Lettering: the visitor's words in quotes exactly, with letterform, size and place, then "spell it exactly as written; add no other words". Leave lettering out entirely if the facts have no Lettering line.
 7. Finish: only the surface treatment appropriate to the medium; smooth photography and digital lettering may stay smooth.
 8. A single "Avoid:" line from the facts.

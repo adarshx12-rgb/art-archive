@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DESIGN_KINDS, ROLES, type DesignKind, type Role } from "../src/content/hierarchy-patterns";
+import { DESIGN_KINDS, ROLES, type DesignKind, type Role } from "../src/content/hierarchy-patterns.ts";
 
 /**
  * Gold prompts: for each good inspiration image, the prompt that would

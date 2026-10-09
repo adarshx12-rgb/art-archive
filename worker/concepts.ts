@@ -204,5 +204,6 @@ export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, 
   const refs = new Set(gold.map((g) => g.ref));
   const checked = kept.map((b) => ({ ...b, reference: b.reference && refs.has(b.reference.ref) ? b.reference : null }));
   const goldSources = gold.map(({ ref, transfer }, i) => ({ ref, id: picked[i]!.gold.id, folders: picked[i]!.gold.folders, transfer }));
-  return { concepts: checked.map((b) => ({ ...b, tags: tagsFor(b) })), model, usage, goldSources, designSources: facts.designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer })) };
+  const idOf = new Map(goldSources.map((g) => [g.ref, g.id]));
+  return { concepts: checked.map((b) => ({ ...b, tags: tagsFor(b), goldId: (b.reference && idOf.get(b.reference.ref)) ?? null })), model, usage, goldSources, designSources: facts.designMemory.references.map(({ id, folders, transfer }) => ({ id, folders, transfer })) };
 }

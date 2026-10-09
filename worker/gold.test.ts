@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { basePlan } from "../src/lib/plan/plan";
 import { defaultState, type BuilderState } from "../src/lib/prompt/state";
 import type { GoldReference } from "./gold-schema";
-import { goldForModel, retrieveGold, setGoldPool } from "./gold";
+import { copiedRun, goldById, goldForModel, placeholdersLeft, referenceColours, retrieveGold, setGoldPool } from "./gold";
 
 const sections = {
   format: "Fight night poster, 4:5 portrait.",
@@ -80,5 +80,33 @@ describe("goldForModel", () => {
     expect(other.prompt).not.toContain(sections.finish);
     expect(other.prompt).not.toContain(sections.lettering);
     expect(other.prompt).not.toContain("#141414");
+  });
+});
+
+describe("gold checks", () => {
+  const g = ref("chk", { colours: [{ name: "tar black", hex: "#141414" }, { name: "safety orange", hex: "#FF6A00" }] });
+
+  it("finds placeholders left in a prompt", () => {
+    expect(placeholdersLeft("[HEADLINE] big, [DETAIL 2] small, [hero] fine")).toEqual(["[HEADLINE]", "[DETAIL 2]"]);
+    expect(placeholdersLeft('"Last Round" big')).toEqual([]);
+  });
+
+  it("finds the reference's colours outside the Avoid line, unless the visitor chose them", () => {
+    const p = "Safety orange (#FF6A00) tape across the top.\nAvoid: tar black backgrounds.";
+    expect(referenceColours(p, g, ["#F0EEE7", "xerox white"])).toEqual(["safety orange", "#FF6A00"]);
+    expect(referenceColours(p, g, ["#FF6A00", "safety orange"])).toEqual([]);
+    expect(referenceColours("Avoid: safety orange.", g, [])).toEqual([]);
+  });
+
+  it("finds a long run copied from the reference", () => {
+    const run = sections.hero.split(" ").slice(0, 12).join(" ");
+    expect(copiedRun(`Intro. ${run} and more.`, g)).toBe(run.toLowerCase().replace(/[^a-z0-9 ]/g, ""));
+    expect(copiedRun(sections.hero.split(" ").slice(0, 11).join(" "), g)).toBeNull();
+  });
+
+  it("finds a compiled gold prompt by id", () => {
+    setGoldPool([g]);
+    expect(goldById("chk")).toBe(g);
+    expect(goldById("nope")).toBeUndefined();
   });
 });

@@ -85,11 +85,12 @@ export interface PromptReply {
 }
 
 /** The server re-derives every fact from the settings themselves (the share-link form). With a brief, it writes the prompt for that concept. */
-export function aiPrompt(state: BuilderState, brief?: Brief) {
-  return post<PromptReply>("/api/prompt", { query: encodeState(state).toString(), ...(brief ? { brief } : {}) });
+export function aiPrompt(state: BuilderState, brief?: Brief & { goldId?: string | null }) {
+  // goldId tells the writer which worked example the concept adapts.
+  return post<PromptReply>("/api/prompt", { query: encodeState(state).toString(), ...(brief ? { brief, ...(brief.goldId ? { goldId: brief.goldId } : {}) } : {}) });
 }
 
-export type Concept = Brief & { tags: string[] };
+export type Concept = Brief & { tags: string[]; goldId?: string | null };
 
 /** Three art-directed concepts for the current settings; `exclude` lists titles already shown. */
 export function aiConcepts(state: BuilderState, exclude: string[]) {

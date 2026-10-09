@@ -301,6 +301,50 @@ describe("prompt task", () => {
       expect(r.prompt).not.toMatch(/highly detailed/i);
       expect(r.prompt).toContain("A woman dancing");
     });
+
+    describe("adapting a gold prompt", () => {
+      const sections = {
+        format: "Club night poster, 4:5 portrait.",
+        ground: "Newsprint grey (#CFCBC2) ground, about 60%, xerox speckle.",
+        hero: "A dancer photocopied huge, blown highlights, cropped at the knees, filling the right two thirds.",
+        layout: "[HEADLINE] stacked down the left edge reads first; the dancer's arm cuts across it.",
+        lettering: "[HEADLINE] in ransom-note cut-out capitals.",
+        finish: "Toner specks, uneven black, a strip of tape top-right.",
+        avoid: "Avoid: gradients, glossy finishes and clean vector type.",
+      };
+      const gold: GoldReference = { id: "g-a", folders: ["punk"], kind: "poster", roles: ["headline", "hero"], textLoad: "light", medium: "photograph", structure: "single-focus", density: "dense", quality: "strong", colours: [{ name: "newsprint grey", hex: "#CFCBC2" }], sections, prompt: Object.values(sections).join("\n") };
+      const referenced = { ...brief, reference: { ref: "G1", takes: "the stacked headline" } };
+      const systemOf = (body: Record<string, unknown>) => String((body.messages as { content: string }[])[0]!.content);
+
+      it("writes in the register of the gold prompt the concept adapts", async () => {
+        setGoldPool([gold]);
+        const calls = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+        await perfectPrompt(env(), { query: punk, brief: referenced, goldId: "g-a" });
+        expect(JSON.stringify(calls[0]!.body)).toContain("ransom-note cut-out capitals");
+        expect(systemOf(calls[0]!.body)).toContain("goldPrompt recreates the real design");
+      });
+
+      it("sends no gold prompt without a reference, or when gold prompts are off", async () => {
+        setGoldPool([gold]);
+        const plain = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+        await perfectPrompt(env(), { query: punk, brief, goldId: "g-a" });
+        expect(JSON.stringify(plain[0]!.body)).not.toContain("goldPrompt");
+        const off = fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed })) });
+        await perfectPrompt(env({ GOLD_CONCEPT_MODE: "off" }), { query: punk, brief: referenced, goldId: "g-a" });
+        expect(JSON.stringify(off[0]!.body)).not.toContain("goldPrompt");
+      });
+
+      it("repairs a draft that keeps a placeholder or the reference's colours", async () => {
+        setGoldPool([gold]);
+        const calls = fakeFetch({ openrouter: (_b, n) => openRouterReply(JSON.stringify({ prompt: n ? directed : directed + " [HEADLINE] on newsprint grey (#CFCBC2)." })) });
+        const r = await perfectPrompt(env(), { query: punk, brief: referenced, goldId: "g-a" });
+        expect(calls).toHaveLength(2);
+        const repair = JSON.stringify(calls[1]!.body);
+        expect(repair).toContain("[HEADLINE]");
+        expect(repair).toContain("newsprint grey");
+        expect(r.prompt).toBe(directed);
+      });
+    });
   });
 });
 
@@ -410,6 +454,8 @@ describe("concepts task", () => {
       expect(systemOf(calls[0]!.body)).toContain("Each concept adapts a different goldPrompt");
       // A reference the director was not given is dropped, the concept kept.
       expect(r.concepts.map((c) => c.reference?.ref ?? null)).toEqual(["G1", "G2", null]);
+      // The Builder sends this back with the picked concept, so the writer gets the same gold prompt.
+      expect(r.concepts.map((c) => c.goldId)).toEqual(["g-a", "g-b", null]);
       expect(r.goldSources).toEqual([{ ref: "G1", id: "g-a", folders: ["punk"], transfer: "within-style" }, { ref: "G2", id: "g-b", folders: ["punk"], transfer: "within-style" }]);
     });
 

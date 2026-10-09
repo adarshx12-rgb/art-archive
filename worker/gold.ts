@@ -1,5 +1,5 @@
 import data from "./data/gold-prompts.json";
-import type { GoldReference } from "./gold-schema";
+import { PLACEHOLDER, type GoldReference } from "./gold-schema";
 import { designIntent } from "./design-memory";
 import type { ContentPlan } from "../src/lib/plan/plan";
 import { styleFor, type BuilderState } from "../src/lib/prompt/state";
@@ -54,6 +54,37 @@ export function retrieveGold(state: BuilderState, plan: ContentPlan, pool: GoldR
   const picked: PickedGold[] = [];
   for (const s of scored) if (picked.length < limit && !picked.some((p) => p.gold.id === s.gold.id)) picked.push(s);
   return picked;
+}
+
+export const goldById = (id: string) => (override ?? compiled).find((g) => g.id === id);
+
+/** Placeholders the writer failed to fill: printed, they would end up lettered on the artwork. */
+export const placeholdersLeft = (prompt: string) => [...prompt.matchAll(new RegExp(PLACEHOLDER.source, "g"))].map((m) => m[0]);
+
+/** The reference's own colours outside the Avoid line, unless the visitor chose them too. */
+export function referenceColours(prompt: string, gold: GoldReference, chosen: string[]): string[] {
+  const body = ` ${prompt.split(/\bAvoid:/i)[0]!.toLowerCase()} `;
+  const mine = new Set(chosen.map((c) => c.toLowerCase()));
+  const found: string[] = [];
+  for (const { name, hex } of gold.colours) {
+    if (!mine.has(name.toLowerCase()) && new RegExp(`[^a-z]${name.toLowerCase().replace(/[^a-z0-9 ]/g, "")}[^a-z]`).test(body)) found.push(name);
+    if (!mine.has(hex.toLowerCase()) && body.includes(hex.toLowerCase())) found.push(hex);
+  }
+  return found;
+}
+
+const words = (text: string) => text.replace(new RegExp(PLACEHOLDER.source, "g"), " ").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+
+/** The first run of n words the prompt shares with its reference: a copy, not an adaptation. */
+export function copiedRun(prompt: string, gold: GoldReference, n = 12): string | null {
+  const source = words(gold.prompt);
+  const runs = new Set(source.slice(0, Math.max(0, source.length - n + 1)).map((_, i) => source.slice(i, i + n).join(" ")));
+  const mine = words(prompt);
+  for (let i = 0; i + n <= mine.length; i++) {
+    const run = mine.slice(i, i + n).join(" ");
+    if (runs.has(run)) return run;
+  }
+  return null;
 }
 
 /** The gold prompts as the models see them. Another style's reference lends only its hero and layout, not its palette, letterforms or finish. */

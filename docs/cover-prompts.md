@@ -1314,51 +1314,51 @@ Avoid: the likeness of a real person, real artist or brand names, colourful stag
 - Save as: `covers-src/film-still-poster.png`
 
 ```text
-An original alternative movie poster for an invented 1950s film, made from a black-and-white film still with the title added in one spot colour.
+An original alternative movie poster for an invented 1960s European thriller, made from a black-and-white film still with the title added in one spot colour.
 
-Composition: a man in a loose white kurta and dhoti stands on the veranda of an old colonial mansion at dusk, leaning against a carved stone pillar on the right, arms folded, looking away from the camera. He fills the right two-thirds of the frame from head to ankles. Behind him, a tall arched doorway glows faintly and an old street lamp hangs in the upper left. The left third stays darker, open for the title. The figure is the focal point; the red title is the only colour.
+Composition: a wide shot of an empty night train platform under a station canopy. A woman in a belted trench coat and headscarf stands small and alone near the platform edge, just right of centre in the lower third, seen from behind, looking down the tracks. One hanging lamp above her throws a pool of light on the wet concrete; steam from an unseen engine drifts across the left half and swallows the far end of the platform. The rails run as two bright lines from the bottom edge to a vanishing point in the steam. The upper third is the dark underside of the canopy, open for the title. The lonely figure is the focal point; the orange title is the only colour.
 
-Typography: set exactly this text: "MONSOON", stacked one letter per line down the left side, filling the full height, in heavy grotesque sans-serif capitals. No other words anywhere.
+Typography: set exactly this text: "LAST TRAIN", on one line across the upper third, in wide extended grotesque capitals with generous letter spacing, the full width of the poster. No other words anywhere.
 
-Colours: film black #141414 in the shadows, silver white #E6E4DF in his clothes and the lit pillar, still grey #7A7A78 in the set, and title red #C8161D on the title letters only.
+Colours: film black #121212 in the canopy and shadows, silver white #E4E2DC in the lamp light, rails and steam, still grey #75756F across the platform, and signal orange #E2541B on the title letters only.
 
-Light: soft cinematic light from the left, deep shadows in the architecture.
+Light: one hard pool of lamp light from above, glowing steam, everything else falling into deep shadow.
 
-Finish: a real black-and-white film frame: film grain, a soft motion blur and a faint ghosted double edge on the figure; the red title printed with grainy, slightly bleeding ink.
+Finish: a real black-and-white film frame: visible grain, slight gate weave softness at the edges and a faint halation around the lamp; the orange title printed flat with slightly rough ink edges.
 
 Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame or mockup.
 
-Avoid: the likeness of a real actor, any real film's title or still, full colour anywhere but the title, crisp digital sharpness, small text blocks.
+Avoid: the likeness of a real actor, any real film's title or still, full colour anywhere but the title, stacked or vertical title letters, close-up portraits, crisp digital sharpness, small text blocks.
 ```
 
-**If it misses:** Make the title one letter per line, filling the full height of the left side in red, and keep everything else black and white with a soft ghosted edge on the figure. Keep the scene as it is.
+**If it misses:** Keep the woman small in a wide, empty frame, and the title on one wide line across the top in orange; everything else stays black and white.
 
 ## 48. Streetwear Poster
 
 - Slug: `streetwear-poster`
-- Artwork: Streetwear quote poster (Cut-out classical painting with clashing type)
+- Artwork: Streetwear quote poster (Cut-out classical sculpture with clashing type)
 - Format: tall 2:3
 - Save as: `covers-src/streetwear-poster.png`
 
 ```text
-An original streetwear quote poster that remixes a classical Indian oil painting with a loud, modern quote.
+An original streetwear quote poster that remixes a classical marble sculpture with a loud, modern quote.
 
-Composition: a flat poster-red ground fills the sheet. A giant word in ultra-condensed white capitals runs the full height of the left half, its letters upright and stretched extremely tall, not turned on their side. In front of it, cut out from an invented 19th-century Indian oil painting, a young royal archer in gold armour and a jewelled turban stands from the waist up in the lower left, holding a bow, looking calmly to the right; the white strokes of the giant word pass over his shoulder and arm. Down the right half, the rest of the quote is stacked line by line, each line in a different typeface. The archer and the giant word are the focal point; the quote stack is the second thing you read.
+Composition: a flat cobalt-blue ground fills the sheet. In the centre, cut out from a photograph of an invented Roman marble bust, a young emperor's head and shoulders face slightly left, wearing a gold paper party crown tipped at an angle. Across the lower third, one giant word in ultra-condensed white capitals runs the full width of the poster; the bust's chest sits in front of it, hiding the middle of the letters. In the upper left, the rest of the quote is stacked in three short lines, each in a different typeface, size and colour. The bust and the giant word are the focal point; the quote stack is the second thing you read.
 
-Typography: set exactly this text, and nothing else: "LOUD" as the giant full-height word, in ultra-condensed heavy white sans-serif capitals; then stacked down the right half: "STAY" in condensed white sans-serif capitals, "NO MATTER" in heavy acid-yellow italic capitals, and "what." in a white decorative display face.
+Typography: set exactly this text, and nothing else: "CROWN" as the giant full-width word across the lower third, in ultra-condensed heavy white sans-serif capitals; stacked in the upper left: "HEAVY IS" in condensed white sans-serif capitals, "THE HEAD" in heavy acid-green italic capitals, and "that wears it." in a white brush script.
 
-Colours: poster red #C4161C for the ground, paper white #EFEDE6 for most of the type, acid yellow #E3E934 on one line only, ink black #111111 in the shadows of the cut-out.
+Colours: cobalt blue #1F3FBF for the ground, paper white #EFEDE6 for most of the type and the marble, acid green #C6F432 on one line only, gold #C9A23A on the paper crown, ink black #111111 in the shadows of the cut-out.
 
-Light: flat, even print light; the archer keeps the warm painted light of his source painting.
+Light: flat, even print light; the bust keeps the soft gallery light of its source photograph.
 
-Finish: a printed poster that has been folded: two faint fold creases, paper grain, and photocopy grit with a coarse halftone on the cut-out figure, which is slightly posterised.
+Finish: a screen-printed poster: slight misregistration between the white and green layers, paper grain, and a coarse halftone with photocopy grit on the cut-out bust.
 
 Format: tall portrait (2:3). Show the flat poster itself, edge to edge, with no wall, frame or mockup.
 
-Avoid: real deities or real people, copying any existing painting, real brand or song names, muted colour, a single clean typeface, glossy 3D rendering.
+Avoid: real people, real emperors or real statues, Indian or religious imagery, a red ground, vertical or sideways type, real brand or song names, muted colour, a single clean typeface, glossy 3D rendering.
 ```
 
-**If it misses:** Make the type clash harder: every line of the quote in a clearly different typeface, size and colour, and let the giant white word pass over the archer's shoulder. Keep the archer, the red ground and the lettering as they are.
+**If it misses:** Make the bust's chest sit clearly in front of the giant word, and make every line of the quote a clearly different typeface, size and colour. Keep the blue ground and the paper crown.
 
 ## 49. Shoegaze
 

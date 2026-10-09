@@ -225,7 +225,7 @@ const CRITIC = `You are the creative director at a top studio reviewing your des
 
 - [ ] **Step 1: Write the script:** read `worker/data/gold-prompts.json` ids and `inspiration/.study/inventory.json` (id = first 16 chars of `imageHash`); for each usable id whose hash differs from `inspiration/.study/refs-uploaded.json`, open `inspiration/.study/<hash>.jpg`, resize to fit 768 px, save to a temp JPEG (quality 80), run `npx wrangler r2 object put inspiration-refs/<id>.jpg --file <tmp> --content-type image/jpeg` plus `--local` or `--remote` (flag argument, default `--local`); delete objects for ids no longer usable (`wrangler r2 object delete`); write the manifest per target (`refs-uploaded-local.json` / `refs-uploaded-remote.json`). Print counts and total bytes.
 - [ ] **Step 2: Run** `python scripts/upload-refs.py --local` — expected: 215 uploaded, ~15 MB.
-- [ ] **Step 3: Remote — ASK THE USER FIRST:** `npx wrangler r2 bucket create inspiration-refs`, then `python scripts/upload-refs.py --remote`. Skip if the user declines; local dev still works.
+- [ ] **Step 3:** Remote setup happens in Task 7 Step 2 (bucket creation approved on 2026-10-09).
 - [ ] **Step 4: Commit** the script. **Commit:** `Upload reference thumbnails to the private bucket`.
 
 ### Task 7: End-to-end check

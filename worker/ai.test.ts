@@ -57,6 +57,18 @@ afterEach(() => {
   setGoldPool(null);
 });
 
+describe("images", () => {
+  it("asks again without images when a provider rejects them", async () => {
+    const calls = fakeFetch({
+      openrouter: (_b, n) => (n ? openRouterReply(JSON.stringify({ answer: "ok" })) : new Response(JSON.stringify({ error: { message: "No endpoints found that support image input" } }), { status: 404 })),
+    });
+    const r = await ask(env({ OPENROUTER_MODELS: "google/gemini-3.8-flash" }), { ...opts, images: ["data:image/jpeg;base64,QQ=="] });
+    expect(r.data.answer).toBe("ok");
+    expect(calls).toHaveLength(2);
+    expect(typeof (calls[1]!.body.messages as { content: unknown }[]).at(-1)!.content).toBe("string");
+  });
+});
+
 describe("model chain", () => {
   it("lists OpenRouter models in order, then Anthropic directly; skips providers without a key", () => {
     expect(chain(env()).map((t) => `${t.kind}:${t.model}`)).toEqual(["openrouter:google/gemini-3.8-flash", "openrouter:anthropic/claude-sonnet-5", "anthropic:claude-sonnet-5"]);
@@ -501,6 +513,46 @@ describe("concepts task", () => {
       const calls = fakeFetch({ openrouter: () => reply(...three) });
       await concepts(env({ GOLD_CONCEPT_MODE: "single" }), { query, exclude: [] });
       expect(systemOf(calls[0]!.body)).toContain("Every concept adapts G1");
+    });
+
+    describe("looking at the reference images", () => {
+      const bucket = (ids: string[]) => ({ get: async (key: string) => (ids.includes(key.replace(".jpg", "")) ? { arrayBuffer: async () => new TextEncoder().encode(key).buffer } : null) }) as unknown as R2Bucket;
+      const six = ["g-1", "g-2", "g-3", "g-4", "g-5", "g-6"];
+      const imageParts = (body: Record<string, unknown>) => {
+        const content = (body.messages as { content: unknown }[]).at(-1)!.content;
+        return Array.isArray(content) ? content.filter((c: { type: string }) => c.type === "image_url").length : 0;
+      };
+      const looked = (n: number) => Array.from({ length: n }, (_, i) => ({ ref: `G${i + 1}`, works: "the type sits behind the figure" }));
+      const answer = (observations: unknown[]) => openRouterReply(JSON.stringify({ observations, sketches: ["a"], concepts: three }));
+
+      it("shows the director the 5 closest reference images, in G1–G5 order", async () => {
+        setGoldPool(six.map((id) => gold(id)));
+        const calls = fakeFetch({ openrouter: () => answer(looked(5)) });
+        const r = await concepts(env({ REFS: bucket(six), CONCEPT_CRITIQUE: "off" }), { query, exclude: [] });
+        expect(imageParts(calls[0]!.body)).toBe(5);
+        const input = JSON.parse(String(((calls[0]!.body.messages as { content: { type: string; text?: string }[] }[]).at(-1)!.content).find((c) => c.type === "text")!.text));
+        expect(input.goldPrompts.map((g: { ref: string }) => g.ref)).toEqual(["G1", "G2", "G3", "G4", "G5"]);
+        expect(r.imagesSeen).toBe(5);
+        expect(calls).toHaveLength(1);
+      });
+
+      it("sends the director back to look at an image it skipped", async () => {
+        setGoldPool(six.map((id) => gold(id)));
+        const calls = fakeFetch({ openrouter: (_b, n) => answer(n ? looked(5) : looked(5).filter((o) => o.ref !== "G4")) });
+        const r = await concepts(env({ REFS: bucket(six), CONCEPT_CRITIQUE: "off" }), { query, exclude: [] });
+        expect(calls).toHaveLength(2);
+        expect(JSON.stringify(calls[1]!.body)).toContain("Look at image G4");
+        expect(r.observations.map((o) => o.ref)).toEqual(["G1", "G2", "G3", "G4", "G5"]);
+      });
+
+      it("works from text when there are no images to load", async () => {
+        setGoldPool(six.map((id) => gold(id)));
+        const calls = fakeFetch({ openrouter: () => answer([]) });
+        const r = await concepts(env({ CONCEPT_CRITIQUE: "off" }), { query, exclude: [] });
+        expect(imageParts(calls[0]!.body)).toBe(0);
+        expect(r.imagesSeen).toBe(0);
+        expect(r.concepts.length).toBe(3);
+      });
     });
 
     it("leaves the director's input as before when gold prompts are off or none fit", async () => {

@@ -199,6 +199,8 @@ async function openRouter<T extends z.ZodType>(env: Env, opts: AskOptions<T>, mo
   if (res.status === 401 || res.status === 403) throw new AiError("This isn’t set up correctly on this server.", 503);
   if (res.status === 402) throw new AiError("The AI account is out of credit.", 503);
   if (res.status === 429) throw new AiError("The AI is busy right now. Try again in a minute.", 429);
+  // Some providers in a chain cannot see images; the request still deserves an answer from the text.
+  if (!res.ok && opts.images?.length && /image/i.test(body.error?.message ?? "")) return openRouter(env, { ...opts, images: undefined }, models);
   if (!res.ok || body.error) throw new AiError("The AI service had a problem. Try again.", 502);
 
   const choice = body.choices?.[0];

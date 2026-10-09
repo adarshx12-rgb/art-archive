@@ -122,7 +122,7 @@ const FIGURES = /\$\d|\d{3,}|\b[A-Z]{2,}\b/;
 const affirmative = (s: string) =>
   s
     .replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ")
-    .replace(/\b(?:the|their|its)\s+(?:\w+\s+){0,2}(?:text|lettering|words?|price|date|numbers?|copy|details?|headline|line)\b/gi, " ")
+    .replace(/\b(?:the|their|its)\s+(?:[\w-]+\s+){0,2}(?:text|lettering|words?|price|date|numbers?|copy|details?|headline|line)\b/gi, " ")
     .replace(/\b(?:HUD|CRT|VHS|RGB|CMYK|LED|LCD|UV|UI|QR|GIF|DVD|CD|TV|3D|2D)\b/g, " ");
 
 /** What's wrong with a brief, as instructions the model can act on. Empty when it's fine. */

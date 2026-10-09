@@ -449,6 +449,14 @@ describe("concepts task", () => {
       expect(r.critique).toBeNull();
     });
 
+    it("keeps each improved concept that passes, and the designer's original where one does not", async () => {
+      const mixed = better.map((c, i) => (i === 1 ? { ...c, type: '"FREE BEER" across the top' } : c));
+      fakeFetch({ openrouter: (_b, n) => (n ? critique(mixed) : reply(...three)) });
+      const r = await concepts(env({ CONCEPT_CRITIQUE: "on" }), { query, exclude: [] });
+      expect(r.concepts.map((c) => c.title)).toEqual([better[0]!.title, three[1]!.title, better[2]!.title]);
+      expect(r.critique).toEqual(notes);
+    });
+
     it("keeps the original concepts when the critique breaks a promise or fails", async () => {
       const invented = better.map((c) => ({ ...c, type: '"FREE BEER" across the top' }));
       fakeFetch({ openrouter: (_b, n) => (n ? critique(invented) : reply(...three)) });

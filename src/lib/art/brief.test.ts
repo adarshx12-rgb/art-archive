@@ -104,7 +104,7 @@ describe("checkBrief", () => {
   });
 
   it("lets supporting elements frame the visitor's own copy, but not carry new text", () => {
-    expect(checkBrief(brief({ furniture: ["a small rust red tab in the top right corner holding the price", "a heavy black bar behind the footer text", "a torn strip as a dark rest for the detail words"] }), punk)).toEqual([]);
+    expect(checkBrief(brief({ furniture: ["a small rust red tab in the top right corner holding the price", "a heavy black bar behind the footer text", "a torn strip as a dark rest for the detail words", "a ticket-shaped scrap holding the free-entry words"] }), punk)).toEqual([]);
     expect(checkBrief(brief({ furniture: ["a price tag on the shoe"] }), punk).join(" ")).toMatch(/carries words/);
     expect(checkBrief(brief({ furniture: ["random numbers down the edge"] }), punk).join(" ")).toMatch(/carries words/);
     expect(checkBrief(brief({ furniture: ["a banner reading the headline"] }), punk).join(" ")).toMatch(/carries words/);

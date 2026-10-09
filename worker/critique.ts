@@ -48,13 +48,27 @@ export async function critiqueConcepts(
       { system: CRITIC + args.system, user: JSON.stringify({ ...args.facts, concepts: args.concepts }), schema: CritiqueOut, name: "critique", effort: "medium", models: args.models, images: args.images },
       override,
     );
-    const { kept, problems } = args.check(r.data.concepts as Brief[]);
-    // Fewer valid concepts than the designer gave is worse, not better.
-    if (kept.length < args.concepts.length) {
-      console.warn(`critique kept the designer's concepts: ${kept.length} of ${r.data.concepts.length} improved concepts passed the checks, ${args.concepts.length} needed. ${problems.join(" | ")}`);
+    // Slot by slot: an improved concept that passes the checks replaces the designer's; one that
+    // does not leaves the designer's in place. One doubtful concept never throws the rest away.
+    const improved = r.data.concepts as Brief[];
+    const failed: string[] = [];
+    const merged = args.concepts.map((original, i) => {
+      const candidate = improved[i];
+      if (!candidate) return { brief: original, improved: false };
+      const { kept, problems } = args.check([candidate]);
+      if (kept.length === 1) return { brief: kept[0]!, improved: true };
+      failed.push(...problems.map((p) => p.replace(/^Concept 1/, `Concept ${i + 1}`)));
+      return { brief: original, improved: false };
+    });
+    if (failed.length) console.warn(`critique kept the designer's version where its own failed the checks: ${failed.join(" | ")}`);
+    if (!merged.some((m) => m.improved)) return null;
+    // The mix must still be a valid, distinct set.
+    const set = args.check(merged.map((m) => m.brief));
+    if (set.kept.length < args.concepts.length) {
+      console.warn(`critique kept the designer's concepts: the mixed set failed: ${set.problems.join(" | ")}`);
       return null;
     }
-    return { concepts: kept, notes: r.data.notes, usage: r.usage };
+    return { concepts: set.kept, notes: r.data.notes, usage: r.usage };
   } catch (e) {
     console.warn("critique kept the designer's concepts:", e instanceof Error ? e.message : e);
     return null;

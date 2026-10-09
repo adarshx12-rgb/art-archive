@@ -297,31 +297,6 @@ export const inspiration: Record<string, Inspiration> = {
       "a generic rain-soaked street with no idea beyond the colour",
     ],
   },
-  synthwave: {
-    studied: 18,
-    moves: [
-      "a horizontally sliced sun setting behind mountains or a skyline, over a receding wireframe grid",
-      "a towering city seen from below, one spire piercing the sun",
-      "a single glowing subject (a flower, a figure, a hand) alone on deep black, most of the frame left dark",
-      "a photograph remapped into hot two-tone colour inside a framed panel, with diagrams around it",
-      "a figure stretched or motion-blurred into streaks of light",
-    ],
-    image: "retro-futurist illustration (sunsets, grids, chrome) or photography gradient-mapped into neon duotones; X-ray, solarised and thermal effects on figures",
-    lettering: {
-      moves: [
-        "a wide heavy title across the top with a flowing script laid over it",
-        "a tall outlined title rotated up the left edge, partly cut by the image",
-        "small information blocks in clusters, like the back of a record sleeve",
-      ],
-      letterforms: "wide geometric display sans with square proportions, chrome or gradient-filled italics, neon script, technical monospace for details",
-    },
-    colour: "deep indigo and navy grounds with magenta, hot pink and cyan; a peach-to-magenta sunset gradient in the sun",
-    finish: "soft glow, fine grain, VHS scanlines and slight chromatic blur",
-    tells: [
-      "the stock sunset-and-grid with nothing else going on",
-      "misspelt fake track lists and credits",
-    ],
-  },
   "luxury-minimal": {
     studied: 15,
     moves: [

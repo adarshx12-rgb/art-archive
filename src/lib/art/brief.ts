@@ -65,6 +65,21 @@ export function quoted(s: string): string[] {
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\b(a|an|the)\b/g, " ").replace(/\s+/g, " ").trim();
+
+/**
+ * The visitor's own words: one of their lines, or a run of whole words from one,
+ * as when "LAST ROUND" is stacked as "LAST" over "ROUND". Nothing is invented by
+ * splitting; a changed or partial word still is.
+ */
+export function ownWords(quote: string, lines: string[]): boolean {
+  const q = norm(quote).split(" ").filter(Boolean);
+  if (!q.length) return false;
+  return lines.some((line) => {
+    const l = norm(line).split(" ").filter(Boolean);
+    for (let i = 0; i + q.length <= l.length; i++) if (q.every((w, j) => w === l[i + j])) return true;
+    return false;
+  });
+}
 /** Words that carry meaning, for matching a hero to a subject. */
 const LINKS = new Set(["with", "of", "in", "on", "and", "at", "to", "from", "his", "her", "their", "its"]);
 const tokens = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((t) => t && !LINKS.has(t));
@@ -101,6 +116,7 @@ export function tidyBrief(b: Brief): Brief {
 const WORDED = /\b(reading|saying|says|text|lettering|words?|caption|slogan|tagline|labell?ed|price|date|numbers?|numerals?|digits?)\b|\bstamp(?:ed)? with\b/i;
 /** Prices, long numbers and capitalised words: text in disguise. */
 const FIGURES = /\$\d|\d{3,}|\b[A-Z]{2,}\b/;
+const affirmative = (s: string) => s.replace(/\b(?:no|without|never|free of|not)\b[^,.;]*/gi, " ");
 
 /** What's wrong with a brief, as instructions the model can act on. Empty when it's fine. */
 export function checkBrief(brief: Brief, state: BuilderState): string[] {
@@ -113,7 +129,7 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
   const conflicts = incompatibleCraft(state);
   for (const problem of new Set(brief.craft.map((id) => conflicts.get(id)).filter((p): p is string => Boolean(p)))) problems.push(problem);
   if (restyle && state.preserve.includes("colours") && sourceColourConflict(texts.join(". "))) problems.push("Preserve source colours: use their existing darkest/lightest tones for outlines and grounds, not new black ink, white/yellowed paper, or a reduced ink palette.");
-  for (const q of new Set(texts.flatMap(quoted))) if (!words.has(norm(q))) problems.push(`"${q}" isn't one of the visitor's words; quote only their words, or none.`);
+  for (const q of new Set(texts.flatMap(quoted))) if (!ownWords(q, typedWords(state))) problems.push(`"${q}" isn't one of the visitor's words; quote only their words, or none.`);
 
   if (restyle) {
     if (brief.hero.subject || brief.hero.scale || brief.device || brief.type || brief.furniture.length) problems.push("A restyle keeps the visitor's picture: leave hero.subject, hero.scale, device and type null and furniture empty.");
@@ -129,7 +145,8 @@ export function checkBrief(brief: Brief, state: BuilderState): string[] {
     const lettering = brief.craft.filter((id) => getCraft(id)?.lettering);
     if (lettering.length) problems.push(`The visitor typed no words, so drop the craft that needs lettering: ${lettering.join(", ")}.`);
   }
-  for (const f of brief.furniture) if ((WORDED.test(f) || FIGURES.test(f)) && !quoted(f).length) problems.push(`Furniture "${f}" carries words; furniture must be wordless.`);
+  // "with no readable words" describes a wordless element; only what it affirmatively carries counts.
+  for (const f of brief.furniture) if ((WORDED.test(affirmative(f)) || FIGURES.test(affirmative(f))) && !quoted(f).length) problems.push(`Furniture "${f}" carries words; furniture must be wordless.`);
 
   const unknown = brief.craft.filter((id) => !getCraft(id));
   if (unknown.length) problems.push(`Unknown craft ids: ${unknown.join(", ")}. Use ids from the craft list.`);

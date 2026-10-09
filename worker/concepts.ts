@@ -219,7 +219,7 @@ export async function concepts(env: Env, body: z.infer<typeof ConceptsRequest>, 
   // The art-director pass: same brief, same images; its concepts must pass the same checks.
   const reviewed = env.CONCEPT_CRITIQUE === "off" ? null : await critiqueConcepts(
     env,
-    { system, facts, concepts: kept, images, models, briefSchema: BriefSchema as unknown as z.ZodType<Brief>, check: (cs) => sortBriefs(cs, state).kept },
+    { system, facts, concepts: kept, images, models, briefSchema: BriefSchema as unknown as z.ZodType<Brief>, check: (cs) => sortBriefs(cs, state) },
     override,
   );
   if (reviewed) {

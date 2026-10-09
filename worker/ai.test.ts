@@ -312,6 +312,12 @@ describe("prompt task", () => {
       expect(calls).toHaveLength(0);
     });
 
+    it("does not warn when the visitor's phrase is split into its own words", async () => {
+      fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace('"Night Shift" in ransom letters', '"Night" stacked over "Shift" in ransom letters') })) });
+      const r = await perfectPrompt(env(), { query: punk, brief });
+      expect(r.warnings).toEqual([]);
+    });
+
     it("warns about quoted words the visitor didn't type", async () => {
       fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed + ' A badge reading "OPEN LATE".' })) });
       const r = await perfectPrompt(env(), { query: punk, brief });

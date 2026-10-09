@@ -103,6 +103,17 @@ describe("checkBrief", () => {
     expect(checkBrief(brief({ furniture: ['a pill badge holding "Night Shift"'] }), punk)).toEqual([]);
   });
 
+  it("accepts furniture that says it has no words", () => {
+    expect(checkBrief(brief({ furniture: ["older torn scraps peeking out under the flyer edges, with no readable words", "blank paper tags without text"] }), punk)).toEqual([]);
+    expect(checkBrief(brief({ furniture: ["a sticker with words on it"] }), punk).join(" ")).toMatch(/carries words/);
+  });
+
+  it("lets the visitor's own phrase be split into its words, but not changed", () => {
+    expect(checkBrief(brief({ type: '"Night" stacked over "Shift", huge, left edge' }), punk)).toEqual([]);
+    expect(checkBrief(brief({ type: '"Night Shift" and "Day" ' }), punk).join(" ")).toMatch(/"Day" isn't one of the visitor's words/);
+    expect(checkBrief(brief({ type: '"Nig" huge' }), punk).join(" ")).toMatch(/isn't one of the visitor's words/);
+  });
+
   it("accepts a rich concept: many supporting elements and no craft ids", () => {
     const rich = brief({ furniture: ["thin callout lines to the dancer's feet", "a sizing grid bottom-left", "a ghosted second dancer mid-step", "motion streaks behind her", "a halftone shadow", 'a stamp holding "Night Shift"'], craft: [] });
     expect(checkBrief(rich, punk)).toEqual([]);

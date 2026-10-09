@@ -34,7 +34,7 @@ export async function critiqueConcepts(
     models?: string;
     briefSchema: z.ZodType<Brief>;
     /** The designer's checks: the improved concepts that pass, in order. */
-    check: (concepts: Brief[]) => Brief[];
+    check: (concepts: Brief[]) => { kept: Brief[]; problems: string[] };
   },
   override?: string | null,
 ): Promise<{ concepts: Brief[]; notes: CritiqueNote[]; usage: Usage } | null> {
@@ -48,11 +48,15 @@ export async function critiqueConcepts(
       { system: CRITIC + args.system, user: JSON.stringify({ ...args.facts, concepts: args.concepts }), schema: CritiqueOut, name: "critique", effort: "medium", models: args.models, images: args.images },
       override,
     );
-    const kept = args.check(r.data.concepts as Brief[]);
+    const { kept, problems } = args.check(r.data.concepts as Brief[]);
     // Fewer valid concepts than the designer gave is worse, not better.
-    if (kept.length < args.concepts.length) return null;
+    if (kept.length < args.concepts.length) {
+      console.warn(`critique kept the designer's concepts: ${kept.length} of ${r.data.concepts.length} improved concepts passed the checks, ${args.concepts.length} needed. ${problems.join(" | ")}`);
+      return null;
+    }
     return { concepts: kept, notes: r.data.notes, usage: r.usage };
-  } catch {
+  } catch (e) {
+    console.warn("critique kept the designer's concepts:", e instanceof Error ? e.message : e);
     return null;
   }
 }

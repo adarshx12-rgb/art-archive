@@ -228,17 +228,6 @@ const CRITIC = `You are the creative director at a top studio reviewing your des
 - [ ] **Step 3: Remote — ASK THE USER FIRST:** `npx wrangler r2 bucket create inspiration-refs`, then `python scripts/upload-refs.py --remote`. Skip if the user declines; local dev still works.
 - [ ] **Step 4: Commit** the script. **Commit:** `Upload reference thumbnails to the private bucket`.
 
-### Task 9: Practice rounds (last; only after Task 7 passes and the user confirms)
-
-**Files:** Create `worker/practice.ts`, `worker/practice.test.ts`, `scripts/practice.mjs`.
-
-**Produces:** `pickPractice(refs: { id: string; folders: string[] }[], history: Record<string, string>, n: number): string[]` (least-practised folders first, one per folder per round, skipping ids practised in the last 30 days; `history` maps id → ISO date); `applyReview(goldRecord: object, review: { similar: "close" | "partly" | "far"; missed: string[]; corrected: GoldAnswer }): { record: object; previous: object }`.
-
-- [ ] **Step 1: Failing tests:** `pickPractice` picks from distinct folders, prefers folders with fewer practised ids, skips recent ids, returns at most n; `applyReview` replaces `gold` with `corrected`, adds `practice: { similar, missed, at }`, and returns the previous record unchanged.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement** the two pure functions (imports with `.ts` extensions so the script can load them); `scripts/practice.mjs pick --n 6` writes `output/practice/<date>/sheet.md` and updates `inspiration/.study/practice-history.json`; `review <date>` sends each `practice-<id>.png` with its original thumbnail to the vision model (`google/gemini-3.8-flash`, JSON schema `{ similar, missed, corrected: GoldSchema }`), writes `review.md`, saves `<hash>.gold-v1.prev.json` and the updated record, then runs `node scripts/gold-prompts.mjs --compile-only`. Prints cost.
-- [ ] **Step 4: Run** tests — PASS; `node scripts/practice.mjs pick --n 6` — writes a sheet. **Commit:** `Practice rounds: recreate, render, review, improve gold prompts`.
-
 ### Task 7: End-to-end check
 
 - [ ] **Step 1:** Local: `python scripts/upload-refs.py --local`, `npm run dev`, then a harness over 8+ briefs across styles against `http://localhost:5173/api/concepts` and `/api/prompt`. For each: concepts returned; `imagesSeen` = picked references (4–5 where the style has them); observations cover every image; critique ran (`critique` not null); prompt returned with no invented-word warnings. Report in `output/e2e/report.md`.
@@ -251,3 +240,14 @@ const CRITIC = `You are the creative director at a top studio reviewing your des
 - [ ] **Step 2:** Run the 8 briefs from `output/abtest/briefs.json` (~$1). Write `output/abtest2/prompts.md` (blind, shuffled), `key.json`, and `notes.md` with each "now" brief's observations, sketches and critique notes.
 - [ ] **Step 3:** Read every "now" prompt for clutter, broken promises and invented words; fix and rerun on a defect.
 - [ ] **Step 4: CHECKPOINT — the user renders 16 images** at 4:5 and records blind picks. Win: "now" on ≥ 5 of 8 and winners not called generic. Otherwise review sketches and critique notes with the user before changing anything.
+
+### Task 9: Practice rounds (last; only after Task 7 passes and the user confirms)
+
+**Files:** Create `worker/practice.ts`, `worker/practice.test.ts`, `scripts/practice.mjs`.
+
+**Produces:** `pickPractice(refs: { id: string; folders: string[] }[], history: Record<string, string>, n: number): string[]` (least-practised folders first, one per folder per round, skipping ids practised in the last 30 days; `history` maps id → ISO date); `applyReview(goldRecord: object, review: { similar: "close" | "partly" | "far"; missed: string[]; corrected: GoldAnswer }): { record: object; previous: object }`.
+
+- [ ] **Step 1: Failing tests:** `pickPractice` picks from distinct folders, prefers folders with fewer practised ids, skips recent ids, returns at most n; `applyReview` replaces `gold` with `corrected`, adds `practice: { similar, missed, at }`, and returns the previous record unchanged.
+- [ ] **Step 2: Run** — FAIL.
+- [ ] **Step 3: Implement** the two pure functions (imports with `.ts` extensions so the script can load them); `scripts/practice.mjs pick --n 6` writes `output/practice/<date>/sheet.md` and updates `inspiration/.study/practice-history.json`; `review <date>` sends each `practice-<id>.png` with its original thumbnail to the vision model (`google/gemini-3.8-flash`, JSON schema `{ similar, missed, corrected: GoldSchema }`), writes `review.md`, saves `<hash>.gold-v1.prev.json` and the updated record, then runs `node scripts/gold-prompts.mjs --compile-only`. Prints cost.
+- [ ] **Step 4: Run** tests — PASS; `node scripts/practice.mjs pick --n 6` — writes a sheet. **Commit:** `Practice rounds: recreate, render, review, improve gold prompts`.

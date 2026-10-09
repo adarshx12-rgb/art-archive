@@ -312,6 +312,13 @@ describe("prompt task", () => {
       expect(calls).toHaveLength(0);
     });
 
+    it("never leaves the internal word 'Furniture' in a prompt, where it could mean chairs", async () => {
+      fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace("Avoid:", "Furniture: three black speed dashes under the heel.\nAvoid:") })) });
+      const r = await perfectPrompt(env(), { query: punk, brief });
+      expect(r.prompt).not.toMatch(/furniture/i);
+      expect(r.prompt).toContain("Supporting details: three black speed dashes under the heel.");
+    });
+
     it("recognises a style name written without its curly apostrophe", async () => {
       const retro = "s=70s-retro&fm=poster&tx=Night%20Shift&sc=" + encodeURIComponent("person~woman dancing~0~0~0~0~0~0~1~dance~1");
       fakeFetch({ openrouter: () => openRouterReply(JSON.stringify({ prompt: directed.replace("Punk poster", "70s retro poster") })) });

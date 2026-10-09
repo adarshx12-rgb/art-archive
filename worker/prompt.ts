@@ -128,6 +128,9 @@ function mustInclude(state: BuilderState, colours: string[]): { label: string; a
  * Drop stray characters some models leave at the end (a closing brace, an
  * unmatched quote). A closing quote that ends quoted lettering is kept.
  */
+/** Our word for supporting elements means chairs to an image model. */
+export const plainWords = (prompt: string) => prompt.replace(/\bFurniture:/g, "Supporting details:").replace(/\bfurniture\b/gi, "supporting details");
+
 export function tidy(prompt: string): string {
   let s = prompt.trim();
   for (let i = 0; i < 4; i++) {
@@ -296,7 +299,7 @@ export async function perfectPrompt(env: Env, body: z.infer<typeof PromptRequest
     designSources,
   };
   return {
-    prompt: stripSlop(tidy(best.data.prompt), facts),
+    prompt: plainWords(stripSlop(tidy(best.data.prompt), facts)),
     warnings: [
       ...gaps.missing.map((g) => `The prompt may not mention ${g}. Check it before using it.`),
       ...gaps.extra.map((w) => `The prompt adds words you didn’t type: “${w}”. Check it before using it.`),

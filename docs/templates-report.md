@@ -1,6 +1,6 @@
 # Design templates
 
-168 checked · 0 with issues · 42 of 42 styles have templates. Run `npm run templates` to refresh.
+168 checked · 0 with issues · 42 of 45 styles have templates. Run `npm run templates` to refresh.
 
 | Template | Layout | Issues |
 |---|---|---|

@@ -322,6 +322,7 @@ describe("prompt task", () => {
         await perfectPrompt(env(), { query: punk, brief: referenced, goldId: "g-a" });
         expect(JSON.stringify(calls[0]!.body)).toContain("ransom-note cut-out capitals");
         expect(systemOf(calls[0]!.body)).toContain("goldPrompt recreates the real design");
+        expect(systemOf(calls[0]!.body)).toContain("Learn from it, never copy it");
       });
 
       it("sends no gold prompt without a reference, or when gold prompts are off", async () => {
@@ -452,6 +453,9 @@ describe("concepts task", () => {
       expect(input.goldPrompts.map((g: { ref: string }) => g.ref)).toEqual(["G1", "G2"]);
       expect(input.goldPrompts[0].prompt).toContain("ransom-note");
       expect(systemOf(calls[0]!.body)).toContain("Each concept adapts a different goldPrompt");
+      // Learn from references, never copy them.
+      expect(systemOf(calls[0]!.body)).toContain("take one or two of its moves");
+      expect(systemOf(calls[0]!.body)).toContain("not the same poster");
       // A reference the director was not given is dropped, the concept kept.
       expect(r.concepts.map((c) => c.reference?.ref ?? null)).toEqual(["G1", "G2", null]);
       // The Builder sends this back with the picked concept, so the writer gets the same gold prompt.

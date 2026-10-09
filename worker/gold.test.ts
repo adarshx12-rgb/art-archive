@@ -98,10 +98,10 @@ describe("gold checks", () => {
     expect(referenceColours("Avoid: safety orange.", g, [])).toEqual([]);
   });
 
-  it("finds a long run copied from the reference", () => {
-    const run = sections.hero.split(" ").slice(0, 12).join(" ");
+  it("finds a run of eight or more words copied from the reference", () => {
+    const run = sections.hero.split(" ").slice(0, 8).join(" ");
     expect(copiedRun(`Intro. ${run} and more.`, g)).toBe(run.toLowerCase().replace(/[^a-z0-9 ]/g, ""));
-    expect(copiedRun(sections.hero.split(" ").slice(0, 11).join(" "), g)).toBeNull();
+    expect(copiedRun(sections.hero.split(" ").slice(0, 7).join(" "), g)).toBeNull();
   });
 
   it("finds a compiled gold prompt by id", () => {

@@ -77,8 +77,8 @@ export function referenceColours(prompt: string, gold: GoldReference, chosen: st
 
 const words = (text: string) => text.replace(new RegExp(PLACEHOLDER.source, "g"), " ").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
 
-/** The first run of n words the prompt shares with its reference: a copy, not an adaptation. */
-export function copiedRun(prompt: string, gold: GoldReference, n = 12): string | null {
+/** The first run of n words the prompt shares with its reference: a copy, not an adaptation. Adapted prompts share at most about four (measured on the A/B run). */
+export function copiedRun(prompt: string, gold: GoldReference, n = 8): string | null {
   const source = words(gold.prompt);
   const runs = new Set(source.slice(0, Math.max(0, source.length - n + 1)).map((_, i) => source.slice(i, i + n).join(" ")));
   const mine = words(prompt);
